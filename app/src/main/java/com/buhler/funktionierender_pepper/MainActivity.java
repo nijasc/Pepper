@@ -22,6 +22,8 @@ import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 import com.buhler.funktionierender_pepper.action.ActionHandler;
 import com.buhler.funktionierender_pepper.action.follow.FollowController;
+import com.buhler.funktionierender_pepper.action.memory.MemoryGameController;
+import com.buhler.funktionierender_pepper.action.memory.MemoryGameView;
 import com.buhler.funktionierender_pepper.lang.LanguageManager;
 import com.buhler.funktionierender_pepper.lang.SpeechManager;
 import com.buhler.funktionierender_pepper.lang.SupportedLanguage;
@@ -52,6 +54,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         stopFollowButton.setOnClickListener(v -> FollowController.get().stop());
         languageLabel = findViewById(R.id.languageLabel);
 
+        MemoryGameView memoryGame = findViewById(R.id.memoryGame);
+        MemoryGameController.get().attachView(memoryGame);
+
         initSpeech();
     }
 
@@ -59,6 +64,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     protected void onDestroy() {
         Log.e("Mainactivity", "ADestroyed");
 
+        MemoryGameController.get().abort();
+        MemoryGameController.get().detachView();
         QiSDK.unregister(this);
         recognizer.cancel();
         recognizer.destroy();
@@ -98,6 +105,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     @Override
     public void onRobotFocusLost() {
+        MemoryGameController.get().abort();
         FollowController.get().setFollowStateListener(null);
         FollowController.get().onFocusLost();
         Log.e("Mainactivity", "AFocus Lost");

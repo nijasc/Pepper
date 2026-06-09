@@ -45,4 +45,10 @@
         android:textSize="28sp"
         android:visibility="gone" />
 
+    <com.buhler.funktionierender_pepper.action.memory.MemoryGameView
+        android:id="@+id/memoryGame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
 </FrameLayout>

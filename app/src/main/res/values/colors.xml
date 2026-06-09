@@ -10,4 +10,9 @@
     <color name="buhler_teal">#FF009E93</color>
     <color name="buhler_teal_dark">#FF00736B</color>
     <color name="buhler_gray">#FF404040</color>
+    <color name="game_overlay">#F00A1014</color>
+    <color name="pad_green">#FF2ECC71</color>
+    <color name="pad_red">#FFE74C3C</color>
+    <color name="pad_yellow">#FFF1C40F</color>
+    <color name="pad_blue">#FF3498DB</color>
 </resources>

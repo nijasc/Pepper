@@ -9,6 +9,7 @@ import com.buhler.funktionierender_pepper.action.documentation.DocumentationActi
 import com.buhler.funktionierender_pepper.action.follow.FollowMeAction;
 import com.buhler.funktionierender_pepper.action.highfive.HighFiveAction;
 import com.buhler.funktionierender_pepper.action.lang.ChangeLanguageAction;
+import com.buhler.funktionierender_pepper.action.memory.MemoryGameAction;
 import com.buhler.funktionierender_pepper.action.names.SiriAction;
 import com.buhler.funktionierender_pepper.action.saxophone.SaxophoneAction;
 import com.buhler.funktionierender_pepper.action.say.SayAction;
@@ -56,6 +57,7 @@ public class ActionHandler {
         actions.add(new TestAction());
         actions.add(new SystemInfoAction(languageManager, actions));
         actions.add(new FollowMeAction());
+        actions.add(new MemoryGameAction());
 
         for (Action action : actions) {
             Log.i("ActionHandler", "Registered action: " + action.getClass().getSimpleName());

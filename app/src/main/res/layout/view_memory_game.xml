@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/memTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/mem_title"
+            android:textColor="@color/white"
+            android:textSize="34sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/memStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/mem_status_idle"
+            android:textColor="@color/buhler_teal"
+            android:textSize="26sp" />
+
+        <TextView
+            android:id="@+id/memScore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/mem_score_idle"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/memPad0"
+                    android:layout_width="190dp"
+                    android:layout_height="190dp"
+                    android:layout_margin="10dp"
+                    android:alpha="0.35"
+                    android:background="@drawable/pad_green" />
+
+                <View
+                    android:id="@+id/memPad1"
+                    android:layout_width="190dp"
+                    android:layout_height="190dp"
+                    android:layout_margin="10dp"
+                    android:alpha="0.35"
+                    android:background="@drawable/pad_red" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <View
+                    android:id="@+id/memPad2"
+                    android:layout_width="190dp"
+                    android:layout_height="190dp"
+                    android:layout_margin="10dp"
+                    android:alpha="0.35"
+                    android:background="@drawable/pad_yellow" />
+
+                <View
+                    android:id="@+id/memPad3"
+                    android:layout_width="190dp"
+                    android:layout_height="190dp"
+                    android:layout_margin="10dp"
+                    android:alpha="0.35"
+                    android:background="@drawable/pad_blue" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/memHint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="@string/mem_hint"
+            android:textColor="#CCFFFFFF"
+            android:textSize="18sp" />
+    </LinearLayout>
+</merge>
