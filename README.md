@@ -19,6 +19,7 @@
   - [Historie](#historie)
   - [Antwortlänge](#antwortlänge)
   - [FollowMe-Mechanik](#followme-mechanik)
+  - [Bildschirmanzeige](#bildschirmanzeige)
 - [Funktionen (Actions)](#funktionen-actions)
   - [Sprechen (Standard)](#sprechen-standard)
   - [Tanzen](#tanzen)
@@ -147,6 +148,14 @@ stateDiagram-v2
         Fahren --> Stehen : Mindestabstand erreicht
     }
 ```
+
+### Bildschirmanzeige
+
+Auf Peppers Display sind dauerhaft zwei Elemente eingeblendet: oben links das **Bühler-Logo** und oben rechts die **aktuell verwendete Sprache**.
+
+Die Sprachanzeige wird live aktualisiert: Wechselt der Benutzer die Sprache (siehe Funktion [Sprache](#sprache)), passt sich die Anzeige sofort an, ohne dass die Applikation neu gestartet werden muss.
+
+Die Oberfläche ist im Bühler-Stil gehalten: Die Akzentfarbe der App (Theme-Farbe) entspricht dem Türkis des Bühler-Logos, und der Titelbalken oben zeigt den Schriftzug «Bühler Pepper». Das Layout wird als reguläres Android-Layout (`res/layout/activity_main.xml`) geladen.
 
 ---
 

@@ -3,16 +3,13 @@ package com.buhler.funktionierender_pepper;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,6 +24,7 @@ import com.buhler.funktionierender_pepper.action.ActionHandler;
 import com.buhler.funktionierender_pepper.action.follow.FollowController;
 import com.buhler.funktionierender_pepper.lang.LanguageManager;
 import com.buhler.funktionierender_pepper.lang.SpeechManager;
+import com.buhler.funktionierender_pepper.lang.SupportedLanguage;
 import com.buhler.funktionierender_pepper.openai.OpenAIService;
 import com.buhler.funktionierender_pepper.openai.history.HistoryManager;
 
@@ -41,6 +39,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private LanguageManager languageManager;
     private HistoryManager historyManager;
     private Button stopFollowButton;
+    private TextView languageLabel;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,7 +47,11 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         QiSDK.register(this, this);
         Log.e("Mainactivity", "ACreate");
 
-        setupStopButton();
+        setContentView(R.layout.activity_main);
+        stopFollowButton = findViewById(R.id.stopFollowButton);
+        stopFollowButton.setOnClickListener(v -> FollowController.get().stop());
+        languageLabel = findViewById(R.id.languageLabel);
+
         initSpeech();
     }
 
@@ -75,8 +78,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         if (languageManager == null) {
             languageManager = new LanguageManager(intent);
+            languageManager.setLanguageChangeListener(this::updateLanguageLabel);
             SpeechManager.getInstance().setLanguageManager(languageManager);
         }
+        updateLanguageLabel(languageManager.getCurrent());
         if (historyManager == null) {
             historyManager = new HistoryManager();
         }
@@ -116,29 +121,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         Log.i("MainActivity", "Permission");
     }
 
-    private void setupStopButton() {
-        stopFollowButton = new Button(this);
-        stopFollowButton.setText("STOPP");
-        stopFollowButton.setAllCaps(true);
-        stopFollowButton.setTextColor(Color.WHITE);
-        stopFollowButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28);
-        stopFollowButton.setBackgroundColor(Color.parseColor("#D32F2F"));
-        int padH = dpToPx(48);
-        int padV = dpToPx(24);
-        stopFollowButton.setPadding(padH, padV, padH, padV);
-        stopFollowButton.setVisibility(View.GONE);
-        stopFollowButton.setOnClickListener(v -> FollowController.get().stop());
-
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT);
-        lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-        lp.bottomMargin = dpToPx(64);
-        addContentView(stopFollowButton, lp);
-    }
-
-    private int dpToPx(int dp) {
-        return Math.round(dp * getResources().getDisplayMetrics().density);
+    private void updateLanguageLabel(SupportedLanguage lang) {
+        if (languageLabel != null) {
+            runOnUiThread(() -> languageLabel.setText(lang.getDisplayName()));
+        }
     }
 
     private void listenToSpeech() {

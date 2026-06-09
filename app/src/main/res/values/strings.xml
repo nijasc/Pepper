@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">funktionierender_pepper</string>
+    <string name="screen_title">Bühler Pepper</string>
+    <string name="logo_description">Bühler Logo</string>
+    <string name="stop_follow">STOPP</string>
+    <string name="lang_german">Deutsch</string>
+    <string name="lang_english">English</string>
 </resources>
