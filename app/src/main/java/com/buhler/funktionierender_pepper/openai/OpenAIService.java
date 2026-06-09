@@ -1,6 +1,7 @@
 package com.buhler.funktionierender_pepper.openai;
 
 
+import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -32,6 +33,8 @@ public class OpenAIService {
     private static final String URL = "https://api.openai.com/v1";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final List<Action> actions;
+    private String cachedToken;
+    private Context c;
 
     public OpenAIService(List<Action> actions) {
         this.actions = actions;
@@ -81,7 +84,7 @@ public class OpenAIService {
         URL url = new URL(URL + path);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
-        con.setRequestProperty("Authorization", "Bearer " + getAuthToken());
+        con.setRequestProperty("Authorization", "Bearer " + getAuthToken(c));
         con.setRequestProperty("Content-Type", "application/json");
 
         if (body != null) {
@@ -117,14 +120,41 @@ public class OpenAIService {
         return content.toString();
     }
 
-    public String getAuthToken() {
-        Dotenv dotenv = Dotenv.configure()
-                .directory("/assets")
-                .filename("env")
-                .load();
+    public String getAuthToken(Context context) {
+        if (cachedToken != null) {
+            return cachedToken;
+        }
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(context.getAssets().open("env"), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("#")) continue;
 
-        String tok = dotenv.get("OPENAI_API_TOKEN");
-        Log.i("TOKENAUTH", tok);
-        return tok;
+                int eq = line.indexOf('=');
+                if (eq < 0) continue;
+
+                String key = line.substring(0, eq).trim();
+                String value = line.substring(eq + 1).trim();
+
+                if (value.length() >= 2
+                        && ((value.startsWith("\"") && value.endsWith("\""))
+                        || (value.startsWith("'") && value.endsWith("'")))) {
+                    value = value.substring(1, value.length() - 1);
+                }
+
+                if ("OPENAI_API_TOKEN".equals(key)) {
+                    cachedToken = value;
+                }
+            }
+        } catch (IOException e) {
+            Log.e("TOKENAUTH", "Failed to read env asset", e);
+        }
+        Log.i("TOKENAUTH", cachedToken);
+        return cachedToken;
+    }
+
+    public void setC(Context c) {
+        this.c = c;
     }
 }

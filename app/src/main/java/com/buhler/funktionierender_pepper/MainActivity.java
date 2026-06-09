@@ -45,8 +45,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         super.onCreate(savedInstanceState);
         QiSDK.register(this, this);
         Log.e("Mainactivity", "ACreate");
-        OpenAIService s = new OpenAIService(new ArrayList<>());
-        s.getAuthToken();
+
         setupStopButton();
         initSpeech();
     }
@@ -63,6 +62,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     @Override
     public void onRobotFocusGained(QiContext qiContext) {
+        OpenAIService s = new OpenAIService(new ArrayList<>());
+        s.setC(qiContext);
+        s.getAuthToken(qiContext);
         Log.e("Mainactivity", "AFocus Gained");
         FollowController.get().onFocusGained(qiContext);
         FollowController.get().setFollowStateListener(following ->
@@ -126,15 +128,15 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void listenToSpeech() {
-    //    if (FollowController.get().isFollowing()) {
-    //        while (FollowController.get().isFollowing()) {
-    //            try {
-    //                Thread.sleep(200);
-    //            } catch (InterruptedException e) {
-    //                e.printStackTrace();
-    //            }
-    //        }
-    //    }
+        if (FollowController.get().isFollowing()) {
+            while (FollowController.get().isFollowing()) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivityForResult(intent, SPEECH_EVENT);
         }
