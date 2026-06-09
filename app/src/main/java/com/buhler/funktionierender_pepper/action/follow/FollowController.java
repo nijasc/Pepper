@@ -14,6 +14,7 @@ import com.aldebaran.qi.sdk.object.actuation.Frame;
 import com.aldebaran.qi.sdk.object.actuation.FreeFrame;
 import com.aldebaran.qi.sdk.object.actuation.LookAt;
 import com.aldebaran.qi.sdk.object.actuation.LookAtMovementPolicy;
+import com.aldebaran.qi.sdk.object.actuation.OrientationPolicy;
 import com.aldebaran.qi.sdk.object.conversation.Listen;
 import com.aldebaran.qi.sdk.object.conversation.ListenResult;
 import com.aldebaran.qi.sdk.object.conversation.PhraseSet;
@@ -33,17 +34,30 @@ public final class FollowController {
 
     private static final String TAG = "FollowController";
 
-    private static final double STAND_OFF_M = 0.6;
-    private static final double DEAD_ZONE_M = 0.10;
-    private static final double RETARGET_M = 0.30;
+    /** Distance Pepper aims to keep from the person (target point sits this far short of them). */
+    private static final double STAND_OFF_M = 0.7;
+    /** Hysteresis band: only start driving again once the person is this much past the stand-off. */
+    private static final double DEAD_ZONE_M = 0.15;
+    /** Re-issue a drive GoTo only after the target point has shifted at least this far. */
+    private static final double RETARGET_M = 0.40;
+    /**
+     * If the person is more than this far off Pepper's heading, turn in place to face them first
+     * instead of letting the holonomic base crab sideways/backwards towards them.
+     */
+    private static final double TURN_THRESHOLD_RAD = Math.toRadians(25);
+    /** Minimum time between GoTo (re)starts in the same mode — stops the constant stop/replan stutter. */
+    private static final long MIN_GOTO_INTERVAL_MS = 800;
     /**
      * How far the followed person may have moved between two loop iterations and still be
      * recognised as the same target. Keeps Pepper locked onto one person instead of jumping
      * to whoever happens to be closest.
      */
     private static final double TARGET_LOCK_GATE_M = 0.75;
-    private static final long LOOP_PAUSE_MS = 200;
+    private static final long LOOP_PAUSE_MS = 150;
     private static final int MAX_MISSES = 25;
+
+    /** What the base is currently asked to do; used to react instantly when the mode changes. */
+    private enum Move { STOP, ROTATE, DRIVE }
 
     private static final FollowController INSTANCE = new FollowController();
     private volatile boolean wantFollow = false;
@@ -120,6 +134,8 @@ public final class FollowController {
         Future<ListenResult> listenFuture = null;
         FreeFrame activeTarget = null;
         boolean trackValid = false;
+        Move activeMove = Move.STOP;
+        long lastGoToAtMs = 0L;
         int misses = 0;
 
         try {
@@ -163,32 +179,58 @@ public final class FollowController {
                     lookAtFuture = startHeadTracking(context, trackFrame);
                 }
 
+                // Decide what the base should do this tick.
+                double bearing = Math.atan2(y, x);
+                Move desired;
+                Transform goalTf;
                 if (distance <= STAND_OFF_M + DEAD_ZONE_M) {
+                    desired = Move.STOP;
+                    goalTf = null;
+                } else if (Math.abs(bearing) > TURN_THRESHOLD_RAD) {
+                    // Person is well off to the side/behind: turn in place to face them first
+                    // (pure rotation, no translation) instead of crabbing sideways or backwards.
+                    desired = Move.ROTATE;
+                    goalTf = TransformBuilder.create().from2DTransform(0.0, 0.0, bearing);
+                } else {
+                    // Person is roughly ahead: drive forward to the stand-off point, facing them.
+                    desired = Move.DRIVE;
+                    double scale = (distance - STAND_OFF_M) / distance;
+                    goalTf = TransformBuilder.create()
+                            .from2DTransform(x * scale, y * scale, bearing);
+                }
+
+                if (desired == Move.STOP) {
                     // Close enough: stop driving but keep the head following the person.
                     requestCancel(goToFuture);
                     goToFuture = null;
                     activeTarget = null;
+                    activeMove = Move.STOP;
                     Thread.sleep(LOOP_PAUSE_MS);
                     continue;
                 }
 
-                double scale = (distance - STAND_OFF_M) / distance;
-                Transform goalTf = TransformBuilder.create()
-                        .from2DTransform(x * scale, y * scale, Math.atan2(y, x));
                 FreeFrame candidate = context.getMapping().makeFreeFrame();
                 candidate.update(robotFrame, goalTf, 0L);
 
-                boolean retarget = goToFuture == null
-                        || goToFuture.isDone()
-                        || targetMoved(candidate, activeTarget) > RETARGET_M;
+                long now = System.currentTimeMillis();
+                boolean modeChanged = desired != activeMove;
+                boolean finished = goToFuture == null || goToFuture.isDone();
+                boolean movedFar = targetMoved(candidate, activeTarget) > RETARGET_M;
+                boolean throttleOk = now - lastGoToAtMs > MIN_GOTO_INTERVAL_MS;
 
-                if (retarget) {
+                // React immediately to a mode change or a finished move, but otherwise let the
+                // current GoTo run; only re-plan for real drift and not more often than the
+                // throttle allows. This is what removes the constant stop/replan stutter.
+                if (modeChanged || finished || (movedFar && throttleOk)) {
                     requestCancel(goToFuture);
                     goToFuture = GoToBuilder.with(context)
                             .withFrame(candidate.frame())
+                            .withFinalOrientationPolicy(OrientationPolicy.ALIGN_X)
                             .build()
                             .async().run();
                     activeTarget = candidate;
+                    activeMove = desired;
+                    lastGoToAtMs = now;
                 }
 
                 Thread.sleep(LOOP_PAUSE_MS);
