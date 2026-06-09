@@ -25,6 +25,7 @@
   - [Tanzen](#tanzen)
   - [Saxofon](#saxofon)
   - [High Five](#high-five)
+  - [Memory-Minispiel](#memory-minispiel)
   - [Lautstärke](#lautstärke)
   - [Sprache](#sprache)
   - [Dokumentation](#dokumentation)
@@ -203,6 +204,24 @@ Der rechte Arm wird für 7 Sekunden in eine High-Five-Position gehoben und fähr
 ```text
 Beispiel (en): High Five.
 Beispiel (de): High Five.
+```
+
+### Memory-Minispiel
+
+Pepper spielt mit dem Benutzer «Memory mit Bewegung» – ein Gedächtnis- und Reaktionsspiel nach dem Senso- bzw. Simon-Prinzip. Auf dem Tablet erscheinen vier farbige Felder (Grün, Rot, Gelb, Blau). Pepper gibt eine Sequenz vor, indem er die Felder nacheinander aufleuchten lässt und dazu je einen eigenen Ton spielt. Der Benutzer wiederholt die Sequenz, indem er die Felder in derselben Reihenfolge auf dem Tablet antippt.
+
+Pro Runde wird die Sequenz um ein Element länger und das Tempo etwas schneller. Wiederholt der Benutzer alles richtig, lobt Pepper ihn mit einer passenden Geste, und die nächste, längere Sequenz folgt. Bei einem Fehler – oder wenn zu lange keine Eingabe erfolgt – endet das Spiel: Pepper reagiert mit einer Trost- oder Jubelgeste und nennt den erreichten Punktestand, also die Anzahl der geschafften Runden.
+
+**Schwierigkeit:** Der Grad lässt sich beim Start über das Sprachkommando wählen – «leicht», «normal» (Standard) oder «schwer». Er bestimmt die Startlänge der Sequenz, das Anzeigetempo und wie viel Zeit für die Eingabe bleibt.
+
+**Zu beachten:**
+
+- Während des Spiels wird das Spielfeld bildschirmfüllend angezeigt und überdeckt die übrige Oberfläche. Nach dem Spielende verschwindet es automatisch.
+- Das Spiel läuft rein über das Tablet und Pepper; Sprachbefehle werden erst nach Spielende wieder verarbeitet.
+
+```text
+Beispiel (en): Let's play the memory game.
+Beispiel (de): Lass uns Memory spielen. / Lass uns Memory spielen, schwer.
 ```
 
 ### Lautstärke

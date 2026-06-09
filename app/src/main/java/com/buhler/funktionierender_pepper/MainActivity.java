@@ -20,6 +20,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
+import com.aldebaran.qi.sdk.design.activity.SpeechBarDisplayStrategy;
 import com.buhler.funktionierender_pepper.action.ActionHandler;
 import com.buhler.funktionierender_pepper.action.follow.FollowController;
 import com.buhler.funktionierender_pepper.action.memory.MemoryGameController;
@@ -46,6 +47,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setSpeechBarDisplayStrategy(SpeechBarDisplayStrategy.IMMERSIVE);
         QiSDK.register(this, this);
         Log.e("Mainactivity", "ACreate");
 
