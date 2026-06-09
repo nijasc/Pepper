@@ -35,7 +35,7 @@ public class ActionHandler {
 
     public void handleInput(QiContext context, String input) {
         if (input.isEmpty()) {
-            SpeechManager.getInstance().say(context, "Pepper ist jetzt startklar!");
+            //SpeechManager.getInstance().say(context, "Pepper ist jetzt startklar!");
             return;
         }
 
