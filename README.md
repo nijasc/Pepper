@@ -1,0 +1,236 @@
+# Pepper
+
+> Bedienungs- und Entwicklerdokumentation für den Roboter Pepper
+
+> [!CAUTION]
+> Pepper hat selbst Zugriff auf diese Dokumentation. Veröffentliche hier keine Informationen, zu denen potenzielle Benutzer von Pepper keinen Zugriff haben sollten. Alles, was in diesem Dokument steht, kann Pepper auf Nachfrage wiedergeben.
+
+## Inhalt
+
+- [Einführung](#einführung)
+  - [Wer ist Pepper?](#wer-ist-pepper)
+  - [Wie bediene ich Pepper?](#wie-bediene-ich-pepper)
+- [Funktionsweise](#funktionsweise)
+  - [Intent Engine](#intent-engine)
+  - [Historie](#historie)
+- [Funktionen (Actions)](#funktionen-actions)
+  - [Sprechen (Standard)](#sprechen-standard)
+  - [Tanzen](#tanzen)
+  - [Saxofon](#saxofon)
+  - [High Five](#high-five)
+  - [Lautstärke](#lautstärke)
+  - [Sprache](#sprache)
+  - [Dokumentation](#dokumentation)
+- [Pepper für Entwickler](#pepper-für-entwickler)
+  - [Einrichtung](#einrichtung)
+    - [Systemspezifikationen](#systemspezifikationen)
+    - [Anforderungen](#anforderungen)
+    - [Der erste Start](#der-erste-start)
+  - [Eine Funktion erstellen](#eine-funktion-erstellen)
+  - [OpenAI-Systemprompt anpassen](#openai-systemprompt-anpassen)
+  - [Anderes & Tipps](#anderes--tipps)
+
+---
+
+## Einführung
+
+### Wer ist Pepper?
+
+Pepper ist ein intelligenter Roboter mit physischen Fähigkeiten. Er beherrscht Funktionen wie «High Five», «Tanzen» und «Saxofon spielen» und setzt dabei seinen ganzen Körper – Arme, Hände und Kopf – ein, um die jeweilige Aktion möglichst lebendig wirken zu lassen.
+
+Darüber hinaus verfügt Pepper über Wissen zur Bühler Group und ihren Tätigkeiten: Er weiss, welche Stellen es gibt und was Bühler macht, und kann Informationen über verschiedene Berufsbilder und Ausbildungsmöglichkeiten bereitstellen. Damit eignet er sich besonders gut als Ansprechpartner an Messen, Informationsanlässen oder im Empfangsbereich.
+
+Sein Charakter lässt sich als hilfreich, intelligent und humorvoll beschreiben. Pepper spricht **Deutsch** und **Englisch** und weiss zu jedem Zeitpunkt, welche Fähigkeiten ihm aktuell zur Verfügung stehen – die verfügbaren Funktionen werden ihm dynamisch mitgeteilt (siehe [Intent Engine](#intent-engine)).
+
+### Wie bediene ich Pepper?
+
+Pepper hört auf Sprachbefehle. Man spricht ihn also einfach an, und er reagiert auf das Gesagte. Standardmässig wird die Antwort über die OpenAI-API (Modell **GPT-4**) generiert und anschliessend gesprochen ausgegeben. Erkennt Pepper im Gesagten hingegen einen Befehl, der zu einer seiner Funktionen passt (z. B. «Tanze für mich»), führt er stattdessen die entsprechende Aktion aus.
+
+> **Wichtig:** Die erste Anfrage muss auf Deutsch erfolgen. Grund dafür ist die Konfiguration der Spracherkennung – sie ist standardmässig auf Deutsch eingestellt und bleibt es, bis die Sprache aktiv gewechselt wird (siehe Funktion [Sprache](#sprache)).
+
+---
+
+## Funktionsweise
+
+### Intent Engine
+
+Die Intent Engine ist das Herzstück von Pepper. Sie entscheidet anhand der Benutzereingabe, welche Funktion ausgeführt werden soll.
+
+Im Hintergrund wird OpenAI bei jeder Anfrage zusammen mit der Liste aller verfügbaren Fähigkeiten aufgerufen. Jede Fähigkeit ist mit einer kurzen Beschreibung versehen, die umreisst, wofür sie zuständig ist. Das Modell vergleicht die Eingabe des Benutzers mit diesen Beschreibungen und wählt die am besten passende Funktion aus. Passt keine der spezialisierten Funktionen, fällt die Auswahl auf die Standardfunktion [Sprechen](#sprechen-standard), und Pepper antwortet mit einer frei generierten Antwort.
+
+Dieses Vorgehen stellt sicher, dass Pepper dynamisch und zuverlässig die richtige Funktion wählt, ohne dass starre Schlüsselwörter oder fest verdrahtete Regeln nötig sind. Neue Funktionen werden dadurch automatisch berücksichtigt, sobald sie mit einer Beschreibung registriert sind (siehe [Eine Funktion erstellen](#eine-funktion-erstellen)).
+
+### Historie
+
+Damit sich Pepper innerhalb eines Gesprächs an den bisherigen Verlauf erinnern kann, speichert er die letzten **10 Einträge** der Unterhaltung. Ein Eintrag ist entweder eine Eingabe des Benutzers oder eine Antwort von Pepper – bei einem gewöhnlichen Wortwechsel (Frage und Antwort) kommen also zwei Einträge hinzu, sodass die Historie in der Regel rund fünf Gesprächsrunden abdeckt.
+
+Wird ein elfter Eintrag hinzugefügt, wird automatisch der älteste entfernt. Die Historie verhält sich damit wie ein gleitendes Fenster: Es bleiben stets die zehn jüngsten Einträge erhalten, ältere Inhalte fallen heraus.
+
+Bei jeder Anfrage wird die gesamte Historie an OpenAI mitgeschickt. Dadurch kann Pepper auf bereits Gesagtes Bezug nehmen – etwa den Namen einer Person, eine zuvor gestellte Frage oder den allgemeinen Kontext der Unterhaltung. Ohne diese Historie würde Pepper jede Eingabe isoliert betrachten und sich an nichts erinnern.
+
+Die Historie wird ausschliesslich im Arbeitsspeicher gehalten und nicht dauerhaft gespeichert. Wird die Applikation neu gestartet, beginnt Pepper wieder mit einer leeren Historie. Das bedeutet auch: Inhalte aus früheren Sitzungen lassen sich nach einem Neustart nicht mehr abrufen.
+
+---
+
+## Funktionen (Actions)
+
+### Sprechen (Standard)
+
+Pepper hört zu und generiert eine Antwort. Diese wird in der aktuell eingestellten Sprache ausgegeben; währenddessen bewegt sich sein Körper automatisch minimal, um einen echten Menschen widerzuspiegeln und die Antwort natürlicher wirken zu lassen.
+
+Pepper antwortet immer in der Sprache, die auf der Google-Sprachanzeige angezeigt wird. Wird keine der unten gelisteten Funktionen ausgelöst, antwortet Pepper auf die hier beschriebene Standardart. Diese Funktion ist somit der Rückfall, wenn die Intent Engine keine spezialisierte Aktion zuordnen kann.
+
+Zur Generierung der Antworten wird das Modell **GPT-4** von OpenAI verwendet.
+
+```text
+Beispiel (en): Hello, how are you?
+Beispiel (de): Hallo, wie geht es dir?
+```
+
+### Tanzen
+
+Pepper spielt ein Lied und bewegt seinen Körper rhythmisch dazu.
+
+```text
+Beispiel (en): Please perform a dance for me.
+Beispiel (de): Tanze bitte für mich.
+```
+
+### Saxofon
+
+Pepper spielt ein Saxofon-Solo und bewegt seinen Körper rhythmisch dazu, während Hände und Arme das Saxofonspielen imitieren.
+
+```text
+Beispiel (en): Play the saxophone.
+Beispiel (de): Spiele Saxofon.
+```
+
+### High Five
+
+Der rechte Arm wird für 7 Sekunden in eine High-Five-Position gehoben und fährt danach wieder herunter. In diesem Zeitfenster kann der Benutzer einschlagen.
+
+```text
+Beispiel (en): High Five.
+Beispiel (de): High Five.
+```
+
+### Lautstärke
+
+Die Systemlautstärke kann per Sprachbefehl geändert werden. Pepper extrahiert dazu den Zahlenwert aus der Eingabe und setzt die Lautstärke entsprechend.
+
+**Zu beachten:**
+
+- Minuszahlen werden in positive Werte umgekehrt (`-40%` → `40%`).
+- Werte über 100 werden nicht akzeptiert.
+- Die Eingabe muss eine Zahl enthalten. Fehlt sie, kann keine Lautstärke gesetzt werden.
+
+```text
+Beispiel (en): Change the volume to 80%.
+Beispiel (de): Setze die Lautstärke auf 80%.
+```
+
+### Sprache
+
+Erlaubt es, die Sprache zu wechseln. Nach dem Wechsel gibt Pepper alle weiteren Antworten in der neu gewählten Sprache aus, bis erneut gewechselt wird.
+
+**Unterstützte Sprachen:** Deutsch, Englisch
+
+**Zu beachten:**
+
+- Die gewünschte Sprache muss in der Eingabe enthalten sein, damit Pepper sie erkennen und setzen kann.
+
+```text
+Beispiel (en): Set the language to German.
+Beispiel (de): Stelle die Sprache auf Englisch.
+```
+
+### Dokumentation
+
+Gibt dem Nutzer Informationen aus dieser Dokumentation wieder. Die Dokumentation wird bei jedem Aufruf neu von GitHub geladen – Änderungen an diesem Dokument werden also unmittelbar übernommen, ohne dass die Applikation neu gestartet werden muss.
+
+**Unterstützte Sprachen:** Deutsch, Englisch
+
+```text
+Beispiel (en): How does Pepper know which action to execute?
+Beispiel (de): Wie weiss Pepper, welche Funktion er ausführen muss?
+```
+
+---
+
+## Pepper für Entwickler
+
+### Einrichtung
+
+#### Systemspezifikationen
+
+| Komponente   | Version |
+| ------------ | ------- |
+| Java         | 8       |
+| Min. SDK     | 23      |
+| Target SDK   | 34      |
+| Compile SDK  | 34      |
+
+**Libraries:**
+
+| Library                                       | Version  |
+| --------------------------------------------- | -------- |
+| `androidx.appcompat`                          | 1.4.2    |
+| `com.google.android.material`                 | 1.6.1    |
+| `androidx.constraintlayout`                   | 2.1.4    |
+| `net.gotev:speech`                            | 1.6.2    |
+| `junit`                                       | 4.+      |
+| `androidx.test.ext:junit`                     | 1.1.3    |
+| `androidx.test.espresso:espresso-core`        | 3.4.0    |
+| `com.aldebaran:qisdk`                         | 1.7.5    |
+| `qisdk-design`                                | 1.7.5    |
+| `com.fasterxml.jackson.core:jackson-databind` | 2.12.7.2 |
+
+#### Anforderungen
+
+> Sind nicht alle unten genannten Anforderungen erfüllt, sind Fehler beim Entwickeln vorprogrammiert. Stelle sicher, dass alles korrekt installiert und konfiguriert ist, bevor du startest.
+
+- Pepper-Projekt
+- Android Studio
+- Pepper-Roboter
+- OpenAI-API-Token
+- Pepper-SDK-Plugin
+
+#### Der erste Start
+
+1. Öffne das Projekt in Android Studio und warte, bis alles geladen und indexiert ist. Dieser Schritt kann beim ersten Öffnen einige Minuten dauern.
+2. **OpenAI-Token konfigurieren:**
+   1. Suche die Klasse `OpenAIService` (`Ctrl + Shift + N`) und öffne sie.
+   2. Trage deinen OpenAI-API-Token in der Variable `AUTH_TOKEN` ein.
+   3. *Optional:* Wähle ein OpenAI-Modell über die `MODEL`-Variable aus.
+3. **Verbindung zu Pepper aufbauen:**
+   1. Klicke in der Menüleiste von Android Studio auf **Tools** und wähle im Dropdown **Pepper SDK**.
+   2. Klicke auf **Connect** und gib die IP-Adresse deines Pepper-Roboters ein.
+   3. Ist ein Passwort konfiguriert, gib es im Dialog ein.
+4. Starte die Applikation über die **app**-Start-Konfiguration in Android Studio.
+
+Wurden alle Schritte korrekt ausgeführt, startet die App nun auf dem Pepper-Roboter und ein Google-Popup erscheint. Teste anschliessend, ob alle Funktionen wie erwartet arbeiten – am besten, indem du nacheinander je einen Befehl pro Funktion ausprobierst.
+
+### Eine Funktion erstellen
+
+Das System ist so aufgebaut, dass sich neue Funktionen einfach ergänzen lassen. Um eine neue Funktion zu erstellen, gehe wie folgt vor:
+
+1. Erstelle eine neue Klasse, z. B. `TestAction`.
+2. Lass `TestAction` von der abstrakten Klasse `Action` erben.
+3. Implementiere die fehlenden (abstrakten) Methoden von `Action`.
+4. Suche im Projekt nach `ActionHandler` (`Ctrl + Shift + N`).
+5. Füge deine Klasse (`TestAction`) in der Methode `initActions` hinzu.
+6. Definiere eine Beschreibung, die deine Funktion grob umreisst. Sie wird an OpenAI übergeben, damit Pepper weiss, über welche Funktionen er verfügt. Formuliere sie möglichst präzise – je klarer die Beschreibung, desto zuverlässiger ordnet die [Intent Engine](#intent-engine) passende Eingaben deiner Funktion zu.
+7. Schreibe in der Methode `execute` den Code, der beim Aufruf der Funktion ausgeführt wird.
+
+### OpenAI-Systemprompt anpassen
+
+Um die Instruktionen von Peppers LLM anzupassen, bearbeite die Datei `instructions.md`. Achte darauf, dass am Ende des Systemprompts der Abschnitt **Available Skills** stehen bleibt – dort werden Peppers Fähigkeiten dynamisch eingefügt. Entfernst du diesen Abschnitt, weiss Pepper nicht mehr, welche Funktionen ihm zur Verfügung stehen.
+
+Die `instructions.md`-Datei findest du im Projekt unter `app/src/main/res/raw/instructions.md`.
+
+### Anderes & Tipps
+
+- Verwende immer den `SpeechManager`, um Pepper etwas sagen zu lassen. So antwortet Pepper stets in der korrekten Sprache. Der `SpeechManager` nutzt dazu den `LanguageManager`, der die aktuelle Sprachkonfiguration enthält.
+- Verwende die Methode `systemSay`, wenn die Ausgabe auf Deutsch hartkodiert ist.
+- Halte dich an die bestehende Projektstruktur. Sie ist bereits gut getestet und erleichtert die zukünftige Weiterentwicklung.
+- Committe deinen OpenAI-API-Token **niemals** ins Repository. Nutze stattdessen lokale Konfiguration (z. B. `local.properties` oder Umgebungsvariablen).
