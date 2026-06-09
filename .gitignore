@@ -15,4 +15,5 @@
 local.properties
 app/src/main/res/raw/credentials.json
 tmp.md
-.env
+*.env
+app/src/main/assets/env

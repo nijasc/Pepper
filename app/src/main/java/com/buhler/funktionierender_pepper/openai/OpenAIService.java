@@ -118,7 +118,10 @@ public class OpenAIService {
     }
 
     public String getAuthToken() {
-        Dotenv dotenv = Dotenv.load();
+        Dotenv dotenv = Dotenv.configure()
+                .directory("/assets")
+                .filename("env")
+                .load();
 
         String tok = dotenv.get("OPENAI_API_TOKEN");
         Log.i("TOKENAUTH", tok);
