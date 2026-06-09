@@ -56,7 +56,8 @@ public class DocumentationAction extends Action {
         docMessage.put("role", "system");
         docMessage.put("content",
                 "Answer the user's question only from this Pepper documentation; "
-                        + "if it isn't covered, say so.\n\n" + documentation);
+                        + "if it isn't covered, say so. Keep the answer to at most 2-3 short "
+                        + "sentences and make it complete in itself.\n\n" + documentation);
 
         Map<String, Object> userMessage = new HashMap<>();
         userMessage.put("role", "user");
