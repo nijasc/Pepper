@@ -28,6 +28,10 @@
   - [Lautstärke](#lautstärke)
   - [Sprache](#sprache)
   - [Dokumentation](#dokumentation)
+  - [Folgen (FollowMe)](#folgen-followme)
+  - [Systeminformationen](#systeminformationen)
+  - [Siri und andere Assistenten](#siri-und-andere-assistenten)
+  - [Test (Entwicklung)](#test-entwicklung)
 - [Pepper für Entwickler](#pepper-für-entwickler)
   - [Einrichtung](#einrichtung)
     - [Systemspezifikationen](#systemspezifikationen)
@@ -240,6 +244,42 @@ Gibt dem Nutzer Informationen aus dieser Dokumentation wieder. Die Dokumentation
 ```text
 Beispiel (en): How does Pepper know which action to execute?
 Beispiel (de): Wie weiss Pepper, welche Funktion er ausführen muss?
+```
+
+### Folgen (FollowMe)
+
+Pepper folgt einer Person physisch, indem er ihr nachläuft. Erkennt er, dass er bereits folgt, weist er freundlich darauf hin. Der genaue Ablauf (Stehen, Drehen, Fahren) sowie die Möglichkeiten zum Beenden sind unter [FollowMe-Mechanik](#followme-mechanik) beschrieben.
+
+```text
+Beispiel (en): Follow me.
+Beispiel (de): Folge mir.
+```
+
+### Systeminformationen
+
+Pepper gibt auf Nachfrage seinen aktuellen Systemzustand wieder: die eingestellte Lautstärke, die aktive Sprache und die Länge der gespeicherten [Historie](#historie). Diese Funktion liest die Werte ausschliesslich aus und verändert nichts – zum Ändern dienen die Funktionen [Lautstärke](#lautstärke) und [Sprache](#sprache).
+
+```text
+Beispiel (en): Which language are you currently using?
+Beispiel (de): Wie laut bist du gerade eingestellt?
+```
+
+### Siri und andere Assistenten
+
+Wird Pepper auf andere Sprachassistenten wie Siri angesprochen, kontert er humorvoll und stellt klar, dass er Pepper ist.
+
+```text
+Beispiel (en): Are you Siri?
+Beispiel (de): Bist du Siri?
+```
+
+### Test (Entwicklung)
+
+Eine Aktion für Entwicklungs- und Demozwecke: Pepper dreht sich einmal um die eigene Achse. Sie wird nur ausgeführt, wenn ausdrücklich danach gefragt wird, und ist nicht für den regulären Einsatz gedacht.
+
+```text
+Beispiel (en): Run the test action.
+Beispiel (de): Führe die Testaktion aus.
 ```
 
 ---
