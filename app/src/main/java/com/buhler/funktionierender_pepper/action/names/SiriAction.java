@@ -12,6 +12,6 @@ public class SiriAction extends Action {
 
     @Override
     public String getDescription() {
-        return "";
+        return "Responds when the user mentions or asks about Siri or other voice assistants.";
     }
 }

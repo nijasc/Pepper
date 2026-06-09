@@ -46,6 +46,6 @@ public class SaxophoneAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Spielt das Saxophon";
+        return "Makes Pepper play the saxophone.";
     }
 }

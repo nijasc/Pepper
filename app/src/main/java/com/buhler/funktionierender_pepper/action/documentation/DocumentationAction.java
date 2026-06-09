@@ -161,9 +161,6 @@ public class DocumentationAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Provides developer & usage information about pepper. Has access to it's "
-                + "documentation. Use this only if explicitly asked about it, for example "
-                + "\"How does the pepper intent engine work?\" Do not choose it for things "
-                + "you can choose a different action for or things that are in the system prompt.";
+        return "Answers questions about Pepper itself from its developer documentation.";
     }
 }

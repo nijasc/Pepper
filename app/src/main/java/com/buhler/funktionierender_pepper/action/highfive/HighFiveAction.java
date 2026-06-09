@@ -33,6 +33,6 @@ public class HighFiveAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Spielt das Saxophon";
+        return "Gives the user a high five.";
     }
 }

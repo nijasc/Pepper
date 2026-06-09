@@ -42,6 +42,6 @@ public class ChangeLanguageAction extends Action {
 
     @Override
     public String getDescription() {
-        return null;
+        return "Switches Pepper's spoken language to the requested language.";
     }
 }

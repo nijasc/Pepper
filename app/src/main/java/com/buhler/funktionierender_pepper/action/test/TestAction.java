@@ -83,6 +83,6 @@ public class TestAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Test Aktion - Führe diese nur aus wenn explizit darum gebeten.";
+        return "Test action; only run when explicitly requested.";
     }
 }

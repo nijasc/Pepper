@@ -69,6 +69,6 @@ public class ChangeVolumeAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Ändert die Systemlautstärke.";
+        return "Sets, raises, lowers or mutes Pepper's speaker volume.";
     }
 }

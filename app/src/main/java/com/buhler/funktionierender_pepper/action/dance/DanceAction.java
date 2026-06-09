@@ -46,6 +46,6 @@ public class DanceAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Tanzt cool und spielt musik.";
+        return "Makes Pepper perform a dance routine with music.";
     }
 }

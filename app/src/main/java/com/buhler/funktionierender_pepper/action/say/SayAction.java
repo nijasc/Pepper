@@ -25,6 +25,6 @@ public class SayAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Antwortet auf die Fragen vom Benutzer.";
+        return "Default action: answers general questions and handles anything no other action covers.";
     }
 }

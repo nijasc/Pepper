@@ -18,9 +18,6 @@ public class FollowMeAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Makes Pepper physically follow the user by walking after them. "
-                + "Use when the user wants Pepper to come along or follow "
-                + "(e.g. 'follow me', 'komm mit', 'folge mir', 'lauf mir nach'). "
-                + "Do NOT use for stopping — that is a separate stop-following action.";
+        return "Makes Pepper physically walk after and follow the user.";
     }
 }

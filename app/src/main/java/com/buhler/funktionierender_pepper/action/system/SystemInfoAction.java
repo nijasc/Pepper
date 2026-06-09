@@ -62,17 +62,6 @@ public class SystemInfoAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Provides READ-ONLY information about Pepper's current system state. "
-                + "Use this action whenever the user wants to KNOW (not change) one of the following:\n"
-                + "- the current audio/speaker volume level "
-                + "(e.g. 'how loud are you', 'what's the current volume', 'wie laut bist du', "
-                + "'auf wie viel Prozent ist die Lautstärke', 'wie laut stehst du gerade')\n"
-                + "- the currently active language setting "
-                + "(e.g. 'which language are you using', 'welche Sprache ist eingestellt')\n"
-                + "- the length or size of the conversation history "
-                + "(e.g. 'how much do you remember', 'wie lang ist der Verlauf')\n"
-                + "This action only REPORTS current values and never modifies them. "
-                + "Do NOT use it to set, raise, lower or mute the volume or to switch the language — "
-                + "those are handled by separate actions.";
+        return "Reports Pepper's current volume, active language or history length without changing them.";
     }
 }
