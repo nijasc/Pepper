@@ -76,9 +76,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     @Override
     public void onRobotFocusGained(QiContext qiContext) {
-        if (said.isEmpty()) {
-            return;
-        }
+
         OpenAIService s = new OpenAIService(new ArrayList<>());
         s.setC(qiContext);
         s.getAuthToken(qiContext);
@@ -101,8 +99,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             if (executionHandler == null) {
                 executionHandler = new ActionHandler(languageManager, historyManager);
             }
-            executionHandler.handleInput(qiContext, said);
-            said = "";
+            if (!said.isEmpty()) {
+                executionHandler.handleInput(qiContext, said);
+                said = "";
+            }
         } catch (Exception e) {
             Log.e("Mainactivity", "OnFocuseGainedError: " + e.getMessage());
         }

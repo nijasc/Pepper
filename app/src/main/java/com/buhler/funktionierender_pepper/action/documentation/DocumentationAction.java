@@ -69,7 +69,7 @@ public class DocumentationAction extends Action {
 
         Map<String, Object> body = new HashMap<>();
         body.put("model", OpenAIService.DEFAULT_MODEL);
-        body.put("instructions", service.formDefaultSystemPrompt(context));
+          body.put("instructions", service.formDefaultSystemPrompt(context));
         body.put("input", conversation);
 
         try {
@@ -81,7 +81,7 @@ public class DocumentationAction extends Action {
         } catch (IOException | JSONException e) {
             e.printStackTrace();
             SpeechManager.getInstance().systemSay(context,
-                    "Bei der Analyse der Dokumentation ist ein Fehler aufgetreten.");
+                    "Bei der Analyse der Dokumentation ist ein Fehler aufgetreten. ");
         }
     }
 

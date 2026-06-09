@@ -30,7 +30,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 public class OpenAIService {
 
-    public static final String DEFAULT_MODEL = "gpt-4";
+    public static final String DEFAULT_MODEL = "gpt-5.4";
     private static final String URL = "https://api.openai.com/v1";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final EmotionReader emotionReader = new EmotionReader();

@@ -17,8 +17,8 @@ public class SayAction extends Action {
     @Override
     public void execute(QiContext context, String input) {
         getHistoryManager().addUser(input);
-        getHistoryManager().addAssistant(input, this);
         String answer = openAi.getResponse(getHistoryManager(), context);
+        getHistoryManager().addAssistant(answer, this);
 
         SpeechManager.getInstance().say(context, answer);
     }
