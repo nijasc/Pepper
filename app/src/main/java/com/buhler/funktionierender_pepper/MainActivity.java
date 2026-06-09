@@ -3,10 +3,12 @@ package com.buhler.funktionierender_pepper;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -116,7 +118,14 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     private void setupStopButton() {
         stopFollowButton = new Button(this);
-        stopFollowButton.setText("Stop");
+        stopFollowButton.setText("STOPP");
+        stopFollowButton.setAllCaps(true);
+        stopFollowButton.setTextColor(Color.WHITE);
+        stopFollowButton.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28);
+        stopFollowButton.setBackgroundColor(Color.parseColor("#D32F2F"));
+        int padH = dpToPx(48);
+        int padV = dpToPx(24);
+        stopFollowButton.setPadding(padH, padV, padH, padV);
         stopFollowButton.setVisibility(View.GONE);
         stopFollowButton.setOnClickListener(v -> FollowController.get().stop());
 
@@ -124,7 +133,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT);
         lp.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        lp.bottomMargin = dpToPx(64);
         addContentView(stopFollowButton, lp);
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
     }
 
     private void listenToSpeech() {

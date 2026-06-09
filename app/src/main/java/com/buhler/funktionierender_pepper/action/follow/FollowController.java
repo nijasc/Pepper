@@ -7,10 +7,13 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.GoToBuilder;
 import com.aldebaran.qi.sdk.builder.HolderBuilder;
 import com.aldebaran.qi.sdk.builder.ListenBuilder;
+import com.aldebaran.qi.sdk.builder.LookAtBuilder;
 import com.aldebaran.qi.sdk.builder.PhraseSetBuilder;
 import com.aldebaran.qi.sdk.builder.TransformBuilder;
 import com.aldebaran.qi.sdk.object.actuation.Frame;
 import com.aldebaran.qi.sdk.object.actuation.FreeFrame;
+import com.aldebaran.qi.sdk.object.actuation.LookAt;
+import com.aldebaran.qi.sdk.object.actuation.LookAtMovementPolicy;
 import com.aldebaran.qi.sdk.object.conversation.Listen;
 import com.aldebaran.qi.sdk.object.conversation.ListenResult;
 import com.aldebaran.qi.sdk.object.conversation.PhraseSet;
@@ -33,6 +36,12 @@ public final class FollowController {
     private static final double STAND_OFF_M = 0.6;
     private static final double DEAD_ZONE_M = 0.10;
     private static final double RETARGET_M = 0.30;
+    /**
+     * How far the followed person may have moved between two loop iterations and still be
+     * recognised as the same target. Keeps Pepper locked onto one person instead of jumping
+     * to whoever happens to be closest.
+     */
+    private static final double TARGET_LOCK_GATE_M = 0.75;
     private static final long LOOP_PAUSE_MS = 200;
     private static final int MAX_MISSES = 25;
 
@@ -107,13 +116,17 @@ public final class FollowController {
     private void runSession(QiContext context, int gen) {
         Holder holder = null;
         Future<Void> goToFuture = null;
+        Future<Void> lookAtFuture = null;
         Future<ListenResult> listenFuture = null;
         FreeFrame activeTarget = null;
+        boolean trackValid = false;
         int misses = 0;
 
         try {
             Frame robotFrame = context.getActuation().robotFrame();
 
+            // Hold BASIC_AWARENESS so Pepper's autonomous head movement does not fight our
+            // explicit LookAt, and BACKGROUND_MOVEMENT so it stays still between go-to moves.
             holder = HolderBuilder.with(context)
                     .withAutonomousAbilities(
                             AutonomousAbilitiesType.BASIC_AWARENESS,
@@ -123,10 +136,14 @@ public final class FollowController {
 
             listenFuture = startStopListener(context);
 
+            // A single frame we keep re-pointing at the followed person. The base drives towards
+            // it (GoTo) while the head keeps looking at it (LookAt, HEAD_ONLY) at the same time.
+            FreeFrame trackFrame = context.getMapping().makeFreeFrame();
+
             while (gen == generation && sessionRunning && wantFollow
                     && !Thread.currentThread().isInterrupted()) {
 
-                Human human = closestHuman(context, robotFrame);
+                Human human = selectHuman(context, robotFrame, trackValid ? trackFrame : null);
                 if (human == null) {
                     if (++misses >= MAX_MISSES) break;
                     Thread.sleep(LOOP_PAUSE_MS);
@@ -139,7 +156,15 @@ public final class FollowController {
                 double y = t.getTranslation().getY();
                 double distance = Math.hypot(x, y);
 
+                // Re-point the shared frame at the person and make sure the head is tracking it.
+                trackFrame.update(robotFrame, t, 0L);
+                trackValid = true;
+                if (lookAtFuture == null || lookAtFuture.isDone()) {
+                    lookAtFuture = startHeadTracking(context, trackFrame);
+                }
+
                 if (distance <= STAND_OFF_M + DEAD_ZONE_M) {
+                    // Close enough: stop driving but keep the head following the person.
                     requestCancel(goToFuture);
                     goToFuture = null;
                     activeTarget = null;
@@ -174,6 +199,7 @@ public final class FollowController {
             Log.w(TAG, "Follow-Session beendet: " + e.getMessage());
         } finally {
             requestCancel(goToFuture);
+            requestCancel(lookAtFuture);
             requestCancel(listenFuture);
             releaseQuietly(holder);
             if (gen == generation) {
@@ -181,6 +207,15 @@ public final class FollowController {
                 setWantFollow(false);
             }
         }
+    }
+
+    private Future<Void> startHeadTracking(QiContext context, FreeFrame target) {
+        LookAt lookAt = LookAtBuilder.with(context)
+                .withFrame(target.frame())
+                .build();
+        // Only the head should track the person; the base orientation is handled by GoTo.
+        lookAt.setPolicy(LookAtMovementPolicy.HEAD_ONLY);
+        return lookAt.async().run();
     }
 
     private Future<ListenResult> startStopListener(QiContext context) {
@@ -234,21 +269,47 @@ public final class FollowController {
         }
     }
 
-    private Human closestHuman(QiContext context, Frame robotFrame) {
+    /**
+     * Picks the human to follow. When we already track someone ({@code lastTarget} set), the
+     * person closest to that last position wins as long as they stayed within
+     * {@link #TARGET_LOCK_GATE_M} — this keeps Pepper locked onto one person. Otherwise (or when
+     * the locked person disappeared) it falls back to the human closest to the robot.
+     */
+    private Human selectHuman(QiContext context, Frame robotFrame, FreeFrame lastTarget) {
         List<Human> humans = context.getHumanAwareness().getHumansAround();
-        Human closest = null;
-        double best = Double.MAX_VALUE;
+
+        Human closestToRobot = null;
+        double bestRobot = Double.MAX_VALUE;
+        Human closestToLast = null;
+        double bestLast = Double.MAX_VALUE;
+
         for (Human h : humans) {
             try {
-                Transform t = h.getHeadFrame().computeTransform(robotFrame).getTransform();
-                double d = Math.hypot(t.getTranslation().getX(), t.getTranslation().getY());
-                if (d < best) {
-                    best = d;
-                    closest = h;
+                Frame head = h.getHeadFrame();
+
+                Transform tr = head.computeTransform(robotFrame).getTransform();
+                double dRobot = Math.hypot(tr.getTranslation().getX(), tr.getTranslation().getY());
+                if (dRobot < bestRobot) {
+                    bestRobot = dRobot;
+                    closestToRobot = h;
+                }
+
+                if (lastTarget != null) {
+                    Transform tl = head.computeTransform(lastTarget.frame()).getTransform();
+                    double dLast = Math.hypot(tl.getTranslation().getX(),
+                            tl.getTranslation().getY());
+                    if (dLast < bestLast) {
+                        bestLast = dLast;
+                        closestToLast = h;
+                    }
                 }
             } catch (Exception ignored) {
             }
         }
-        return closest;
+
+        if (closestToLast != null && bestLast <= TARGET_LOCK_GATE_M) {
+            return closestToLast;
+        }
+        return closestToRobot;
     }
 }
