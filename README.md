@@ -5,6 +5,9 @@
 > [!CAUTION]
 > Pepper hat selbst Zugriff auf diese Dokumentation. Veröffentliche hier keine Informationen, zu denen potenzielle Benutzer von Pepper keinen Zugriff haben sollten. Alles, was in diesem Dokument steht, kann Pepper auf Nachfrage wiedergeben.
 
+> [!NOTE]
+> Hinweis für Pepper: Diagramme in dieser Dokumentation (z. B. Mermaid-Diagramme) sind ausschliesslich für Entwickler gedacht. Lies sie niemals laut vor und gib ihren Code nicht wieder. Nutze ihren Inhalt nur, wenn du explizit nach der Architektur oder dem internen Aufbau gefragt wirst, und beschreibe ihn dann in eigenen Worten.
+
 ## Inhalt
 
 - [Einführung](#einführung)
@@ -12,7 +15,9 @@
   - [Wie bediene ich Pepper?](#wie-bediene-ich-pepper)
 - [Funktionsweise](#funktionsweise)
   - [Intent Engine](#intent-engine)
+  - [Ablauf einer Anfrage](#ablauf-einer-anfrage)
   - [Historie](#historie)
+  - [FollowMe-Mechanik](#followme-mechanik)
 - [Funktionen (Actions)](#funktionen-actions)
   - [Sprechen (Standard)](#sprechen-standard)
   - [Tanzen](#tanzen)
@@ -25,6 +30,7 @@
   - [Einrichtung](#einrichtung)
     - [Systemspezifikationen](#systemspezifikationen)
     - [Anforderungen](#anforderungen)
+    - [Env-Setup](#env-setup)
     - [Der erste Start](#der-erste-start)
   - [Eine Funktion erstellen](#eine-funktion-erstellen)
   - [OpenAI-Systemprompt anpassen](#openai-systemprompt-anpassen)
@@ -60,6 +66,40 @@ Im Hintergrund wird OpenAI bei jeder Anfrage zusammen mit der Liste aller verfü
 
 Dieses Vorgehen stellt sicher, dass Pepper dynamisch und zuverlässig die richtige Funktion wählt, ohne dass starre Schlüsselwörter oder fest verdrahtete Regeln nötig sind. Neue Funktionen werden dadurch automatisch berücksichtigt, sobald sie mit einer Beschreibung registriert sind (siehe [Eine Funktion erstellen](#eine-funktion-erstellen)).
 
+```mermaid
+flowchart TD
+    A[Benutzereingabe] --> B[IntentEngine]
+    B --> C{"OpenAI vergleicht die Eingabe<br/>mit den Funktionsbeschreibungen"}
+    C -->|Passende Funktion| D[Spezialisierte Action]
+    C -->|Keine Übereinstimmung| E["SayAction (Standard)"]
+    D --> F[execute]
+    E --> F
+    F --> G[Pepper reagiert]
+```
+
+### Ablauf einer Anfrage
+
+Das folgende Sequenzdiagramm zeigt, wie eine gesprochene Eingabe von der Spracherkennung bis zur ausgeführten Aktion durch die einzelnen Komponenten wandert.
+
+```mermaid
+sequenceDiagram
+    participant U as Benutzer
+    participant M as MainActivity
+    participant AH as ActionHandler
+    participant IE as IntentEngine
+    participant AI as OpenAIService
+    participant AC as Action
+    U->>M: Spricht Pepper an
+    M->>M: Spracherkennung (Google)
+    M->>AH: handleInput(text)
+    AH->>IE: getIntent(text)
+    IE->>AI: Anfrage + Liste der Fähigkeiten
+    AI-->>IE: Gewählte Funktion
+    IE-->>AH: Action
+    AH->>AC: execute(context, text)
+    AC-->>U: Pepper reagiert
+```
+
 ### Historie
 
 Damit sich Pepper innerhalb eines Gesprächs an den bisherigen Verlauf erinnern kann, speichert er die letzten **10 Einträge** der Unterhaltung. Ein Eintrag ist entweder eine Eingabe des Benutzers oder eine Antwort von Pepper – bei einem gewöhnlichen Wortwechsel (Frage und Antwort) kommen also zwei Einträge hinzu, sodass die Historie in der Regel rund fünf Gesprächsrunden abdeckt.
@@ -69,6 +109,33 @@ Wird ein elfter Eintrag hinzugefügt, wird automatisch der älteste entfernt. Di
 Bei jeder Anfrage wird die gesamte Historie an OpenAI mitgeschickt. Dadurch kann Pepper auf bereits Gesagtes Bezug nehmen – etwa den Namen einer Person, eine zuvor gestellte Frage oder den allgemeinen Kontext der Unterhaltung. Ohne diese Historie würde Pepper jede Eingabe isoliert betrachten und sich an nichts erinnern.
 
 Die Historie wird ausschliesslich im Arbeitsspeicher gehalten und nicht dauerhaft gespeichert. Wird die Applikation neu gestartet, beginnt Pepper wieder mit einer leeren Historie. Das bedeutet auch: Inhalte aus früheren Sitzungen lassen sich nach einem Neustart nicht mehr abrufen.
+
+### FollowMe-Mechanik
+
+Mit dem Befehl «folge mir» läuft Pepper einer Person physisch hinterher. Eine Hintergrundschleife (`FollowController`) wählt fortlaufend die Zielperson aus und entscheidet je nach deren Position, ob Pepper **stehen bleibt**, sich **dreht** oder **vorwärtsfährt**:
+
+- **Stehen:** Die Person ist nah genug – Pepper hält den Mindestabstand und wartet.
+- **Drehen:** Die Person steht seitlich versetzt – Pepper dreht sich zu ihr.
+- **Fahren:** Die Person ist zu weit entfernt – Pepper fährt nach.
+
+Beendet wird das Folgen über den **Stopp-Button** auf dem Display, per Sprachbefehl («stopp», «bleib stehen» …) oder automatisch, wenn die Person dauerhaft nicht mehr erkannt wird.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Inaktiv
+    Inaktiv --> Folgt : «folge mir» erkannt
+    Folgt --> Inaktiv : Stopp-Button gedrückt
+    Folgt --> Inaktiv : «stopp» gesagt
+    Folgt --> Inaktiv : Person dauerhaft verloren
+
+    state Folgt {
+        [*] --> Stehen
+        Stehen --> Drehen : Person seitlich versetzt
+        Stehen --> Fahren : Person zu weit entfernt
+        Drehen --> Stehen : ausgerichtet
+        Fahren --> Stehen : Mindestabstand erreicht
+    }
+```
 
 ---
 
@@ -184,6 +251,7 @@ Beispiel (de): Wie weiss Pepper, welche Funktion er ausführen muss?
 | `com.aldebaran:qisdk`                         | 1.7.5    |
 | `qisdk-design`                                | 1.7.5    |
 | `com.fasterxml.jackson.core:jackson-databind` | 2.12.7.2 |
+| `io.github.cdimascio:java-dotenv`              | 5.2.2    |
 
 #### Anforderungen
 
@@ -195,13 +263,41 @@ Beispiel (de): Wie weiss Pepper, welche Funktion er ausführen muss?
 - OpenAI-API-Token
 - Pepper-SDK-Plugin
 
+#### Env-Setup
+
+Der OpenAI-API-Token wird **nicht** im Quellcode hinterlegt, sondern aus einer lokalen Konfigurationsdatei gelesen. Beim Start liest Pepper die Datei `env` aus dem Assets-Ordner (`app/src/main/assets/env`) und entnimmt ihr den Token. Diese Datei ist über `.gitignore` vom Repository ausgeschlossen und gelangt damit nie in die Versionskontrolle.
+
+**Aufbau der Datei:**
+
+- Pro Zeile ein Eintrag im Format `SCHLÜSSEL=Wert`.
+- Leerzeilen sowie Zeilen, die mit `#` beginnen, werden als Kommentare ignoriert.
+- Werte dürfen optional in einfache (`'`) oder doppelte (`"`) Anführungszeichen gesetzt werden.
+
+**Unterstützte Schlüssel:**
+
+| Schlüssel          | Pflicht | Beschreibung                                  |
+| ------------------ | ------- | --------------------------------------------- |
+| `OPENAI_API_TOKEN` | Ja      | Dein OpenAI-API-Token für sämtliche Anfragen. |
+
+**So richtest du die Datei ein:**
+
+1. Wechsle in den Ordner `app/src/main/assets/`.
+2. Kopiere die Vorlage `exampleenv` und benenne die Kopie in `env` um.
+3. Ersetze in der neuen Datei `env` den Platzhalter `<YOUR_TOKEN>` durch deinen tatsächlichen OpenAI-API-Token.
+
+Die Vorlagedatei `exampleenv` ist im Repository eingecheckt und dient als Muster:
+
+```env
+OPENAI_API_TOKEN=<YOUR_TOKEN>
+```
+
+> **Wichtig:** Committe die Datei `env` niemals ins Repository – sie enthält dein persönliches Geheimnis. Im Repository verbleibt ausschliesslich die Vorlage `exampleenv`.
+
 #### Der erste Start
 
 1. Öffne das Projekt in Android Studio und warte, bis alles geladen und indexiert ist. Dieser Schritt kann beim ersten Öffnen einige Minuten dauern.
-2. **OpenAI-Token konfigurieren:**
-   1. Suche die Klasse `OpenAIService` (`Ctrl + Shift + N`) und öffne sie.
-   2. Trage deinen OpenAI-API-Token in der Variable `AUTH_TOKEN` ein.
-   3. *Optional:* Wähle ein OpenAI-Modell über die `MODEL`-Variable aus.
+2. **OpenAI-Token konfigurieren:** Lege die Datei `app/src/main/assets/env` an und trage darin deinen OpenAI-API-Token ein. Wie das genau funktioniert, ist im Abschnitt [Env-Setup](#env-setup) beschrieben.
+   - *Optional:* Wähle ein OpenAI-Modell über die `DEFAULT_MODEL`-Variable in der Klasse `OpenAIService` aus.
 3. **Verbindung zu Pepper aufbauen:**
    1. Klicke in der Menüleiste von Android Studio auf **Tools** und wähle im Dropdown **Pepper SDK**.
    2. Klicke auf **Connect** und gib die IP-Adresse deines Pepper-Roboters ein.
