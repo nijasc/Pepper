@@ -1,0 +1,6 @@
+topic: ~buhler()
+# Defining extra concepts out of words or group of words
+concept:(tanz) [Tanz tanze tanz Tanze "Kannst du Tanzen?" "Tanz für mich."]
+
+# Replying to speech
+u:(~tanz) ^execute(myExecutor, tanz)

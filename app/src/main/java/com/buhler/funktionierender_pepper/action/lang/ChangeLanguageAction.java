@@ -1,0 +1,47 @@
+package com.buhler.funktionierender_pepper.action.lang;
+
+import com.aldebaran.qi.sdk.QiContext;
+import com.buhler.funktionierender_pepper.action.Action;
+import com.buhler.funktionierender_pepper.lang.LanguageManager;
+import com.buhler.funktionierender_pepper.lang.SpeechManager;
+import com.buhler.funktionierender_pepper.lang.SupportedLanguage;
+
+public class ChangeLanguageAction extends Action {
+    private final LanguageManager languageManager;
+
+    public ChangeLanguageAction(LanguageManager languageManager) {
+        this.languageManager = languageManager;
+    }
+
+    @Override
+    public void execute(QiContext context, String input) {
+        SupportedLanguage lang = parseLang(input);
+
+        if (lang == null) {
+            return;
+        }
+
+        languageManager.applyLanguage(lang);
+        SpeechManager.getInstance().systemSay(context, "Die sprache wurde auf " + lang.getTriggerNames()[0] + " geändert.");
+    }
+
+    private SupportedLanguage parseLang(String input) {
+        String[] langSplit = input.split(" ");
+
+        for (SupportedLanguage lang : SupportedLanguage.values()) {
+            for (String trigger : lang.getTriggerNames()) {
+                for (String langStr : langSplit) {
+                    if (trigger.equalsIgnoreCase(langStr)) {
+                        return lang;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String getDescription() {
+        return null;
+    }
+}
