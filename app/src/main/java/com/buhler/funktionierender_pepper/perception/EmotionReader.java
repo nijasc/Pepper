@@ -20,14 +20,17 @@ public class EmotionReader {
         BasicEmotion mood = readMood(context);
 
         if (!mood.isMentionable()) {
+            Log.i(TAG, "Stimmung '" + mood + "' wird nicht erwaehnt (neutral oder unbekannt).");
             mentionedLastTime = false;
             return null;
         }
         if (mentionedLastTime) {
+            Log.i(TAG, "Stimmung '" + mood + "' erkannt, aber Cooldown aktiv - diesmal kein Hinweis.");
             mentionedLastTime = false;
             return null;
         }
         mentionedLastTime = true;
+        Log.i(TAG, "Stimmung '" + mood + "' wird als Kontext an den Systemprompt uebergeben.");
         return mood.getPromptHint();
     }
 
@@ -35,17 +38,25 @@ public class EmotionReader {
         try {
             List<Human> humans = context.getHumanAwareness().getHumansAround();
             if (humans == null || humans.isEmpty()) {
+                Log.i(TAG, "Keine Person wahrgenommen - keine Emotion erkannt.");
                 return BasicEmotion.UNKNOWN;
             }
 
+            Log.i(TAG, "Personen wahrgenommen: " + humans.size() + " - werte die naechste aus.");
             Emotion emotion = humans.get(0).getEmotion();
             if (emotion == null) {
+                Log.i(TAG, "Person erkannt, aber keine Emotionsdaten verfuegbar.");
                 return BasicEmotion.UNKNOWN;
             }
 
-            return map(emotion.getPleasure(), emotion.getExcitement());
+            PleasureState pleasure = emotion.getPleasure();
+            ExcitementState excitement = emotion.getExcitement();
+            BasicEmotion mood = map(pleasure, excitement);
+            Log.i(TAG, "Rohwerte - Pleasure: " + pleasure + ", Excitement: " + excitement
+                    + " -> Grundstimmung: " + mood);
+            return mood;
         } catch (Exception e) {
-            Log.w(TAG, "Emotion konnte nicht gelesen werden: " + e.getMessage());
+            Log.w(TAG, "Emotion konnte nicht gelesen werden: " + e.getMessage(), e);
             return BasicEmotion.UNKNOWN;
         }
     }

@@ -410,12 +410,13 @@ Die folgende Übersicht zeigt die wichtigsten Klassen und ihre Verantwortung –
 | `ActionHandler` | Registriert alle Actions (`initActions`) und leitet jede Benutzereingabe über die `IntentEngine` an die passende Action weiter. |
 | `IntentEngine` | Klassifiziert die Eingabe per OpenAI (`gpt-4o-mini`, strukturierte JSON-Antwort) und gibt die passende `Action` zurück (siehe [Intent Engine](#intent-engine)). |
 | `Action` (abstrakt) | Basisklasse jeder Funktion. Gibt `execute()` und `getDescription()` vor und hält den `HistoryManager`. |
-| `OpenAIService` | Kapselt sämtliche OpenAI-HTTP-Aufrufe, baut den Systemprompt inklusive Fähigkeitsliste und liest den API-Token aus `assets/env`. |
+| `OpenAIService` | Kapselt sämtliche OpenAI-HTTP-Aufrufe, baut den Systemprompt inklusive Fähigkeitsliste sowie – falls erkannt – dem aktuellen Stimmungskontext und liest den API-Token aus `assets/env`. |
 | `SpeechManager` (Singleton) | Lässt Pepper sprechen: `say()` in der aktiven Sprache, `systemSay()` hartkodiert auf Deutsch. |
 | `LanguageManager` | Hält die aktuell gewählte Sprache, meldet Wechsel an Listener und übergibt sie an die Spracherkennung. |
 | `HistoryManager` | Verwaltet das gleitende Fenster der letzten 10 Gesprächseinträge (siehe [Historie](#historie)). |
 | `FollowController` (Singleton) | Hintergrundschleife der FollowMe-Mechanik (siehe [FollowMe-Mechanik](#followme-mechanik)). |
 | `MemoryGameController` / `MemoryGameView` | Steuerung und Tablet-Darstellung des [Memory-Minispiels](#memory-minispiel). |
+| `EmotionReader` / `BasicEmotion` | Liest über die QiSDK-Wahrnehmung die Stimmung der Person, mappt `PleasureState` × `ExcitementState` auf eine Grundstimmung und speist sie als Kontext in den Systemprompt (siehe [Emotionswahrnehmung](#emotionswahrnehmung)). |
 
 ### Ressourcen verwalten
 
@@ -485,6 +486,7 @@ Kurze Erklärung der wichtigsten Begriffe – vor allem der Pepper- bzw. QiSDK-s
 | `Say` / `SayBuilder` / `Locale` | QiSDK-Bausteine für die gesprochene Ausgabe inklusive Sprache und Region. |
 | Systemprompt (`instructions.md`) | Grundinstruktion für Peppers LLM, an die die Liste der Fähigkeiten angehängt wird (siehe [OpenAI-Systemprompt anpassen](#openai-systemprompt-anpassen)). |
 | Historie | Gleitendes Fenster der letzten 10 Gesprächseinträge (siehe [Historie](#historie)). |
+| Emotion / `PleasureState` / `ExcitementState` | QiSDK-Wahrnehmungswerte einer Person. Pepper leitet daraus eine Grundstimmung ab und greift sie ab und zu auf (siehe [Emotionswahrnehmung](#emotionswahrnehmung)). |
 | Asset / `res/raw` | Die zwei Wege, statische Dateien einzubinden (siehe [Ressourcen verwalten](#ressourcen-verwalten)). |
 
 ### Anderes & Tipps
