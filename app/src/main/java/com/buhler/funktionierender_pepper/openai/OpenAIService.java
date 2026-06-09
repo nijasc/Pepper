@@ -11,6 +11,7 @@ import com.aldebaran.qi.sdk.util.IOUtils;
 import com.buhler.funktionierender_pepper.R;
 import com.buhler.funktionierender_pepper.action.Action;
 import com.buhler.funktionierender_pepper.openai.history.HistoryManager;
+import com.buhler.funktionierender_pepper.perception.EmotionReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -32,6 +33,7 @@ public class OpenAIService {
     public static final String DEFAULT_MODEL = "gpt-4";
     private static final String URL = "https://api.openai.com/v1";
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final EmotionReader emotionReader = new EmotionReader();
     private final List<Action> actions;
     private static String cachedToken;
     private Context c;
@@ -73,11 +75,20 @@ public class OpenAIService {
 
     public String formDefaultSystemPrompt(QiContext context) {
         String instructions = IOUtils.fromRaw(context, R.raw.instructions);
-        StringBuilder skills = new StringBuilder();
+        StringBuilder prompt = new StringBuilder(instructions);
         for (Action action : actions) {
-            skills.append("- ").append(action.getDescription()).append("\n");
+            prompt.append("- ").append(action.getDescription()).append("\n");
         }
-        return instructions + skills;
+
+        String moodHint = emotionReader.moodHintForPrompt(context);
+        if (moodHint != null) {
+            prompt.append("\n## Visitor Emotion\n")
+                    .append("The person in front of you right now ").append(moodHint).append(". ")
+                    .append("You may occasionally and subtly acknowledge this if it fits the ")
+                    .append("conversation, but never mention it in every reply and never force it.\n");
+        }
+
+        return prompt.toString();
     }
 
     public String sendOpenAiRequest(String path, @Nullable Map<String, Object> body) throws IOException {
