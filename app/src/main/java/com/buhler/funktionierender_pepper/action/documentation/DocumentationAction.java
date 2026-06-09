@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,10 +63,14 @@ public class DocumentationAction extends Action {
         userMessage.put("role", "user");
         userMessage.put("content", input);
 
+        List<Object> conversation = new ArrayList<>(getHistoryManager().toInput());
+        conversation.add(docMessage);
+        conversation.add(userMessage);
+
         Map<String, Object> body = new HashMap<>();
         body.put("model", OpenAIService.DEFAULT_MODEL);
         body.put("instructions", service.formDefaultSystemPrompt(context));
-        body.put("input", Arrays.asList(docMessage, userMessage));
+        body.put("input", conversation);
 
         try {
             String response = service.sendOpenAiRequest("/responses", body);
