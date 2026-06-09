@@ -33,7 +33,7 @@ public class OpenAIService {
     private static final String URL = "https://api.openai.com/v1";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final List<Action> actions;
-    private String cachedToken;
+    private static String cachedToken;
     private Context c;
 
     public OpenAIService(List<Action> actions) {

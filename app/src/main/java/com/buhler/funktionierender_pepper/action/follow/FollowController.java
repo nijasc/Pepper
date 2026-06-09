@@ -36,11 +36,6 @@ public final class FollowController {
     private static final double STAND_OFF_M = 0.6;
     private static final double DEAD_ZONE_M = 0.10;
     private static final double RETARGET_M = 0.30;
-    /**
-     * How far the followed person may have moved between two loop iterations and still be
-     * recognised as the same target. Keeps Pepper locked onto one person instead of jumping
-     * to whoever happens to be closest.
-     */
     private static final double TARGET_LOCK_GATE_M = 0.75;
     private static final long LOOP_PAUSE_MS = 200;
     private static final int MAX_MISSES = 25;
@@ -125,8 +120,6 @@ public final class FollowController {
         try {
             Frame robotFrame = context.getActuation().robotFrame();
 
-            // Hold BASIC_AWARENESS so Pepper's autonomous head movement does not fight our
-            // explicit LookAt, and BACKGROUND_MOVEMENT so it stays still between go-to moves.
             holder = HolderBuilder.with(context)
                     .withAutonomousAbilities(
                             AutonomousAbilitiesType.BASIC_AWARENESS,
@@ -136,8 +129,6 @@ public final class FollowController {
 
             listenFuture = startStopListener(context);
 
-            // A single frame we keep re-pointing at the followed person. The base drives towards
-            // it (GoTo) while the head keeps looking at it (LookAt, HEAD_ONLY) at the same time.
             FreeFrame trackFrame = context.getMapping().makeFreeFrame();
 
             while (gen == generation && sessionRunning && wantFollow
@@ -156,7 +147,6 @@ public final class FollowController {
                 double y = t.getTranslation().getY();
                 double distance = Math.hypot(x, y);
 
-                // Re-point the shared frame at the person and make sure the head is tracking it.
                 trackFrame.update(robotFrame, t, 0L);
                 trackValid = true;
                 if (lookAtFuture == null || lookAtFuture.isDone()) {
@@ -164,7 +154,6 @@ public final class FollowController {
                 }
 
                 if (distance <= STAND_OFF_M + DEAD_ZONE_M) {
-                    // Close enough: stop driving but keep the head following the person.
                     requestCancel(goToFuture);
                     goToFuture = null;
                     activeTarget = null;
@@ -213,7 +202,6 @@ public final class FollowController {
         LookAt lookAt = LookAtBuilder.with(context)
                 .withFrame(target.frame())
                 .build();
-        // Only the head should track the person; the base orientation is handled by GoTo.
         lookAt.setPolicy(LookAtMovementPolicy.HEAD_ONLY);
         return lookAt.async().run();
     }
@@ -269,12 +257,6 @@ public final class FollowController {
         }
     }
 
-    /**
-     * Picks the human to follow. When we already track someone ({@code lastTarget} set), the
-     * person closest to that last position wins as long as they stayed within
-     * {@link #TARGET_LOCK_GATE_M} — this keeps Pepper locked onto one person. Otherwise (or when
-     * the locked person disappeared) it falls back to the human closest to the robot.
-     */
     private Human selectHuman(QiContext context, Frame robotFrame, FreeFrame lastTarget) {
         List<Human> humans = context.getHumanAwareness().getHumansAround();
 
