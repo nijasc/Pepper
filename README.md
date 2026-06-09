@@ -39,8 +39,11 @@
     - [Anforderungen](#anforderungen)
     - [Env-Setup](#env-setup)
     - [Der erste Start](#der-erste-start)
+  - [Kernkomponenten](#kernkomponenten)
+  - [Ressourcen verwalten](#ressourcen-verwalten)
   - [Eine Funktion erstellen](#eine-funktion-erstellen)
   - [OpenAI-Systemprompt anpassen](#openai-systemprompt-anpassen)
+  - [Glossar](#glossar)
   - [Anderes & Tipps](#anderes--tipps)
 
 ---
@@ -385,6 +388,57 @@ OPENAI_API_TOKEN=<YOUR_TOKEN>
 
 Wurden alle Schritte korrekt ausgeführt, startet die App nun auf dem Pepper-Roboter und ein Google-Popup erscheint. Teste anschliessend, ob alle Funktionen wie erwartet arbeiten – am besten, indem du nacheinander je einen Befehl pro Funktion ausprobierst.
 
+### Kernkomponenten
+
+Die folgende Übersicht zeigt die wichtigsten Klassen und ihre Verantwortung – als Landkarte für den Einstieg. Der Quellcode liegt unter `app/src/main/java/com/buhler/funktionierender_pepper/`.
+
+| Klasse | Verantwortung |
+| ------ | ------------- |
+| `MainActivity` | Einstiegspunkt der App (erbt von `RobotActivity`). Registriert das QiSDK, verwaltet den Roboter-Lifecycle (`onRobotFocusGained` …), startet die Google-Spracherkennung und verdrahtet die Oberfläche (Sprachlabel, Stopp-Button, Memory-Spielfeld). |
+| `ActionHandler` | Registriert alle Actions (`initActions`) und leitet jede Benutzereingabe über die `IntentEngine` an die passende Action weiter. |
+| `IntentEngine` | Klassifiziert die Eingabe per OpenAI (`gpt-4o-mini`, strukturierte JSON-Antwort) und gibt die passende `Action` zurück (siehe [Intent Engine](#intent-engine)). |
+| `Action` (abstrakt) | Basisklasse jeder Funktion. Gibt `execute()` und `getDescription()` vor und hält den `HistoryManager`. |
+| `OpenAIService` | Kapselt sämtliche OpenAI-HTTP-Aufrufe, baut den Systemprompt inklusive Fähigkeitsliste und liest den API-Token aus `assets/env`. |
+| `SpeechManager` (Singleton) | Lässt Pepper sprechen: `say()` in der aktiven Sprache, `systemSay()` hartkodiert auf Deutsch. |
+| `LanguageManager` | Hält die aktuell gewählte Sprache, meldet Wechsel an Listener und übergibt sie an die Spracherkennung. |
+| `HistoryManager` | Verwaltet das gleitende Fenster der letzten 10 Gesprächseinträge (siehe [Historie](#historie)). |
+| `FollowController` (Singleton) | Hintergrundschleife der FollowMe-Mechanik (siehe [FollowMe-Mechanik](#followme-mechanik)). |
+| `MemoryGameController` / `MemoryGameView` | Steuerung und Tablet-Darstellung des [Memory-Minispiels](#memory-minispiel). |
+
+### Ressourcen verwalten
+
+Statische Dateien (Sounds, Animationen, Texte, Zertifikate) liegen an zwei Orten: in `res/raw/` und in `assets/`. Der Unterschied bestimmt, wie sie im Code eingebunden werden.
+
+**`res/raw/` – typsicher über `R.raw` referenziert**
+
+Android erzeugt für jede Datei in `res/raw/` automatisch eine Konstante `R.raw.<dateiname>` (ohne Endung). Der Zugriff ist damit zur Compile-Zeit typsicher. Hier liegen:
+
+| Typ | Beispiele | Verwendung im Code |
+| --- | --------- | ------------------ |
+| Audio (`.mp3`) | `wyoming`, `summer`, `saxophone_song` | `MediaPlayer.create(context, R.raw.wyoming).start()` |
+| Animationen (`.qianim`) | `wyoming_dance`, `pepper_highfive`, `tanz_001` | `AnimationBuilder.with(context).withResources(R.raw.pepper_highfive)` → `AnimateBuilder` → `animate.async().run()` |
+| Text / Markdown | `instructions` (Systemprompt) | `IOUtils.fromRaw(context, R.raw.instructions)` |
+| Zertifikat (`.pem`) | `gh_root` | `getResources().openRawResource(R.raw.gh_root)` |
+
+Zu beachten:
+
+- Dateinamen in `res/raw/` müssen kleingeschrieben sein, dürfen nur Buchstaben, Ziffern und `_` enthalten und keine Unterordner bilden.
+- Die Endung entfällt in der Konstante: aus `wyoming.mp3` wird `R.raw.wyoming`.
+
+**`assets/` – über einen Pfad zur Laufzeit geladen**
+
+Dateien in `assets/` behalten Name, Endung und Ordnerstruktur und werden zur Laufzeit über einen String-Pfad geöffnet:
+
+```java
+context.getAssets().open("env");
+```
+
+Hier liegen die Token-Datei `env` (per [`.gitignore`](#env-setup) ausgeschlossen), deren Vorlage `exampleenv` sowie `robot/robotsdk.xml`.
+
+**Faustregel:** Nutze `res/raw/` für alles, was typsicher per `R.raw` eingebunden wird (Sounds, Animationen, statische Texte). Nutze `assets/` für Dateien, die zur Laufzeit über einen Pfad gelesen werden und Endung oder Unterordner behalten sollen (z. B. Konfiguration).
+
+**Layout & UI:** Oberflächen-Ressourcen liegen unter `res/layout/` (`activity_main.xml`) und werden über `R.layout.activity_main` geladen; einzelne Views erreichst du typsicher über `findViewById(R.id.…)`.
+
 ### Eine Funktion erstellen
 
 Das System ist so aufgebaut, dass sich neue Funktionen einfach ergänzen lassen. Um eine neue Funktion zu erstellen, gehe wie folgt vor:
@@ -402,6 +456,24 @@ Das System ist so aufgebaut, dass sich neue Funktionen einfach ergänzen lassen.
 Um die Instruktionen von Peppers LLM anzupassen, bearbeite die Datei `instructions.md`. Achte darauf, dass am Ende des Systemprompts der Abschnitt **Available Skills** stehen bleibt – dort werden Peppers Fähigkeiten dynamisch eingefügt. Entfernst du diesen Abschnitt, weiss Pepper nicht mehr, welche Funktionen ihm zur Verfügung stehen.
 
 Die `instructions.md`-Datei findest du im Projekt unter `app/src/main/res/raw/instructions.md`.
+
+### Glossar
+
+Kurze Erklärung der wichtigsten Begriffe – vor allem der Pepper- bzw. QiSDK-spezifischen.
+
+| Begriff | Bedeutung |
+| ------- | --------- |
+| QiSDK | Das SDK von Aldebaran / SoftBank Robotics, mit dem Pepper programmiert wird (Sprechen, Animationen, Bewegung). |
+| `QiContext` | Laufzeit-Handle des Roboters. Nahezu jede Roboteraktion (`Say`, `Animate` …) wird damit gebaut. Steht ab `onRobotFocusGained` zur Verfügung. |
+| `RobotActivity` | Basis-Activity des QiSDK, von der `MainActivity` erbt. |
+| Robot Focus | Zustand, in dem die App die Kontrolle über den Roboter hat. Die Callbacks `onRobotFocusGained` / `…Lost` / `…Refused` signalisieren Wechsel. |
+| Action | Eine Fähigkeit von Pepper (z. B. Tanzen). Erbt von der abstrakten Klasse `Action`. |
+| Intent | Die von der [Intent Engine](#intent-engine) ermittelte Absicht hinter einer Eingabe; wird auf genau eine `Action` abgebildet. |
+| Animation / `.qianim` | Bewegungsdatei für Pepper. Wird über `AnimationBuilder` / `AnimateBuilder` abgespielt. |
+| `Say` / `SayBuilder` / `Locale` | QiSDK-Bausteine für die gesprochene Ausgabe inklusive Sprache und Region. |
+| Systemprompt (`instructions.md`) | Grundinstruktion für Peppers LLM, an die die Liste der Fähigkeiten angehängt wird (siehe [OpenAI-Systemprompt anpassen](#openai-systemprompt-anpassen)). |
+| Historie | Gleitendes Fenster der letzten 10 Gesprächseinträge (siehe [Historie](#historie)). |
+| Asset / `res/raw` | Die zwei Wege, statische Dateien einzubinden (siehe [Ressourcen verwalten](#ressourcen-verwalten)). |
 
 ### Anderes & Tipps
 
