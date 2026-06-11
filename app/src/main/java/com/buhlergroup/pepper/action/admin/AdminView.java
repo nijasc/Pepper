@@ -32,6 +32,9 @@ import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
+import com.buhlergroup.pepper.action.selfie.NetworkUtils;
+import com.buhlergroup.pepper.action.selfie.QrGenerator;
+import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
@@ -92,6 +95,7 @@ public class AdminView extends FrameLayout {
     private SelfieAdapter selfieAdapter;
 
     private ImageView detailImage;
+    private ImageView detailQr;
     private TextView detailNumber;
     private TextView detailDate;
     private Button detailFavorite;
@@ -153,6 +157,7 @@ public class AdminView extends FrameLayout {
         exportAllButton = findViewById(R.id.adminExportAll);
         selfieGrid = findViewById(R.id.adminSelfieGrid);
         detailImage = findViewById(R.id.adminDetailImage);
+        detailQr = findViewById(R.id.adminDetailQr);
         detailNumber = findViewById(R.id.adminDetailNumber);
         detailDate = findViewById(R.id.adminDetailDate);
         detailFavorite = findViewById(R.id.adminDetailFavorite);
@@ -590,16 +595,41 @@ public class AdminView extends FrameLayout {
                 .format(new Date(selfie.createdAt)));
         updateFavoriteButton();
         detailImage.setImageBitmap(null);
+        detailQr.setImageBitmap(null);
+        detailQr.setVisibility(GONE);
 
         File file = new File(SelfieRepository.get(getContext()).imagesDir(), selfie.filename);
         dbExecutor.submit(() -> {
             Bitmap bitmap = SelfieAdapter.decodeThumb(file, 1000);
+            Bitmap qr = buildSelfieQr(selfie);
             post(() -> {
                 if (currentDetail == selfie) {
                     detailImage.setImageBitmap(bitmap);
+                    if (qr != null) {
+                        detailQr.setImageBitmap(qr);
+                        detailQr.setVisibility(VISIBLE);
+                    } else {
+                        detailQr.setImageBitmap(null);
+                        detailQr.setVisibility(GONE);
+                    }
                 }
             });
         });
+    }
+
+    private Bitmap buildSelfieQr(SelfieEntity selfie) {
+        SelfieController.get().ensureServerStarted(getContext());
+        String ip = NetworkUtils.localIp(getContext());
+        if (ip == null) {
+            return null;
+        }
+        String url = "http://" + ip + ":" + SelfieController.get().serverPort() + "/" + selfie.filename;
+        try {
+            return QrGenerator.encode(url, 500);
+        } catch (Exception e) {
+            Log.w(TAG, "Selfie-QR fehlgeschlagen: " + e.getMessage());
+            return null;
+        }
     }
 
     private void updateFavoriteButton() {

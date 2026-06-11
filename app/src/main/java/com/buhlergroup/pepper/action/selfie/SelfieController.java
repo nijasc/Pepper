@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.net.wifi.WifiManager;
 import android.util.Log;
 
 import com.aldebaran.qi.sdk.QiContext;
@@ -21,12 +20,7 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -90,7 +84,7 @@ public final class SelfieController {
             SelfieEntity entity = SelfieRepository.get(context).save(toJpeg(composed));
 
             ensureServer(SelfieRepository.get(context).imagesDir());
-            String ip = localIp(context);
+            String ip = NetworkUtils.localIp(context);
             if (ip == null) {
                 say(context, "Ich bin gerade nicht mit dem WLAN verbunden, deshalb kann ich das Selfie nicht teilen.");
                 board.hide();
@@ -132,6 +126,18 @@ public final class SelfieController {
             running = false;
         }
         return null;
+    }
+
+    public void ensureServerStarted(Context context) {
+        try {
+            ensureServer(SelfieRepository.get(context).imagesDir());
+        } catch (IOException e) {
+            Log.w(TAG, "Could not start image server: " + e.getMessage());
+        }
+    }
+
+    public int serverPort() {
+        return SERVER_PORT;
     }
 
     private void ensureServer(File imagesDir) throws IOException {
@@ -211,37 +217,6 @@ public final class SelfieController {
                 .replace(",", "\\,")
                 .replace(":", "\\:")
                 .replace("\"", "\\\"");
-    }
-
-    private String localIp(Context context) {
-        try {
-            WifiManager wm = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            if (wm != null) {
-                int ip = wm.getConnectionInfo().getIpAddress();
-                if (ip != 0) {
-                    return String.format(Locale.US, "%d.%d.%d.%d",
-                            ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
-                }
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "WifiManager IP lookup failed: " + e.getMessage());
-        }
-
-        try {
-            for (NetworkInterface nif : Collections.list(NetworkInterface.getNetworkInterfaces())) {
-                if (!nif.isUp() || nif.isLoopback()) {
-                    continue;
-                }
-                for (InetAddress addr : Collections.list(nif.getInetAddresses())) {
-                    if (addr instanceof Inet4Address && addr.isSiteLocalAddress()) {
-                        return addr.getHostAddress();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Log.w(TAG, "NetworkInterface IP lookup failed: " + e.getMessage());
-        }
-        return null;
     }
 
     private void say(QiContext context, String text) {
