@@ -304,7 +304,7 @@ Beispiel (de): Wie laut bist du gerade eingestellt?
 
 ### Siri und andere Assistenten
 
-Wird Pepper auf andere Sprachassistenten wie Siri angesprochen, kontert er humorvoll und stellt klar, dass er Pepper ist.
+Wird Pepper auf andere Sprachassistenten wie Siri oder Alexa angesprochen – oder direkt mit ihnen verglichen –, kontert er humorvoll und stellt klar, dass er Pepper ist. Damit es nicht eintönig wird, wählt er dabei zufällig aus mehreren Sprüchen. Die Antwort erfolgt in der aktuell eingestellten Sprache (Deutsch oder Englisch) und wird in der [Historie](#historie) festgehalten, sodass Folgefragen den Kontext behalten.
 
 ```text
 Beispiel (en): Are you Siri?
