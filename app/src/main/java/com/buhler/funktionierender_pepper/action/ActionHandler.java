@@ -4,6 +4,7 @@ package com.buhler.funktionierender_pepper.action;
 import android.util.Log;
 
 import com.aldebaran.qi.sdk.QiContext;
+import com.buhler.funktionierender_pepper.action.admin.OpenAdminAction;
 import com.buhler.funktionierender_pepper.action.dance.DanceAction;
 import com.buhler.funktionierender_pepper.action.documentation.DocumentationAction;
 import com.buhler.funktionierender_pepper.action.follow.FollowMeAction;
@@ -64,6 +65,7 @@ public class ActionHandler {
         actions.add(new FollowMeAction());
         actions.add(new MemoryGameAction());
         actions.add(new SelfieAction());
+        actions.add(new OpenAdminAction());
 
         for (Action action : actions) {
             Log.i("ActionHandler", "Registered action: " + action.getClass().getSimpleName());
