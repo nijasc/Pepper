@@ -1,7 +1,6 @@
 package com.buhlergroup.pepper.action.raffle;
 
 import android.util.Log;
-import android.util.Patterns;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.R;
@@ -81,8 +80,18 @@ public final class RaffleJoinController {
             CountDownLatch done = new CountDownLatch(1);
             board.show(raffle.title, raffle.requiresPhone, new RaffleJoinView.Listener() {
                 @Override
+                public void onStepShown(int stepType) {
+                    dbExecutor.submit(() -> say(context, stepPrompt(stepType)));
+                }
+
+                @Override
+                public void onValidationError(int stepType) {
+                    dbExecutor.submit(() -> say(context, stepErrorHint(stepType)));
+                }
+
+                @Override
                 public void onSubmit(String name, String email, String phone) {
-                    processSubmit(context, raffle, board, name, email, phone, preCapturedSelfieId, done);
+                    handleSubmit(context, raffle, board, name, email, phone, preCapturedSelfieId, done);
                 }
 
                 @Override
@@ -101,32 +110,9 @@ public final class RaffleJoinController {
         }
     }
 
-    private void processSubmit(QiContext context, RaffleEntity raffle, RaffleJoinView board,
-                               String rawName, String rawEmail, String rawPhone,
-                               String preCapturedSelfieId, CountDownLatch done) {
-        String name = rawName.trim();
-        String email = rawEmail.trim();
-        String phone = rawPhone.trim();
-
-        if (name.isEmpty()) {
-            board.showError(R.string.raffle_join_name_required);
-            return;
-        }
-        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            board.showError(R.string.raffle_join_email_invalid);
-            return;
-        }
-        if (raffle.requiresPhone) {
-            if (phone.isEmpty()) {
-                board.showError(R.string.raffle_join_phone_required);
-                return;
-            }
-            if (!phone.matches("[+]?[0-9\\s()\\-]{7,20}")) {
-                board.showError(R.string.raffle_join_phone_invalid);
-                return;
-            }
-        }
-
+    private void handleSubmit(QiContext context, RaffleEntity raffle, RaffleJoinView board,
+                              String name, String email, String phone,
+                              String preCapturedSelfieId, CountDownLatch done) {
         board.setSubmitting(true);
         dbExecutor.submit(() -> {
             RaffleRepository repo = RaffleRepository.get(board.getContext());
@@ -137,11 +123,13 @@ public final class RaffleJoinController {
                 return;
             }
             if (repo.hasEntryWithEmail(raffle.id, email)) {
-                board.showError(R.string.raffle_join_duplicate);
+                say(context, "Mit dieser E-Mail bist du bereits eingetragen.");
+                board.goToStep(RaffleJoinView.STEP_EMAIL, R.string.raffle_join_duplicate);
                 return;
             }
             if (raffle.requiresPhone && repo.hasEntryWithPhone(raffle.id, phone)) {
-                board.showError(R.string.raffle_join_phone_duplicate);
+                say(context, "Mit dieser Telefonnummer bist du bereits eingetragen.");
+                board.goToStep(RaffleJoinView.STEP_PHONE, R.string.raffle_join_phone_duplicate);
                 return;
             }
 
@@ -158,9 +146,33 @@ public final class RaffleJoinController {
             }
 
             repo.addEntry(raffle.id, name, email, phone.isEmpty() ? null : phone, selfieId);
-            say(context, "Super, ich habe dich für die Verlosung eingetragen. Viel Glück!");
-            done.countDown();
+            say(context, "Super, " + name + "! Du bist jetzt dabei. Viel Glück bei der Verlosung!");
+            board.showConfirmation(name, done::countDown);
         });
+    }
+
+    private String stepPrompt(int stepType) {
+        switch (stepType) {
+            case RaffleJoinView.STEP_EMAIL:
+                return "Und wie lautet deine E-Mail-Adresse?";
+            case RaffleJoinView.STEP_PHONE:
+                return "Darf ich auch deine Telefonnummer haben?";
+            case RaffleJoinView.STEP_NAME:
+            default:
+                return "Wie heißt du?";
+        }
+    }
+
+    private String stepErrorHint(int stepType) {
+        switch (stepType) {
+            case RaffleJoinView.STEP_EMAIL:
+                return "Diese E-Mail-Adresse sieht nicht ganz richtig aus. Magst du sie noch einmal prüfen?";
+            case RaffleJoinView.STEP_PHONE:
+                return "Diese Telefonnummer sieht nicht ganz richtig aus. Magst du sie noch einmal prüfen?";
+            case RaffleJoinView.STEP_NAME:
+            default:
+                return "Ich habe deinen Namen nicht ganz erfasst. Magst du ihn noch einmal eingeben?";
+        }
     }
 
     private void say(QiContext context, String text) {

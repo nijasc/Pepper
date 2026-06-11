@@ -66,4 +66,11 @@
     <string name="raffle_join_phone_invalid">Bitte gib eine gültige Telefonnummer ein.</string>
     <string name="raffle_join_duplicate">Mit dieser E-Mail bist du bereits eingetragen.</string>
     <string name="raffle_join_phone_duplicate">Mit dieser Telefonnummer bist du bereits eingetragen.</string>
+    <string name="raffle_join_step_name">Wie heißt du?</string>
+    <string name="raffle_join_step_email">Wie lautet deine E-Mail-Adresse?</string>
+    <string name="raffle_join_step_phone">Und deine Telefonnummer?</string>
+    <string name="raffle_join_progress">Schritt %1$d / %2$d</string>
+    <string name="raffle_join_next">Weiter</string>
+    <string name="raffle_join_finish">Mitmachen</string>
+    <string name="raffle_join_confirm">Danke, %1$s! Du bist jetzt dabei. 🎉</string>
 </resources>

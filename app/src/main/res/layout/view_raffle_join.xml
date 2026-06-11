@@ -4,7 +4,8 @@
     tools:parentTag="android.widget.FrameLayout">
 
     <LinearLayout
-        android:layout_width="520dp"
+        android:id="@+id/raffleJoinCard"
+        android:layout_width="560dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:orientation="vertical"
@@ -19,86 +20,89 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/raffleJoinProgress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/raffle_join_prompt"
-            android:textColor="#CCFFFFFF"
-            android:textSize="18sp" />
+            android:layout_marginTop="4dp"
+            android:textColor="@color/buhler_teal"
+            android:textSize="16sp" />
 
-        <EditText
-            android:id="@+id/raffleJoinName"
+        <LinearLayout
+            android:id="@+id/raffleJoinStep"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:hint="@string/raffle_join_name_hint"
-            android:inputType="textPersonName"
-            android:textColor="@color/white"
-            android:textColorHint="#88FFFFFF" />
+            android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/raffleJoinEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="@string/raffle_join_email_hint"
-            android:inputType="textEmailAddress"
-            android:textColor="@color/white"
-            android:textColorHint="#88FFFFFF" />
+            <TextView
+                android:id="@+id/raffleJoinStepPrompt"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="20sp" />
 
-        <EditText
-            android:id="@+id/raffleJoinPhone"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:hint="@string/raffle_join_phone_hint"
-            android:inputType="phone"
-            android:textColor="@color/white"
-            android:textColorHint="#88FFFFFF"
-            android:visibility="gone" />
+            <EditText
+                android:id="@+id/raffleJoinInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textColor="@color/white"
+                android:textColorHint="#88FFFFFF"
+                android:textSize="20sp" />
 
-        <TextView
-            android:id="@+id/raffleJoinError"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textColor="@color/pad_red"
-            android:textSize="16sp"
-            android:visibility="gone" />
+            <TextView
+                android:id="@+id/raffleJoinError"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/pad_red"
+                android:textSize="16sp"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:layout_marginTop="24dp"
+            android:gravity="center"
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/raffleJoinSave"
+                android:id="@+id/raffleJoinBack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="12dp"
-                android:background="@drawable/bg_pill_teal"
-                android:paddingLeft="44dp"
+                android:background="@drawable/bg_pill_red"
+                android:paddingLeft="36dp"
                 android:paddingTop="14dp"
-                android:paddingRight="44dp"
+                android:paddingRight="36dp"
                 android:paddingBottom="14dp"
-                android:text="@string/raffle_join_save"
                 android:textColor="@color/white"
-                android:textSize="20sp" />
+                android:textSize="18sp" />
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/raffleJoinCancel"
+                android:id="@+id/raffleJoinNext"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_pill_red"
-                android:paddingLeft="44dp"
+                android:background="@drawable/bg_pill_teal"
+                android:paddingLeft="36dp"
                 android:paddingTop="14dp"
-                android:paddingRight="44dp"
+                android:paddingRight="36dp"
                 android:paddingBottom="14dp"
-                android:text="@string/raffle_join_cancel"
                 android:textColor="@color/white"
-                android:textSize="20sp" />
+                android:textSize="18sp" />
         </LinearLayout>
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/raffleJoinConfirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:padding="32dp"
+        android:textColor="@color/white"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 </merge>
