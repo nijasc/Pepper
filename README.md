@@ -483,7 +483,7 @@ Die IP-Adresse findest du auf dem Pepper-Tablet unter den Netzwerk-Einstellungen
 
 ### Kernkomponenten
 
-Die folgende Übersicht zeigt die wichtigsten Klassen und ihre Verantwortung – als Landkarte für den Einstieg. Der Quellcode liegt unter `app/src/main/java/com/buhler/funktionierender_pepper/`.
+Die folgende Übersicht zeigt die wichtigsten Klassen und ihre Verantwortung – als Landkarte für den Einstieg. Der Quellcode liegt unter `app/src/main/java/com/buhlergroup/pepper/`.
 
 | Klasse | Verantwortung |
 | ------ | ------------- |
