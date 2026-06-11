@@ -445,7 +445,7 @@ Baue die signierte APK über den Gradle-Task `assembleRelease`:
 .\gradlew assembleRelease
 ```
 
-Das Ergebnis liegt anschliessend unter `app/build/outputs/apk/release/app-release.apk`.
+Das Ergebnis liegt anschliessend unter `app/build/intermediates/apk/release/app-release.apk`.
 
 > **Build-JDK:** Gradle 7.2 / AGP 7.1.3 laufen nur mit **JDK 11–16** (JDK 17+ wird erst ab Gradle 7.3 unterstützt). Baue entweder direkt aus Android Studio (`Build → Generate Signed Bundle / APK` oder den Task `assembleRelease` im Studio-Terminal – Studio nutzt sein gebündeltes JBR), oder setze für die Kommandozeile `org.gradle.java.home` in `gradle.properties` auf ein JDK 11–16. Das in `compileOptions` gesetzte Java 8 betrifft nur die Quellcode-Kompatibilität, nicht das Build-JDK.
 
@@ -457,7 +457,7 @@ Eine installierte APK bleibt dauerhaft auf dem Tablet – auch nach dem Trennen 
 
 ```powershell
 adb connect <PEPPER-IP>:5555
-adb install -r app\build\outputs\apk\release\app-release.apk
+adb install -r app/build/intermediates/apk/release/app-release.apk
 ```
 
 Die IP-Adresse findest du auf dem Pepper-Tablet unter den Netzwerk-Einstellungen. Das Flag `-r` installiert über eine bestehende Version, ohne deren Daten zu löschen. Nach der Installation erscheint die App in der App-Liste des Tablets und lässt sich direkt auf Pepper starten.
