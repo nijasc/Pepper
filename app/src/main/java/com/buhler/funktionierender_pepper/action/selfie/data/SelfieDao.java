@@ -12,7 +12,7 @@ public interface SelfieDao {
     @Insert
     long insert(SelfieEntity selfie);
 
-    @Query("SELECT * FROM selfies ORDER BY number DESC")
+    @Query("SELECT * FROM selfies ORDER BY favorite DESC, number DESC")
     List<SelfieEntity> getAll();
 
     @Query("SELECT * FROM selfies WHERE id = :id LIMIT 1")
