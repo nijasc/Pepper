@@ -2,6 +2,7 @@ package com.buhlergroup.pepper.action.admin;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -122,7 +123,13 @@ public class AdminView extends FrameLayout {
     private LinearLayout raffleEntries;
     private Button raffleCloseButton;
     private Button raffleFinishButton;
+    private Button raffleDrawButton;
+    private Button raffleRedrawButton;
+    private Button raffleEmailButton;
+    private TextView raffleWinnerView;
     private long currentRaffleId;
+    private String currentRaffleTitle;
+    private RaffleEntryEntity currentWinner;
 
     private EditText cameraIp;
     private EditText cameraPort;
@@ -189,6 +196,10 @@ public class AdminView extends FrameLayout {
         raffleEntries = findViewById(R.id.adminRaffleEntries);
         raffleCloseButton = findViewById(R.id.adminRaffleClose);
         raffleFinishButton = findViewById(R.id.adminRaffleFinish);
+        raffleDrawButton = findViewById(R.id.adminRaffleDraw);
+        raffleRedrawButton = findViewById(R.id.adminRaffleRedraw);
+        raffleEmailButton = findViewById(R.id.adminRaffleEmail);
+        raffleWinnerView = findViewById(R.id.adminRaffleWinner);
         cameraIp = findViewById(R.id.cameraIp);
         cameraPort = findViewById(R.id.cameraPort);
         cameraEnabled = findViewById(R.id.cameraEnabled);
@@ -219,6 +230,9 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.raffleCreateBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         raffleFinishButton.setOnClickListener(v -> finishCurrentRaffle());
         raffleCloseButton.setOnClickListener(v -> closeCurrentRaffle());
+        raffleDrawButton.setOnClickListener(v -> drawWinner());
+        raffleRedrawButton.setOnClickListener(v -> drawWinner());
+        raffleEmailButton.setOnClickListener(v -> sendWinnerEmail());
         findViewById(R.id.adminRaffleBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminCamera).setOnClickListener(v -> showCamera());
         findViewById(R.id.cameraTest).setOnClickListener(v -> testCamera());
@@ -463,6 +477,7 @@ public class AdminView extends FrameLayout {
 
     private void showRaffleOverview(RaffleEntity raffle, List<RaffleEntryEntity> entries) {
         currentRaffleId = raffle.id;
+        currentRaffleTitle = raffle.title;
         raffleOverviewTitle.setText(raffle.title);
         if (raffle.status == RaffleStatus.ACTIVE) {
             String end = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
@@ -473,8 +488,31 @@ public class AdminView extends FrameLayout {
             raffleOverviewStatus.setText(
                     getContext().getString(R.string.raffle_status_ended, entries.size()));
         }
+        boolean ended = raffle.status == RaffleStatus.ENDED;
         raffleCloseButton.setVisibility(raffle.status == RaffleStatus.ACTIVE ? VISIBLE : GONE);
-        raffleFinishButton.setVisibility(raffle.status == RaffleStatus.ENDED ? VISIBLE : GONE);
+        raffleFinishButton.setVisibility(ended ? VISIBLE : GONE);
+
+        RaffleEntryEntity winner = null;
+        if (raffle.winnerId != null) {
+            for (RaffleEntryEntity entry : entries) {
+                if (entry.id == raffle.winnerId) {
+                    winner = entry;
+                    break;
+                }
+            }
+        }
+        currentWinner = winner;
+        if (winner != null) {
+            raffleWinnerView.setText(
+                    getContext().getString(R.string.raffle_winner_label, winner.name, winner.email));
+            raffleWinnerView.setVisibility(VISIBLE);
+        } else {
+            raffleWinnerView.setVisibility(GONE);
+        }
+        raffleDrawButton.setVisibility(ended && winner == null && !entries.isEmpty() ? VISIBLE : GONE);
+        raffleRedrawButton.setVisibility(ended && winner != null ? VISIBLE : GONE);
+        raffleEmailButton.setVisibility(ended && winner != null ? VISIBLE : GONE);
+
         raffleEntries.removeAllViews();
         if (entries.isEmpty()) {
             TextView empty = new TextView(getContext());
@@ -557,6 +595,74 @@ public class AdminView extends FrameLayout {
             RaffleRepository.get(getContext()).endRaffle(id);
             post(this::openRaffle);
         });
+    }
+
+    private void drawWinner() {
+        long id = currentRaffleId;
+        if (id <= 0) {
+            return;
+        }
+        dbExecutor.submit(() -> {
+            RaffleRepository.get(getContext()).pickWinner(id);
+            post(this::openRaffle);
+        });
+    }
+
+    private void sendWinnerEmail() {
+        RaffleEntryEntity winner = currentWinner;
+        String title = currentRaffleTitle;
+        if (winner == null) {
+            return;
+        }
+        dbExecutor.submit(() -> {
+            Uri selfieUri = null;
+            if (winner.selfieId != null && !winner.selfieId.isEmpty()) {
+                SelfieRepository repository = SelfieRepository.get(getContext());
+                SelfieEntity selfie = repository.findById(winner.selfieId);
+                if (selfie != null) {
+                    File file = new File(repository.imagesDir(), selfie.filename);
+                    if (file.exists()) {
+                        try {
+                            selfieUri = FileProvider.getUriForFile(getContext(),
+                                    getContext().getPackageName() + ".fileprovider", file);
+                        } catch (Exception e) {
+                            Log.w(TAG, "Selfie attachment failed: " + e.getMessage());
+                        }
+                    }
+                }
+            }
+            Uri attachment = selfieUri;
+            post(() -> launchEmail(winner, title, attachment));
+        });
+    }
+
+    private void launchEmail(RaffleEntryEntity winner, String title, Uri selfieUri) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("message/rfc822");
+        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{winner.email});
+        intent.putExtra(Intent.EXTRA_SUBJECT, getContext().getString(R.string.raffle_email_subject, title));
+        intent.putExtra(Intent.EXTRA_TEXT,
+                getContext().getString(R.string.raffle_email_body, winner.name, title));
+        if (selfieUri != null) {
+            intent.putExtra(Intent.EXTRA_STREAM, selfieUri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        }
+        intent.setPackage("com.google.android.gm");
+        try {
+            getContext().startActivity(intent);
+            return;
+        } catch (ActivityNotFoundException e) {
+            Log.w(TAG, "Gmail not available, falling back to chooser");
+        }
+        Intent fallback = new Intent(intent);
+        fallback.setPackage(null);
+        Intent chooser = Intent.createChooser(fallback, getContext().getString(R.string.raffle_email_chooser));
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            getContext().startActivity(chooser);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), R.string.raffle_email_chooser, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showCamera() {

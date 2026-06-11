@@ -684,6 +684,18 @@
             android:textColor="@color/buhler_teal"
             android:textSize="18sp" />
 
+        <TextView
+            android:id="@+id/adminRaffleWinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_pill_teal"
+            android:padding="12dp"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -696,6 +708,58 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />
         </ScrollView>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminRaffleDraw"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_pill_teal"
+                android:paddingLeft="32dp"
+                android:paddingTop="14dp"
+                android:paddingRight="32dp"
+                android:paddingBottom="14dp"
+                android:text="@string/raffle_draw"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:visibility="gone" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminRaffleRedraw"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_pill_teal"
+                android:paddingLeft="32dp"
+                android:paddingTop="14dp"
+                android:paddingRight="32dp"
+                android:paddingBottom="14dp"
+                android:text="@string/raffle_redraw"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:visibility="gone" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminRaffleEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill_teal"
+                android:paddingLeft="32dp"
+                android:paddingTop="14dp"
+                android:paddingRight="32dp"
+                android:paddingBottom="14dp"
+                android:text="@string/raffle_email_send"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="wrap_content"

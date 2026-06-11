@@ -1,6 +1,7 @@
 package com.buhlergroup.pepper.action.raffle.data;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -31,6 +32,9 @@ public class RaffleEntity {
 
     @ColumnInfo(name = "created_at")
     public long createdAt;
+
+    @Nullable
+    public Long winnerId;
 
     public RaffleEntity(@NonNull String title, @NonNull String description, @NonNull RaffleStatus status,
                         boolean requiresSelfie, boolean requiresPhone, long endDate, long createdAt) {

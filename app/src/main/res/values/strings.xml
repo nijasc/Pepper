@@ -67,6 +67,13 @@
     <string name="raffle_no_entries">Noch keine Teilnehmer</string>
     <string name="raffle_finish">Verlosung beenden</string>
     <string name="raffle_close_now">Jetzt schließen</string>
+    <string name="raffle_draw">Gewinner ziehen</string>
+    <string name="raffle_redraw">Neu ziehen</string>
+    <string name="raffle_email_send">E-Mail senden</string>
+    <string name="raffle_winner_label">Gewinner: %1$s · %2$s</string>
+    <string name="raffle_email_chooser">E-Mail senden mit …</string>
+    <string name="raffle_email_subject">Herzlichen Glückwunsch – %1$s</string>
+    <string name="raffle_email_body">Hallo %1$s,\n\nherzlichen Glückwunsch! Du wurdest bei unserer Verlosung «%2$s» als Gewinner gezogen. 🎉\n\nWir melden uns in Kürze mit allen weiteren Details bei dir.\n\nViele Grüße\nDein Bühler-Team</string>
     <string name="raffle_join_prompt">Trag dich hier für die Verlosung ein</string>
     <string name="raffle_join_name_hint">Name</string>
     <string name="raffle_join_email_hint">E-Mail</string>

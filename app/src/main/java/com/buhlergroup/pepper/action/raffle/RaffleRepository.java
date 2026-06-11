@@ -106,4 +106,21 @@ public final class RaffleRepository {
     public List<String> linkedSelfieIds() {
         return entryDao.getLinkedSelfieIds();
     }
+
+    public RaffleEntryEntity pickWinner(long raffleId) {
+        RaffleEntryEntity entry = entryDao.getRandomEntry(raffleId);
+        if (entry == null) {
+            return null;
+        }
+        raffleDao.setWinner(raffleId, entry.id);
+        return entry;
+    }
+
+    public RaffleEntryEntity getWinner(long raffleId) {
+        RaffleEntity raffle = raffleDao.findById(raffleId);
+        if (raffle == null || raffle.winnerId == null) {
+            return null;
+        }
+        return entryDao.findEntry(raffle.winnerId);
+    }
 }
