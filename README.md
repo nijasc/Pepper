@@ -426,7 +426,7 @@ Eine Release-APK muss signiert sein, sonst lässt sie sich nicht über `adb` ins
 1. Erzeuge im Projektwurzelverzeichnis einmalig einen Keystore:
 
    ```powershell
-   keytool -genkeypair -v -keystore buhler-messebot.jks -alias buhler-messebot -keyalg RSA -keysize 2048 -validity 10000
+   keytool -genkeypair -v -keystore buhler-messebot.jks -alias buhler-messebot -keyalg RSA -keysize 2048 -validity 10000 -storetype JKS
    ```
 
    Folge den Eingabeaufforderungen (Passwort, Name/Organisation).
@@ -434,6 +434,8 @@ Eine Release-APK muss signiert sein, sonst lässt sie sich nicht über `adb` ins
 3. Trage in `keystore.properties` deine Passwörter sowie – falls abweichend – den Alias ein.
 
 > **Wichtig:** Bewahre den Keystore sicher auf und committe ihn niemals. Geht er verloren, lassen sich auf bereits installierten Geräten keine Updates derselben App mehr ausliefern. Im Repository verbleibt ausschliesslich die Vorlage `keystore.properties.template`.
+
+> **`-storetype JKS` ist bewusst gesetzt.** Erzeugst du den Keystore mit einem sehr neuen JDK (z. B. JDK 26), schreibt `keytool` standardmässig ein PKCS12-Format mit starken Algorithmen (Integritätsprüfung via `HmacPBESHA256`). Die ältere JVM, mit der Gradle 7.2 baut (max. JDK 16), kann das nicht lesen und der Build bricht beim Signieren ab mit `NoSuchAlgorithmException: Algorithm HmacPBESHA256 not available`. Das ältere JKS-Format vermeidet das und ist von jeder JVM lesbar. Alternativ erzeugst du den Keystore mit demselben JDK (≤ 16), mit dem auch gebaut wird.
 
 #### Release-APK bauen
 
@@ -445,7 +447,7 @@ Baue die signierte APK über den Gradle-Task `assembleRelease`:
 
 Das Ergebnis liegt anschliessend unter `app/build/outputs/apk/release/app-release.apk`.
 
-> **Build-JDK:** Gradle 7.2 / AGP 7.1.3 laufen nur mit **JDK 11–17**. Baue entweder direkt aus Android Studio (`Build → Generate Signed Bundle / APK` oder den Task `assembleRelease` im Studio-Terminal – Studio nutzt sein gebündeltes JBR), oder setze für die Kommandozeile `org.gradle.java.home` in `gradle.properties` auf ein JDK 17. Das in `compileOptions` gesetzte Java 8 betrifft nur die Quellcode-Kompatibilität, nicht das Build-JDK.
+> **Build-JDK:** Gradle 7.2 / AGP 7.1.3 laufen nur mit **JDK 11–16** (JDK 17+ wird erst ab Gradle 7.3 unterstützt). Baue entweder direkt aus Android Studio (`Build → Generate Signed Bundle / APK` oder den Task `assembleRelease` im Studio-Terminal – Studio nutzt sein gebündeltes JBR), oder setze für die Kommandozeile `org.gradle.java.home` in `gradle.properties` auf ein JDK 11–16. Das in `compileOptions` gesetzte Java 8 betrifft nur die Quellcode-Kompatibilität, nicht das Build-JDK.
 
 > **SDK-Pfad:** Für Kommandozeilen-Builds muss der Pfad zum Android-SDK bekannt sein – entweder über die Datei `local.properties` (`sdk.dir=…`) oder die Umgebungsvariable `ANDROID_HOME`. Android Studio legt `local.properties` automatisch an.
 
