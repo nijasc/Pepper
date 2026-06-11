@@ -64,6 +64,7 @@ public class AdminView extends FrameLayout {
     private TextView devLogText;
     private TextView galleryEmpty;
     private TextView langCurrent;
+    private Button exportAllButton;
     private RecyclerView selfieGrid;
     private SelfieAdapter selfieAdapter;
 
@@ -110,6 +111,7 @@ public class AdminView extends FrameLayout {
         devLogText = findViewById(R.id.adminDevLogText);
         galleryEmpty = findViewById(R.id.adminGalleryEmpty);
         langCurrent = findViewById(R.id.adminLangCurrent);
+        exportAllButton = findViewById(R.id.adminExportAll);
         selfieGrid = findViewById(R.id.adminSelfieGrid);
         detailImage = findViewById(R.id.adminDetailImage);
         detailNumber = findViewById(R.id.adminDetailNumber);
@@ -305,6 +307,7 @@ public class AdminView extends FrameLayout {
     private void showGallery() {
         showPanel(PANEL_GALLERY);
         galleryEmpty.setVisibility(GONE);
+        setExportEnabled(false);
         dbExecutor.submit(() -> {
             SelfieRepository repository = SelfieRepository.get(getContext());
             List<SelfieEntity> items = repository.getAll();
@@ -312,8 +315,14 @@ public class AdminView extends FrameLayout {
             post(() -> {
                 selfieAdapter.setData(items, dir);
                 galleryEmpty.setVisibility(items.isEmpty() ? VISIBLE : GONE);
+                setExportEnabled(!items.isEmpty());
             });
         });
+    }
+
+    private void setExportEnabled(boolean enabled) {
+        exportAllButton.setEnabled(enabled);
+        exportAllButton.setAlpha(enabled ? 1f : 0.4f);
     }
 
     private void showDetail(SelfieEntity selfie) {
