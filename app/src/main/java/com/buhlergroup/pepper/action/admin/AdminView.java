@@ -120,6 +120,8 @@ public class AdminView extends FrameLayout {
     private TextView raffleOverviewTitle;
     private TextView raffleOverviewStatus;
     private LinearLayout raffleEntries;
+    private Button raffleCloseButton;
+    private Button raffleFinishButton;
     private long currentRaffleId;
 
     private EditText cameraIp;
@@ -185,6 +187,8 @@ public class AdminView extends FrameLayout {
         raffleOverviewTitle = findViewById(R.id.adminRaffleTitle);
         raffleOverviewStatus = findViewById(R.id.adminRaffleStatus);
         raffleEntries = findViewById(R.id.adminRaffleEntries);
+        raffleCloseButton = findViewById(R.id.adminRaffleClose);
+        raffleFinishButton = findViewById(R.id.adminRaffleFinish);
         cameraIp = findViewById(R.id.cameraIp);
         cameraPort = findViewById(R.id.cameraPort);
         cameraEnabled = findViewById(R.id.cameraEnabled);
@@ -213,7 +217,8 @@ public class AdminView extends FrameLayout {
         raffleEndDateButton.setOnClickListener(v -> pickEndDate());
         raffleCreateSave.setOnClickListener(v -> onSaveRaffle());
         findViewById(R.id.raffleCreateBack).setOnClickListener(v -> showPanel(PANEL_MENU));
-        findViewById(R.id.adminRaffleFinish).setOnClickListener(v -> finishCurrentRaffle());
+        raffleFinishButton.setOnClickListener(v -> finishCurrentRaffle());
+        raffleCloseButton.setOnClickListener(v -> closeCurrentRaffle());
         findViewById(R.id.adminRaffleBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminCamera).setOnClickListener(v -> showCamera());
         findViewById(R.id.cameraTest).setOnClickListener(v -> testCamera());
@@ -468,6 +473,8 @@ public class AdminView extends FrameLayout {
             raffleOverviewStatus.setText(
                     getContext().getString(R.string.raffle_status_ended, entries.size()));
         }
+        raffleCloseButton.setVisibility(raffle.status == RaffleStatus.ACTIVE ? VISIBLE : GONE);
+        raffleFinishButton.setVisibility(raffle.status == RaffleStatus.ENDED ? VISIBLE : GONE);
         raffleEntries.removeAllViews();
         if (entries.isEmpty()) {
             TextView empty = new TextView(getContext());
@@ -537,6 +544,17 @@ public class AdminView extends FrameLayout {
         }
         dbExecutor.submit(() -> {
             RaffleRepository.get(getContext()).finishRaffle(id);
+            post(this::openRaffle);
+        });
+    }
+
+    private void closeCurrentRaffle() {
+        long id = currentRaffleId;
+        if (id <= 0) {
+            return;
+        }
+        dbExecutor.submit(() -> {
+            RaffleRepository.get(getContext()).endRaffle(id);
             post(this::openRaffle);
         });
     }
