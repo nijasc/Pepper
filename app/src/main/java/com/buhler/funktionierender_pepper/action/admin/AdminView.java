@@ -55,6 +55,7 @@ public class AdminView extends FrameLayout {
     private View detailPanel;
     private View langPanel;
     private View historyPanel;
+    private ScrollView devLogScroll;
     private ScrollView historyScroll;
     private LinearLayout historyContainer;
 
@@ -100,6 +101,7 @@ public class AdminView extends FrameLayout {
         detailPanel = findViewById(R.id.adminDetailPanel);
         langPanel = findViewById(R.id.adminLangPanel);
         historyPanel = findViewById(R.id.adminHistoryPanel);
+        devLogScroll = findViewById(R.id.adminDevLogScroll);
         historyScroll = findViewById(R.id.adminHistoryScroll);
         historyContainer = findViewById(R.id.adminHistoryContainer);
 
@@ -291,12 +293,13 @@ public class AdminView extends FrameLayout {
         if (log.isEmpty()) {
             text.append(getContext().getString(R.string.admin_devlog_empty));
         } else {
-            for (int i = log.size() - 1; i >= 0; i--) {
-                text.append(log.get(i)).append('\n');
+            for (String entry : log) {
+                text.append(entry).append('\n');
             }
         }
         devLogText.setText(text.toString());
         showPanel(PANEL_DEVLOG);
+        devLogScroll.post(() -> devLogScroll.fullScroll(View.FOCUS_DOWN));
     }
 
     private void showGallery() {
