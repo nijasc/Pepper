@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -192,6 +193,7 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminHistory).setOnClickListener(v -> showHistory());
         findViewById(R.id.adminHistoryBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminRaffle).setOnClickListener(v -> openRaffle());
+        findViewById(R.id.raffleDescriptionDone).setOnClickListener(this::hideKeyboard);
         raffleEndDateButton.setOnClickListener(v -> pickEndDate());
         raffleCreateSave.setOnClickListener(v -> onSaveRaffle());
         findViewById(R.id.raffleCreateBack).setOnClickListener(v -> showPanel(PANEL_MENU));
@@ -356,6 +358,15 @@ public class AdminView extends FrameLayout {
         raffleCreateSave.setEnabled(true);
         raffleCreateSave.setAlpha(1f);
         showPanel(PANEL_RAFFLE_CREATE);
+    }
+
+    private void hideKeyboard(View anchor) {
+        InputMethodManager imm =
+                (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(anchor.getWindowToken(), 0);
+        }
+        raffleDescription.clearFocus();
     }
 
     private void pickEndDate() {

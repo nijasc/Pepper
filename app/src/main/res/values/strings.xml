@@ -49,6 +49,7 @@
     <string name="raffle_create_active_exists">Es läuft bereits eine Verlosung.</string>
     <string name="raffle_create_invalid">Bitte Titel und Enddatum angeben.</string>
     <string name="raffle_created">Verlosung erstellt</string>
+    <string name="raffle_keyboard_done">Tastatur schließen</string>
     <string name="raffle_status_active">Aktiv bis %1$s · %2$d Teilnehmer</string>
     <string name="raffle_status_ended">Beendet · %1$d Teilnehmer</string>
     <string name="raffle_no_entries">Noch keine Teilnehmer</string>
