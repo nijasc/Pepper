@@ -17,3 +17,6 @@ app/src/main/res/raw/credentials.json
 tmp.md
 *.env
 app/src/main/assets/env
+keystore.properties
+*.jks
+*.keystore
