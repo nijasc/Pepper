@@ -52,7 +52,7 @@ public class ActionHandler {
     private void initActions(LanguageManager languageManager) {
         actions.add(new SayAction(actions));
         actions.add(new DanceAction());
-        actions.add(new SiriAction());
+        actions.add(new SiriAction(languageManager));
         actions.add(new SaxophoneAction());
         actions.add(new HighFiveAction());
         actions.add(new ChangeLanguageAction(languageManager));
