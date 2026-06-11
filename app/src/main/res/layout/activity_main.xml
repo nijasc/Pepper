@@ -61,19 +61,19 @@
         android:textColor="@color/white"
         android:textSize="18sp" />
 
-    <com.buhler.funktionierender_pepper.action.memory.MemoryGameView
+    <com.buhlergroup.pepper.action.memory.MemoryGameView
         android:id="@+id/memoryGame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <com.buhler.funktionierender_pepper.action.selfie.SelfieView
+    <com.buhlergroup.pepper.action.selfie.SelfieView
         android:id="@+id/selfieView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <com.buhler.funktionierender_pepper.action.admin.AdminView
+    <com.buhlergroup.pepper.action.admin.AdminView
         android:id="@+id/adminView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
