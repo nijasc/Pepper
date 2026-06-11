@@ -125,7 +125,11 @@ public final class SelfieController {
 
             Bitmap photo = capture(context);
             if (photo == null) {
-                say(context, "Hoppla, das Foto hat nicht geklappt. Versuchen wir es später nochmal.");
+                if (CameraSettings.isActive(context)) {
+                    say(context, "Ich kann die externe Kamera nicht erreichen. Bitte deaktiviere sie im Admin-Dashboard, wenn du meine Kamera verwenden möchtest.");
+                } else {
+                    say(context, "Hoppla, das Foto hat nicht geklappt. Versuchen wir es später nochmal.");
+                }
                 return null;
             }
 
@@ -203,12 +207,8 @@ public final class SelfieController {
 
     private Bitmap capture(QiContext context) {
         if (CameraSettings.isActive(context)) {
-            Bitmap external = new WifiCameraManager()
+            return new WifiCameraManager()
                     .capture(CameraSettings.getIp(context), CameraSettings.getPort(context));
-            if (external != null) {
-                return external;
-            }
-            Log.w(TAG, "External camera capture failed, falling back to Pepper camera");
         }
         try {
             TakePicture takePicture = TakePictureBuilder.with(context).build();
