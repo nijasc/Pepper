@@ -63,6 +63,10 @@ public final class RaffleJoinController {
     }
 
     public void join(QiContext context, RaffleEntity raffle) {
+        join(context, raffle, null);
+    }
+
+    public void join(QiContext context, RaffleEntity raffle, String preCapturedSelfieId) {
         RaffleJoinView board = view;
         if (board == null) {
             say(context, "Mein Tablet ist gerade nicht bereit.");
@@ -78,7 +82,7 @@ public final class RaffleJoinController {
             board.show(raffle.title, raffle.requiresPhone, new RaffleJoinView.Listener() {
                 @Override
                 public void onSubmit(String name, String email, String phone) {
-                    processSubmit(context, raffle, board, name, email, phone, done);
+                    processSubmit(context, raffle, board, name, email, phone, preCapturedSelfieId, done);
                 }
 
                 @Override
@@ -98,7 +102,8 @@ public final class RaffleJoinController {
     }
 
     private void processSubmit(QiContext context, RaffleEntity raffle, RaffleJoinView board,
-                               String rawName, String rawEmail, String rawPhone, CountDownLatch done) {
+                               String rawName, String rawEmail, String rawPhone,
+                               String preCapturedSelfieId, CountDownLatch done) {
         String name = rawName.trim();
         String email = rawEmail.trim();
         String phone = rawPhone.trim();
@@ -130,10 +135,10 @@ public final class RaffleJoinController {
                 return;
             }
 
-            String selfieId = null;
-            if (raffle.requiresSelfie) {
+            String selfieId = preCapturedSelfieId;
+            if (raffle.requiresSelfie && selfieId == null) {
                 board.hide();
-                SelfieEntity selfie = SelfieController.get().takeSelfie(context);
+                SelfieEntity selfie = SelfieController.get().takeSelfieForRaffle(context);
                 if (selfie == null) {
                     say(context, "Ohne Selfie kann ich dich leider nicht eintragen.");
                     done.countDown();

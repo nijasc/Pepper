@@ -13,6 +13,10 @@ import com.aldebaran.qi.sdk.object.camera.TakePicture;
 import com.aldebaran.qi.sdk.object.image.EncodedImage;
 import com.aldebaran.qi.sdk.object.image.TimestampedImageHandle;
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
+import com.buhlergroup.pepper.action.raffle.RaffleRepository;
+import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
+import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.config.Env;
 import com.buhlergroup.pepper.lang.SpeechManager;
@@ -79,6 +83,14 @@ public final class SelfieController {
     }
 
     public SelfieEntity takeSelfie(QiContext context) {
+        return takeSelfie(context, true);
+    }
+
+    public SelfieEntity takeSelfieForRaffle(QiContext context) {
+        return takeSelfie(context, false);
+    }
+
+    private SelfieEntity takeSelfie(QiContext context, boolean offerRaffle) {
         SelfieView board = view;
         if (board == null) {
             say(context, "Mein Tablet ist gerade nicht bereit, deshalb kann ich kein Selfie machen.");
@@ -138,6 +150,9 @@ public final class SelfieController {
             }
             board.setOnCloseListener(null);
             board.hide();
+            if (offerRaffle) {
+                offerRaffleJoin(context, entity);
+            }
             return entity;
         } catch (Exception e) {
             Log.e(TAG, "Selfie failed", e);
@@ -239,6 +254,20 @@ public final class SelfieController {
                 .replace(",", "\\,")
                 .replace(":", "\\:")
                 .replace("\"", "\\\"");
+    }
+
+    private void offerRaffleJoin(QiContext context, SelfieEntity selfie) {
+        try {
+            RaffleEntity raffle = RaffleRepository.get(context).getCurrentRaffle();
+            if (raffle == null || raffle.status != RaffleStatus.ACTIVE) {
+                return;
+            }
+            say(context, "Übrigens, gerade läuft unsere Verlosung. Wenn du teilnehmen möchtest, "
+                    + "trag dich einfach auf meinem Tablet ein – oder tippe auf Abbrechen.");
+            RaffleJoinController.get().join(context, raffle, selfie.id);
+        } catch (Exception e) {
+            Log.w(TAG, "Raffle offer after selfie failed: " + e.getMessage());
+        }
     }
 
     private void say(QiContext context, String text) {
