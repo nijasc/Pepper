@@ -663,6 +663,12 @@ Danach nutzt Pepper bei jedem Selfie die externe Kamera: Er bittet «Stell dich 
 
 **Protokoll-Entscheidung:** Für PTP/IP existiert keine ausgereifte, in Maven verfügbare Java-Bibliothek, die die Canon-EOS-Eigenheiten (Pairing-Handshake, Event-Polling über den Command-Channel) abdeckt. Daher implementiert `WifiCameraManager` eine **minimale eigene TCP-Umsetzung** der benötigten PTP/IP-Operationen: Init-Command-/Event-Channel-Pairing, `OpenSession`, Canon `SetRemoteMode`/`SetEventMode`, Auslösen via `RemoteRelease`, Event-Polling (`EOS_GetEvent`) bis zum `ObjectAdded`-Ereignis und Abruf des Bildes via `GetObject`. Alles Little-Endian, Hostnamen UTF-16LE.
 
+**Pairing-Handshake (geklärt):** Entgegen der ursprünglichen Annahme erwartet die Kamera **keinen speziellen, «EOS Utility»-spezifischen GUID**. Der Client sendet im `INIT_COMMAND_REQUEST` einen **beliebigen, selbst gewählten 16-Byte-GUID** plus einen Friendly Name – die Kamera merkt sich diesen GUID und akzeptiert künftige Verbindungen desselben Clients. Pepper verwendet deshalb bewusst einen **festen, deterministischen GUID** (`WifiCameraManager.clientGuid`) und den Hostnamen **«Pepper»** (erscheint auf der Kamera), damit die Kamera Pepper über Sitzungen hinweg wiedererkennt.
+
+- **Kein Vorab-Pairing am PC nötig:** Die Kamera muss **nicht** zuerst mit der echten EOS-Utility-Software gepaired werden. Es genügt, sie in den Pairing-Modus zu versetzen (WLAN → «Fernsteuerung (EOS Utility)» → Gerät registrieren); danach pairt Pepper direkt beim ersten Verbindungsaufbau.
+- **Kein zusätzliches Pairing-Paket:** Der Standard-Vierer-Handshake (`Init Command Request/Ack`, `Init Event Request/Ack`) genügt; danach folgen `OpenSession` (0x1002) → `SetRemoteMode` (0x9114, Param 1) → `SetEventMode` (0x9115, Param 1), je mit Antwortcode `0x2001`.
+- Referenz: <https://julianschroden.com/post/2023-05-10-pairing-and-initializing-a-ptp-ip-connection-with-a-canon-eos-camera/>
+
 > [!WARNING]
 > Die PTP/IP-Implementierung in `WifiCameraManager` ist ein **ungetestetes Gerüst**, das ohne echte Kamera nicht verifiziert werden konnte. Die genauen Canon-Operation-Codes und der Capture-/Event-Ablauf müssen am Gerät mit der Canon EOS 80D nachgezogen werden. Referenz: <https://julianschroden.com/post/2023-05-10-pairing-and-initializing-a-ptp-ip-connection-with-a-canon-eos-camera/>
 
