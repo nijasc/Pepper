@@ -12,7 +12,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.buhler.funktionierender_pepper"
+        applicationId "com.buhlergroup.pepper"
         minSdk 23
         targetSdk 34
         versionCode 1
