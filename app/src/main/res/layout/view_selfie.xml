@@ -85,7 +85,7 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/selfieOkay"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
