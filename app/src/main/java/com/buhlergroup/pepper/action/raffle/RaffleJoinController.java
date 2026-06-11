@@ -116,9 +116,15 @@ public final class RaffleJoinController {
             board.showError(R.string.raffle_join_email_invalid);
             return;
         }
-        if (raffle.requiresPhone && phone.isEmpty()) {
-            board.showError(R.string.raffle_join_phone_required);
-            return;
+        if (raffle.requiresPhone) {
+            if (phone.isEmpty()) {
+                board.showError(R.string.raffle_join_phone_required);
+                return;
+            }
+            if (!phone.matches("[+]?[0-9\\s()\\-]{7,20}")) {
+                board.showError(R.string.raffle_join_phone_invalid);
+                return;
+            }
         }
 
         board.setSubmitting(true);
@@ -132,6 +138,10 @@ public final class RaffleJoinController {
             }
             if (repo.hasEntryWithEmail(raffle.id, email)) {
                 board.showError(R.string.raffle_join_duplicate);
+                return;
+            }
+            if (raffle.requiresPhone && repo.hasEntryWithPhone(raffle.id, phone)) {
+                board.showError(R.string.raffle_join_phone_duplicate);
                 return;
             }
 

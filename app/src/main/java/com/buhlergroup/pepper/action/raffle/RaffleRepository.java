@@ -98,4 +98,8 @@ public final class RaffleRepository {
     public boolean hasEntryWithEmail(long raffleId, String email) {
         return entryDao.countByEmail(raffleId, email) > 0;
     }
+
+    public boolean hasEntryWithPhone(long raffleId, String phone) {
+        return entryDao.countByPhone(raffleId, phone) > 0;
+    }
 }

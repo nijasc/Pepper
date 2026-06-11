@@ -63,5 +63,7 @@
     <string name="raffle_join_name_required">Bitte gib deinen Namen ein.</string>
     <string name="raffle_join_email_invalid">Bitte gib eine gültige E-Mail-Adresse ein.</string>
     <string name="raffle_join_phone_required">Bitte gib deine Telefonnummer ein.</string>
+    <string name="raffle_join_phone_invalid">Bitte gib eine gültige Telefonnummer ein.</string>
     <string name="raffle_join_duplicate">Mit dieser E-Mail bist du bereits eingetragen.</string>
+    <string name="raffle_join_phone_duplicate">Mit dieser Telefonnummer bist du bereits eingetragen.</string>
 </resources>
