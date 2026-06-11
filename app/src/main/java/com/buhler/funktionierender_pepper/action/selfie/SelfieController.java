@@ -10,8 +10,8 @@ import android.util.Log;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.TakePictureBuilder;
+import com.aldebaran.qi.sdk.object.camera.TakePicture;
 import com.aldebaran.qi.sdk.object.image.EncodedImage;
-import com.aldebaran.qi.sdk.object.image.TakePicture;
 import com.aldebaran.qi.sdk.object.image.TimestampedImageHandle;
 import com.buhler.funktionierender_pepper.R;
 import com.buhler.funktionierender_pepper.action.selfie.data.SelfieEntity;
