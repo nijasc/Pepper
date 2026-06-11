@@ -35,4 +35,7 @@
     <string name="admin_history_view">Verlauf ansehen</string>
     <string name="admin_history_empty">Noch keine Nachrichten</string>
     <string name="admin_export_all">Alle exportieren</string>
+    <string name="admin_export_preparing">ZIP wird erstellt …</string>
+    <string name="admin_export_done">Export fertig</string>
+    <string name="admin_export_failed">Export fehlgeschlagen</string>
 </resources>

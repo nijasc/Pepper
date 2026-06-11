@@ -3,6 +3,7 @@ package com.buhlergroup.pepper.action.admin;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,15 +28,21 @@ import com.buhlergroup.pepper.openai.history.HistoryEntry;
 import com.buhlergroup.pepper.openai.history.HistoryRole;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class AdminView extends FrameLayout {
 
+    private static final String TAG = "AdminView";
     private static final String PIN = "1019";
     private static final int PANEL_PIN = 0;
     private static final int PANEL_MENU = 1;
@@ -126,6 +133,7 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminDevLogBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminSelfies).setOnClickListener(v -> showGallery());
         findViewById(R.id.adminGalleryBack).setOnClickListener(v -> showPanel(PANEL_MENU));
+        exportAllButton.setOnClickListener(v -> onExportAll());
         findViewById(R.id.adminDetailBack).setOnClickListener(v -> showGallery());
         detailFavorite.setOnClickListener(v -> toggleFavorite());
         findViewById(R.id.adminDetailDelete).setOnClickListener(v -> deleteCurrent());
@@ -323,6 +331,52 @@ public class AdminView extends FrameLayout {
     private void setExportEnabled(boolean enabled) {
         exportAllButton.setEnabled(enabled);
         exportAllButton.setAlpha(enabled ? 1f : 0.4f);
+    }
+
+    private void onExportAll() {
+        setExportEnabled(false);
+        exportAllButton.setText(R.string.admin_export_preparing);
+        dbExecutor.submit(() -> {
+            File zip = createSelfiesZip();
+            post(() -> {
+                exportAllButton.setText(R.string.admin_export_all);
+                setExportEnabled(true);
+                if (zip != null) {
+                    Toast.makeText(getContext(), R.string.admin_export_done, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+    }
+
+    private File createSelfiesZip() {
+        File imagesDir = SelfieRepository.get(getContext()).imagesDir();
+        File[] files = imagesDir.listFiles();
+        if (files == null || files.length == 0) {
+            return null;
+        }
+        File zipFile = new File(getContext().getCacheDir(), "selfies_export.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
+            byte[] buffer = new byte[8192];
+            for (File file : files) {
+                if (!file.isFile()) {
+                    continue;
+                }
+                try (FileInputStream fis = new FileInputStream(file)) {
+                    zos.putNextEntry(new ZipEntry(file.getName()));
+                    int read;
+                    while ((read = fis.read(buffer)) != -1) {
+                        zos.write(buffer, 0, read);
+                    }
+                    zos.closeEntry();
+                }
+            }
+        } catch (IOException e) {
+            Log.w(TAG, "Selfie-Export fehlgeschlagen: " + e.getMessage());
+            return null;
+        }
+        return zipFile;
     }
 
     private void showDetail(SelfieEntity selfie) {
