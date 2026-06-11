@@ -9,7 +9,9 @@ import java.util.Map;
 
 public class HistoryManager implements Cloneable {
     public static final int MAX_HISTORY = 10;
+    private static final int MAX_DEV_LOG = 200;
     private final List<HistoryEntry> history = new ArrayList<>();
+    private final List<String> devLog = new ArrayList<>();
 
     public void addUser(String content) {
         add(HistoryRole.USER, content, null);
@@ -37,6 +39,16 @@ public class HistoryManager implements Cloneable {
             removeOldestConversational();
         }
         history.add(new HistoryEntry(role, content, action));
+        if (role == HistoryRole.DEVELOPER) {
+            devLog.add(content);
+            if (devLog.size() > MAX_DEV_LOG) {
+                devLog.remove(0);
+            }
+        }
+    }
+
+    public List<String> getDevLog() {
+        return new ArrayList<>(devLog);
     }
 
     public List<Map<String, String>> toInput() {

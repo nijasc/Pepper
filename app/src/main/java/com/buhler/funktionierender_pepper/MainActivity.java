@@ -23,6 +23,8 @@ import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayStrategy;
 import com.buhler.funktionierender_pepper.action.ActionHandler;
 import com.buhler.funktionierender_pepper.action.follow.FollowController;
+import com.buhler.funktionierender_pepper.action.admin.AdminController;
+import com.buhler.funktionierender_pepper.action.admin.AdminView;
 import com.buhler.funktionierender_pepper.action.memory.MemoryGameController;
 import com.buhler.funktionierender_pepper.action.memory.MemoryGameView;
 import com.buhler.funktionierender_pepper.action.selfie.SelfieController;
@@ -64,6 +66,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         SelfieView selfieView = findViewById(R.id.selfieView);
         SelfieController.get().attachView(selfieView);
 
+        AdminView adminView = findViewById(R.id.adminView);
+        AdminController.get().attachView(adminView);
+        findViewById(R.id.adminButton).setOnClickListener(v -> AdminController.get().open());
+
         initSpeech();
     }
 
@@ -75,6 +81,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         MemoryGameController.get().detachView();
         SelfieController.get().detachView();
         SelfieController.get().stopServer();
+        AdminController.get().detachView();
         QiSDK.unregister(this);
         recognizer.cancel();
         recognizer.destroy();
@@ -102,6 +109,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         if (historyManager == null) {
             historyManager = new HistoryManager();
         }
+        AdminController.get().setHistoryManager(historyManager);
         try {
             if (executionHandler == null) {
                 executionHandler = new ActionHandler(languageManager, historyManager);

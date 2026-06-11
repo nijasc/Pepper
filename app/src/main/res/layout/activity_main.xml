@@ -45,6 +45,17 @@
         android:textSize="28sp"
         android:visibility="gone" />
 
+    <Button
+        android:id="@+id/adminButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp"
+        android:background="@android:color/transparent"
+        android:text="@string/admin_button"
+        android:textColor="#66FFFFFF"
+        android:textSize="14sp" />
+
     <com.buhler.funktionierender_pepper.action.memory.MemoryGameView
         android:id="@+id/memoryGame"
         android:layout_width="match_parent"
@@ -53,6 +64,12 @@
 
     <com.buhler.funktionierender_pepper.action.selfie.SelfieView
         android:id="@+id/selfieView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <com.buhler.funktionierender_pepper.action.admin.AdminView
+        android:id="@+id/adminView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone" />

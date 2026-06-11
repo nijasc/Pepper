@@ -13,4 +13,22 @@
     <string name="selfie_scan_hint">Scanne den QR-Code, um dein Bild herunterzuladen</string>
     <string name="selfie_wifi_hint">Scanne, um dich mit Peppers WLAN zu verbinden</string>
     <string name="selfie_okay">Okay</string>
+    <string name="admin_button">Admin</string>
+    <string name="admin_pin_title">Admin – PIN eingeben</string>
+    <string name="admin_pin_error">Falscher PIN</string>
+    <string name="admin_cancel">Abbrechen</string>
+    <string name="admin_menu_title">Admin-Bereich</string>
+    <string name="admin_clear_history">Verlauf löschen</string>
+    <string name="admin_dev_logs">Dev-Logs</string>
+    <string name="admin_selfies">Selfies</string>
+    <string name="admin_close">Schließen</string>
+    <string name="admin_back">Zurück</string>
+    <string name="admin_history_cleared">Verlauf gelöscht</string>
+    <string name="admin_key_clear">C</string>
+    <string name="admin_key_backspace">⌫</string>
+    <string name="admin_devlog_empty">Noch keine Einträge</string>
+    <string name="admin_no_selfies">Noch keine Selfies</string>
+    <string name="admin_delete">Löschen</string>
+    <string name="admin_favorite_add">Als Favorit</string>
+    <string name="admin_favorite_remove">Favorit entfernen</string>
 </resources>

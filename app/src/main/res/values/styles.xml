@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="AdminKey">
+        <item name="android:layout_width">96dp</item>
+        <item name="android:layout_height">72dp</item>
+        <item name="android:layout_margin">6dp</item>
+        <item name="android:background">@drawable/bg_pill_teal</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">28sp</item>
+    </style>
+
+    <style name="AdminMenuButton">
+        <item name="android:layout_width">340dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">12dp</item>
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:paddingBottom">18dp</item>
+        <item name="android:background">@drawable/bg_pill_teal</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">22sp</item>
+    </style>
+</resources>
