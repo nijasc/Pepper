@@ -1,7 +1,9 @@
 package com.buhlergroup.pepper.action.admin;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -17,6 +19,7 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -342,12 +345,30 @@ public class AdminView extends FrameLayout {
                 exportAllButton.setText(R.string.admin_export_all);
                 setExportEnabled(true);
                 if (zip != null) {
-                    Toast.makeText(getContext(), R.string.admin_export_done, Toast.LENGTH_SHORT).show();
+                    shareZip(zip);
                 } else {
                     Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
                 }
             });
         });
+    }
+
+    private void shareZip(File zip) {
+        try {
+            Uri uri = FileProvider.getUriForFile(getContext(),
+                    getContext().getPackageName() + ".fileprovider", zip);
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType("application/zip");
+            share.putExtra(Intent.EXTRA_STREAM, uri);
+            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent chooser = Intent.createChooser(share,
+                    getContext().getString(R.string.admin_export_share_title));
+            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(chooser);
+        } catch (Exception e) {
+            Log.w(TAG, "Teilen fehlgeschlagen: " + e.getMessage());
+            Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private File createSelfiesZip() {
