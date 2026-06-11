@@ -16,7 +16,10 @@ import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHolder> {
 
@@ -25,6 +28,7 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
     }
 
     private final List<SelfieEntity> items = new ArrayList<>();
+    private final Set<String> raffleLinkedIds = new HashSet<>();
     private final OnSelfieClick onClick;
     private File imagesDir;
 
@@ -32,10 +36,12 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
         this.onClick = onClick;
     }
 
-    public void setData(List<SelfieEntity> data, File imagesDir) {
+    public void setData(List<SelfieEntity> data, File imagesDir, Set<String> linkedSelfieIds) {
         this.imagesDir = imagesDir;
         items.clear();
         items.addAll(data);
+        raffleLinkedIds.clear();
+        raffleLinkedIds.addAll(linkedSelfieIds != null ? linkedSelfieIds : Collections.emptySet());
         notifyDataSetChanged();
     }
 
@@ -51,6 +57,7 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
         SelfieEntity selfie = items.get(position);
         holder.number.setText("#" + selfie.number);
         holder.star.setVisibility(selfie.favorite ? View.VISIBLE : View.GONE);
+        holder.raffle.setVisibility(raffleLinkedIds.contains(selfie.id) ? View.VISIBLE : View.GONE);
         holder.image.setImageBitmap(decodeThumb(new File(imagesDir, selfie.filename), 240));
         holder.itemView.setOnClickListener(v -> onClick.onClick(selfie));
     }
@@ -81,12 +88,14 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
         final ImageView image;
         final TextView number;
         final TextView star;
+        final ImageView raffle;
 
         SelfieHolder(@NonNull View itemView) {
             super(itemView);
             image = itemView.findViewById(R.id.itemSelfieImage);
             number = itemView.findViewById(R.id.itemSelfieNumber);
             star = itemView.findViewById(R.id.itemSelfieStar);
+            raffle = itemView.findViewById(R.id.itemSelfieRaffle);
         }
     }
 }

@@ -50,7 +50,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
@@ -463,19 +465,49 @@ public class AdminView extends FrameLayout {
         showPanel(PANEL_RAFFLE);
     }
 
-    private TextView createEntryRow(RaffleEntryEntity entry) {
+    private View createEntryRow(RaffleEntryEntity entry) {
+        LinearLayout row = new LinearLayout(getContext());
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        int pv = dp(6);
+        row.setPadding(0, pv, 0, pv);
+
+        ImageView thumb = new ImageView(getContext());
+        LinearLayout.LayoutParams thumbParams = new LinearLayout.LayoutParams(dp(48), dp(48));
+        thumbParams.setMarginEnd(dp(12));
+        thumb.setLayoutParams(thumbParams);
+        thumb.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        thumb.setBackgroundColor(0xFF000000);
+        thumb.setVisibility(GONE);
+        row.addView(thumb);
+
         StringBuilder sb = new StringBuilder(entry.name).append(" · ").append(entry.email);
         if (entry.phone != null && !entry.phone.isEmpty()) {
             sb.append(" · ").append(entry.phone);
         }
+        TextView text = new TextView(getContext());
+        text.setText(sb.toString());
+        text.setTextColor(0xFFFFFFFF);
+        row.addView(text);
+
         if (entry.selfieId != null && !entry.selfieId.isEmpty()) {
-            sb.append("  📷");
+            dbExecutor.submit(() -> {
+                SelfieRepository repository = SelfieRepository.get(getContext());
+                SelfieEntity selfie = repository.findById(entry.selfieId);
+                if (selfie == null) {
+                    return;
+                }
+                Bitmap bitmap = SelfieAdapter.decodeThumb(
+                        new File(repository.imagesDir(), selfie.filename), 160);
+                post(() -> {
+                    if (bitmap != null) {
+                        thumb.setImageBitmap(bitmap);
+                    }
+                    thumb.setVisibility(VISIBLE);
+                    row.setOnClickListener(v -> showDetail(selfie));
+                });
+            });
         }
-        TextView row = new TextView(getContext());
-        row.setText(sb.toString());
-        row.setTextColor(0xFFFFFFFF);
-        int pv = dp(6);
-        row.setPadding(0, pv, 0, pv);
         return row;
     }
 
@@ -521,8 +553,9 @@ public class AdminView extends FrameLayout {
             SelfieRepository repository = SelfieRepository.get(getContext());
             List<SelfieEntity> items = repository.getAll();
             File dir = repository.imagesDir();
+            Set<String> linked = new HashSet<>(RaffleRepository.get(getContext()).linkedSelfieIds());
             post(() -> {
-                selfieAdapter.setData(items, dir);
+                selfieAdapter.setData(items, dir, linked);
                 galleryEmpty.setVisibility(items.isEmpty() ? VISIBLE : GONE);
                 setExportEnabled(!items.isEmpty());
             });

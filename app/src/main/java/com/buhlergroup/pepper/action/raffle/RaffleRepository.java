@@ -102,4 +102,8 @@ public final class RaffleRepository {
     public boolean hasEntryWithPhone(long raffleId, String phone) {
         return entryDao.countByPhone(raffleId, phone) > 0;
     }
+
+    public List<String> linkedSelfieIds() {
+        return entryDao.getLinkedSelfieIds();
+    }
 }

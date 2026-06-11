@@ -53,6 +53,10 @@ public final class SelfieRepository {
         return dao.getAll();
     }
 
+    public SelfieEntity findById(String id) {
+        return dao.findById(id);
+    }
+
     public void setFavorite(String id, boolean favorite) {
         dao.setFavorite(id, favorite);
     }

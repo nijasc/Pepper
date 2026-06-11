@@ -23,4 +23,7 @@ public interface RaffleEntryDao {
 
     @Query("SELECT COUNT(*) FROM raffle_entries WHERE raffle_id = :raffleId AND phone = :phone")
     int countByPhone(long raffleId, String phone);
+
+    @Query("SELECT DISTINCT selfie_id FROM raffle_entries WHERE selfie_id IS NOT NULL")
+    List<String> getLinkedSelfieIds();
 }
