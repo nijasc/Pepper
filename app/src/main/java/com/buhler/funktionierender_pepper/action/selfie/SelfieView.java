@@ -52,6 +52,7 @@ public class SelfieView extends FrameLayout {
         wifiBlock = findViewById(R.id.selfieWifiBlock);
         statusView = findViewById(R.id.selfieStatus);
         okayButton = findViewById(R.id.selfieOkay);
+        okayButton.setTextColor(ContextCompat.getColor(context, R.color.white));
         okayButton.setOnClickListener(v -> {
             Runnable listener = closeListener;
             if (listener != null) {
