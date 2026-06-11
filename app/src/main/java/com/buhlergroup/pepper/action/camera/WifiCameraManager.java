@@ -38,6 +38,7 @@ public final class WifiCameraManager {
     private static final int DATA_PHASE_IN = 2;
 
     private static final int OP_OPEN_SESSION = 0x1002;
+    private static final int OP_INITIATE_CAPTURE = 0x100E;
     private static final int OP_GET_OBJECT = 0x1009;
     private static final int OP_EOS_SET_REMOTE_MODE = 0x9114;
     private static final int OP_EOS_SET_EVENT_MODE = 0x9115;
@@ -84,8 +85,11 @@ public final class WifiCameraManager {
             executeCommand(OP_EOS_SET_REMOTE_MODE, 1);
             executeCommand(OP_EOS_SET_EVENT_MODE, 1);
 
-            executeCommand(OP_EOS_REMOTE_RELEASE_ON, 3, 0);
+            int releaseResult = executeCommand(OP_EOS_REMOTE_RELEASE_ON, 3, 0);
             executeCommand(OP_EOS_REMOTE_RELEASE_OFF, 3, 0);
+            if (releaseResult != RESPONSE_OK) {
+                executeCommand(OP_INITIATE_CAPTURE, 0, 0);
+            }
 
             int objectHandle = pollForObjectHandle();
             if (objectHandle == 0) {
@@ -148,7 +152,7 @@ public final class WifiCameraManager {
         return buffer.array();
     }
 
-    private void executeCommand(int opCode, int... params) throws IOException {
+    private int executeCommand(int opCode, int... params) throws IOException {
         int tid = ++transactionId;
         writePacket(commandOut, PKT_OPERATION_REQUEST, buildOperationRequest(DATA_PHASE_NONE, opCode, tid, params));
         Packet response = readOperationResponse();
@@ -156,6 +160,7 @@ public final class WifiCameraManager {
         if (code != RESPONSE_OK) {
             Log.w(TAG, "Operation 0x" + Integer.toHexString(opCode) + " response 0x" + Integer.toHexString(code));
         }
+        return code;
     }
 
     private byte[] executeCommandWithDataIn(int opCode, int... params) throws IOException {
