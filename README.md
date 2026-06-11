@@ -28,6 +28,7 @@
   - [High Five](#high-five)
   - [Memory-Minispiel](#memory-minispiel)
   - [Selfie](#selfie)
+  - [Verlosung](#verlosung)
   - [Lautstärke](#lautstärke)
   - [Sprache](#sprache)
   - [Dokumentation](#dokumentation)
@@ -35,6 +36,10 @@
   - [Systeminformationen](#systeminformationen)
   - [Siri und andere Assistenten](#siri-und-andere-assistenten)
   - [Test (Entwicklung)](#test-entwicklung)
+- [Admin-Bereich](#admin-bereich)
+  - [Zugang & PIN](#zugang--pin)
+  - [Selfie-Galerie](#selfie-galerie)
+  - [Verlosung verwalten](#verlosung-verwalten)
 - [Pepper für Entwickler](#pepper-für-entwickler)
   - [Einrichtung](#einrichtung)
     - [Systemspezifikationen](#systemspezifikationen)
@@ -260,6 +265,30 @@ Beispiel (en): Let's take a selfie.
 Beispiel (de): Lass uns ein Selfie machen.
 ```
 
+### Verlosung
+
+Pepper kann eine **Verlosung** (Gewinnspiel) begleiten. Eine Verlosung wird im [Admin-Bereich](#verlosung-verwalten) angelegt; immer nur **eine** ist gleichzeitig aktiv. Solange eine Verlosung läuft, weiss Pepper davon und lädt Besucher im Gespräch von sich aus zum Mitmachen ein – die aktive Verlosung wird dazu automatisch in den Systemprompt eingespeist. Auf direkte Fragen («Gibt es ein Gewinnspiel?») antwortet Pepper mit Titel, Beschreibung und Enddatum.
+
+Beim **Beitritt** erfasst Pepper Name und E-Mail-Adresse (optional Telefon) Schritt für Schritt über ein Tablet-Formular, das Pepper sprachlich begleitet. E-Mail- und Telefonformat werden geprüft, Doppel-Eintritte über dieselbe E-Mail oder Telefonnummer verhindert. Ist für die Verlosung ein Selfie verpflichtend, läuft zuerst der [Selfie](#selfie)-Flow und das Selfie wird dem Eintrag zugeordnet.
+
+**Drei Eintrittspunkte:**
+
+- **Sprachbefehl** – «Verlosung beitreten», «Mitmachen», «teilnehmen».
+- **Nach einem Selfie** – läuft eine aktive Verlosung, bietet Pepper direkt im Anschluss den Beitritt an.
+- **Admin** – manuelle Verwaltung und Teilnehmerübersicht.
+
+**Status-Lebenszyklus:** `ACTIVE` (Beitritt möglich) → `ENDED` (nach Enddatum automatisch, kein Beitritt mehr) → `FINISHED` (manuell vom Admin abgeschlossen, Pepper erwähnt sie nicht mehr).
+
+**Zu beachten:**
+
+- Teilnehmerdaten liegen in einer eigenen Room-Datenbank (`raffle.db`) lokal auf Pepper – nichts wird ins Internet übertragen.
+- Pepper begleitet den Beitritt sprachlich auf Deutsch (wie alle System-Ansagen via `systemSay`).
+
+```text
+Beispiel (en): I want to join the raffle.
+Beispiel (de): Ich möchte bei der Verlosung mitmachen.
+```
+
 ### Lautstärke
 
 Die Systemlautstärke kann per Sprachbefehl geändert werden. Pepper extrahiert dazu den Zahlenwert aus der Eingabe und setzt die Lautstärke entsprechend.
@@ -336,6 +365,38 @@ Eine Aktion für Entwicklungs- und Demozwecke: Pepper dreht sich einmal um die e
 Beispiel (en): Run the test action.
 Beispiel (de): Führe die Testaktion aus.
 ```
+
+---
+
+## Admin-Bereich
+
+Der Admin-Bereich ist eine PIN-geschützte Tablet-Oberfläche für Betrieb und Wartung – getrennt vom normalen Besucher-Dialog.
+
+### Zugang & PIN
+
+Geöffnet wird der Admin-Bereich über den **Admin-Button** unten links auf dem Homescreen oder per Sprachbefehl («Admin», «Einstellungen»). Danach folgt die Eingabe einer **4-stelligen PIN**. Nach erfolgreicher Eingabe erscheint das Admin-Menü als **Kachelgrid** mit Icons.
+
+Solange ein Overlay (Admin, Selfie oder Verlosungs-Beitritt) offen ist, werden Admin-Button und Sprachanzeige ausgeblendet, und die Spracherkennung pausiert, bis es wieder geschlossen wird.
+
+Das Menü bündelt:
+
+| Kachel | Funktion |
+| ------ | -------- |
+| Verlauf löschen | Leert das Gesprächsgedächtnis (`HistoryManager`). |
+| Dev-Logs | Zeigt die Entwickler-Logs chronologisch (neueste unten, Auto-Scroll). |
+| Selfies | Öffnet die [Selfie-Galerie](#selfie-galerie). |
+| Sprache | Wechselt manuell zwischen Deutsch und Englisch. |
+| Verlauf ansehen | Zeigt das aktuelle Gespräch als Chat-Blasen. |
+| Verlosung | Legt eine [Verlosung](#verlosung-verwalten) an bzw. verwaltet sie. |
+| Schließen | Schliesst den Admin-Bereich. |
+
+### Selfie-Galerie
+
+Die Galerie zeigt alle lokal gespeicherten Selfies als Raster, **Favoriten zuerst**. Selfies, die mit einem Verlosungs-Eintrag verknüpft sind, tragen ein kleines Verlosungs-Badge. In der **Detailansicht** eines Selfies lässt sich der Download-QR-Code anzeigen (zeigt auf den eingebetteten Webserver, Port 8080), das Selfie als Favorit markieren oder löschen. Über **«Alle exportieren»** werden sämtliche Selfies als ZIP gepackt und per Android-Share-Intent (`FileProvider`) zum Teilen/Speichern angeboten.
+
+### Verlosung verwalten
+
+Hier wird eine [Verlosung](#verlosung) angelegt (Titel, Beschreibung, Enddatum, Optionen «Selfie erforderlich» / «Telefon erforderlich») – nur möglich, wenn keine andere aktiv ist. Läuft bereits eine Verlosung, zeigt das Panel stattdessen die **Übersicht** mit Status, Teilnehmerzahl und Teilnehmerliste (Name, E-Mail, Telefon, Selfie-Thumbnail). Verknüpfte Selfie-Thumbnails sind anklickbar und öffnen die Selfie-Detailansicht. Über **«Verlosung beenden»** wird die Verlosung manuell auf `FINISHED` gesetzt.
 
 ---
 
@@ -498,6 +559,12 @@ Die folgende Übersicht zeigt die wichtigsten Klassen und ihre Verantwortung –
 | `FollowController` (Singleton) | Hintergrundschleife der FollowMe-Mechanik (siehe [FollowMe-Mechanik](#followme-mechanik)). |
 | `MemoryGameController` / `MemoryGameView` | Steuerung und Tablet-Darstellung des [Memory-Minispiels](#memory-minispiel). |
 | `EmotionReader` / `BasicEmotion` | Liest über die QiSDK-Wahrnehmung die Stimmung der Person, mappt `PleasureState` × `ExcitementState` auf eine Grundstimmung und speist sie als Kontext in den Systemprompt (siehe [Emotionswahrnehmung](#emotionswahrnehmung)). |
+| `SelfieController` / `SelfieRepository` | Nimmt das [Selfie](#selfie) auf, legt das Bild ab (Room + Datei), serviert es über `LocalImageServer` und bietet nach der Aufnahme ggf. den Verlosungs-Beitritt an. |
+| `NetworkUtils` | Ermittelt die lokale WLAN-IP von Pepper (für die Download-URLs der QR-Codes). |
+| `AdminController` / `AdminView` | Steuerung und Tablet-Oberfläche des [Admin-Bereichs](#admin-bereich) (PIN, Kachelmenü, Dev-Logs, Galerie, Verlosungs-Verwaltung). Meldet den Offen-Zustand an `MainActivity`. |
+| `RaffleRepository` / `RaffleDatabase` | Persistenz der [Verlosung](#verlosung) in einer eigenen `raffle.db` (Verlosungen + Teilnehmer-Einträge), erzwingt max. eine aktive Verlosung und den automatischen `ACTIVE`→`ENDED`-Übergang. |
+| `RaffleJoinController` / `RaffleJoinView` | Schritt-für-Schritt-Beitrittsformular mit Pepper-Sprachbegleitung, Validierung, Duplikat-Prüfung und Abschlussscreen. |
+| `RaffleInfoAction` / `JoinRaffleAction` | Actions für Verlosungs-Auskunft bzw. -Beitritt per Sprachbefehl. |
 
 ### Ressourcen verwalten
 
