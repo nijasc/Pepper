@@ -51,6 +51,16 @@ public class HistoryManager implements Cloneable {
         return new ArrayList<>(devLog);
     }
 
+    public List<HistoryEntry> getConversation() {
+        List<HistoryEntry> result = new ArrayList<>();
+        for (HistoryEntry entry : history) {
+            if (entry.getRole() != HistoryRole.DEVELOPER) {
+                result.add(entry);
+            }
+        }
+        return result;
+    }
+
     public List<Map<String, String>> toInput() {
         List<Map<String, String>> input = new ArrayList<>();
         for (HistoryEntry entry : history) {

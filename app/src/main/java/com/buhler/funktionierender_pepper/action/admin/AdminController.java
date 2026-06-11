@@ -2,6 +2,7 @@ package com.buhler.funktionierender_pepper.action.admin;
 
 import com.buhler.funktionierender_pepper.lang.LanguageManager;
 import com.buhler.funktionierender_pepper.lang.SupportedLanguage;
+import com.buhler.funktionierender_pepper.openai.history.HistoryEntry;
 import com.buhler.funktionierender_pepper.openai.history.HistoryManager;
 
 import java.util.Collections;
@@ -83,5 +84,13 @@ public final class AdminController {
             return Collections.emptyList();
         }
         return hm.getDevLog();
+    }
+
+    public List<HistoryEntry> getConversation() {
+        HistoryManager hm = historyManager;
+        if (hm == null) {
+            return Collections.emptyList();
+        }
+        return hm.getConversation();
     }
 }

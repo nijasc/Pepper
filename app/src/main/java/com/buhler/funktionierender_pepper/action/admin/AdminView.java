@@ -3,11 +3,14 @@ package com.buhler.funktionierender_pepper.action.admin;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +23,8 @@ import com.buhler.funktionierender_pepper.R;
 import com.buhler.funktionierender_pepper.action.selfie.SelfieRepository;
 import com.buhler.funktionierender_pepper.action.selfie.data.SelfieEntity;
 import com.buhler.funktionierender_pepper.lang.SupportedLanguage;
+import com.buhler.funktionierender_pepper.openai.history.HistoryEntry;
+import com.buhler.funktionierender_pepper.openai.history.HistoryRole;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -38,6 +43,7 @@ public class AdminView extends FrameLayout {
     private static final int PANEL_GALLERY = 3;
     private static final int PANEL_DETAIL = 4;
     private static final int PANEL_LANG = 5;
+    private static final int PANEL_HISTORY = 6;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final StringBuilder entered = new StringBuilder();
@@ -48,6 +54,9 @@ public class AdminView extends FrameLayout {
     private View galleryPanel;
     private View detailPanel;
     private View langPanel;
+    private View historyPanel;
+    private ScrollView historyScroll;
+    private LinearLayout historyContainer;
 
     private TextView pinDots;
     private TextView pinError;
@@ -90,6 +99,9 @@ public class AdminView extends FrameLayout {
         galleryPanel = findViewById(R.id.adminGalleryPanel);
         detailPanel = findViewById(R.id.adminDetailPanel);
         langPanel = findViewById(R.id.adminLangPanel);
+        historyPanel = findViewById(R.id.adminHistoryPanel);
+        historyScroll = findViewById(R.id.adminHistoryScroll);
+        historyContainer = findViewById(R.id.adminHistoryContainer);
 
         pinDots = findViewById(R.id.adminPinDots);
         pinError = findViewById(R.id.adminPinError);
@@ -117,6 +129,8 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminLangDe).setOnClickListener(v -> setLanguage(SupportedLanguage.GERMAN));
         findViewById(R.id.adminLangEn).setOnClickListener(v -> setLanguage(SupportedLanguage.ENGLISH));
         findViewById(R.id.adminLangBack).setOnClickListener(v -> showPanel(PANEL_MENU));
+        findViewById(R.id.adminHistory).setOnClickListener(v -> showHistory());
+        findViewById(R.id.adminHistoryBack).setOnClickListener(v -> showPanel(PANEL_MENU));
 
         selfieAdapter = new SelfieAdapter(this::showDetail);
         selfieGrid.setLayoutManager(new GridLayoutManager(context, 3));
@@ -203,6 +217,7 @@ public class AdminView extends FrameLayout {
         galleryPanel.setVisibility(which == PANEL_GALLERY ? VISIBLE : GONE);
         detailPanel.setVisibility(which == PANEL_DETAIL ? VISIBLE : GONE);
         langPanel.setVisibility(which == PANEL_LANG ? VISIBLE : GONE);
+        historyPanel.setVisibility(which == PANEL_HISTORY ? VISIBLE : GONE);
     }
 
     private void showLanguage() {
@@ -218,6 +233,48 @@ public class AdminView extends FrameLayout {
     private void updateLanguageLabel() {
         SupportedLanguage current = AdminController.get().getCurrentLanguage();
         langCurrent.setText(current != null ? current.getDisplayName() : "");
+    }
+
+    private void showHistory() {
+        historyContainer.removeAllViews();
+        List<HistoryEntry> entries = AdminController.get().getConversation();
+        if (entries.isEmpty()) {
+            TextView empty = new TextView(getContext());
+            empty.setText(R.string.admin_history_empty);
+            empty.setTextColor(0xCCFFFFFF);
+            int pad = dp(16);
+            empty.setPadding(pad, pad, pad, pad);
+            historyContainer.addView(empty);
+        } else {
+            for (HistoryEntry entry : entries) {
+                historyContainer.addView(createBubble(entry));
+            }
+        }
+        showPanel(PANEL_HISTORY);
+        historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_DOWN));
+    }
+
+    private TextView createBubble(HistoryEntry entry) {
+        boolean user = entry.getRole() == HistoryRole.USER;
+        TextView bubble = new TextView(getContext());
+        bubble.setText(entry.getContent());
+        bubble.setTextColor(0xFFFFFFFF);
+        bubble.setBackgroundResource(user ? R.drawable.bg_bubble_user : R.drawable.bg_bubble_assistant);
+        bubble.setMaxWidth(dp(560));
+        int ph = dp(16);
+        int pv = dp(10);
+        bubble.setPadding(ph, pv, ph, pv);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.gravity = user ? Gravity.END : Gravity.START;
+        int margin = dp(6);
+        params.setMargins(margin, margin, margin, margin);
+        bubble.setLayoutParams(params);
+        return bubble;
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void onClearHistory() {

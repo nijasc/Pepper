@@ -32,4 +32,6 @@
     <string name="admin_favorite_add">Als Favorit</string>
     <string name="admin_favorite_remove">Favorit entfernen</string>
     <string name="admin_language">Sprache</string>
+    <string name="admin_history_view">Verlauf ansehen</string>
+    <string name="admin_history_empty">Noch keine Nachrichten</string>
 </resources>

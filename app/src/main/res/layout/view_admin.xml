@@ -130,6 +130,11 @@
             android:text="@string/admin_language" />
 
         <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminHistory"
+            style="@style/AdminMenuButton"
+            android:text="@string/admin_history_view" />
+
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminClose"
             style="@style/AdminMenuButton"
             android:layout_marginTop="32dp"
@@ -335,6 +340,44 @@
             android:id="@+id/adminLangBack"
             style="@style/AdminMenuButton"
             android:layout_marginTop="24dp"
+            android:text="@string/admin_back" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adminHistoryPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/admin_history_view"
+            android:textColor="@color/white"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <ScrollView
+            android:id="@+id/adminHistoryScroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:id="@+id/adminHistoryContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminHistoryBack"
+            style="@style/AdminMenuButton"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
             android:text="@string/admin_back" />
     </LinearLayout>
 </merge>
