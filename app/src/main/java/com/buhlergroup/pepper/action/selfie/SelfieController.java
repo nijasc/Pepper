@@ -64,15 +64,15 @@ public final class SelfieController {
         }
     }
 
-    public void takeSelfie(QiContext context) {
+    public SelfieEntity takeSelfie(QiContext context) {
         SelfieView board = view;
         if (board == null) {
             say(context, "Mein Tablet ist gerade nicht bereit, deshalb kann ich kein Selfie machen.");
-            return;
+            return null;
         }
         if (running) {
             say(context, "Wir machen doch gerade schon ein Selfie!");
-            return;
+            return null;
         }
 
         running = true;
@@ -83,7 +83,7 @@ public final class SelfieController {
             Bitmap photo = capture(context);
             if (photo == null) {
                 say(context, "Hoppla, das Foto hat nicht geklappt. Versuchen wir es später nochmal.");
-                return;
+                return null;
             }
 
             Bitmap composed = addOverlay(context, photo);
@@ -94,7 +94,7 @@ public final class SelfieController {
             if (ip == null) {
                 say(context, "Ich bin gerade nicht mit dem WLAN verbunden, deshalb kann ich das Selfie nicht teilen.");
                 board.hide();
-                return;
+                return null;
             }
 
             String url = "http://" + ip + ":" + SERVER_PORT + "/" + entity.filename;
@@ -123,6 +123,7 @@ public final class SelfieController {
             }
             board.setOnCloseListener(null);
             board.hide();
+            return entity;
         } catch (Exception e) {
             Log.e(TAG, "Selfie failed", e);
             say(context, "Da ist etwas schiefgelaufen mit dem Selfie.");
@@ -130,6 +131,7 @@ public final class SelfieController {
         } finally {
             running = false;
         }
+        return null;
     }
 
     private void ensureServer(File imagesDir) throws IOException {

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <LinearLayout
+        android:layout_width="520dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp">
+
+        <TextView
+            android:id="@+id/raffleJoinTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/raffle_join_prompt"
+            android:textColor="#CCFFFFFF"
+            android:textSize="18sp" />
+
+        <EditText
+            android:id="@+id/raffleJoinName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:hint="@string/raffle_join_name_hint"
+            android:inputType="textPersonName"
+            android:textColor="@color/white"
+            android:textColorHint="#88FFFFFF" />
+
+        <EditText
+            android:id="@+id/raffleJoinEmail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/raffle_join_email_hint"
+            android:inputType="textEmailAddress"
+            android:textColor="@color/white"
+            android:textColorHint="#88FFFFFF" />
+
+        <EditText
+            android:id="@+id/raffleJoinPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="@string/raffle_join_phone_hint"
+            android:inputType="phone"
+            android:textColor="@color/white"
+            android:textColorHint="#88FFFFFF"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/raffleJoinError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/pad_red"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/raffleJoinSave"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_pill_teal"
+                android:paddingLeft="44dp"
+                android:paddingTop="14dp"
+                android:paddingRight="44dp"
+                android:paddingBottom="14dp"
+                android:text="@string/raffle_join_save"
+                android:textColor="@color/white"
+                android:textSize="20sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/raffleJoinCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill_red"
+                android:paddingLeft="44dp"
+                android:paddingTop="14dp"
+                android:paddingRight="44dp"
+                android:paddingBottom="14dp"
+                android:text="@string/raffle_join_cancel"
+                android:textColor="@color/white"
+                android:textSize="20sp" />
+        </LinearLayout>
+    </LinearLayout>
+</merge>

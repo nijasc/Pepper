@@ -17,4 +17,7 @@ public interface RaffleEntryDao {
 
     @Query("SELECT COUNT(*) FROM raffle_entries WHERE raffle_id = :raffleId")
     int countEntries(long raffleId);
+
+    @Query("SELECT COUNT(*) FROM raffle_entries WHERE raffle_id = :raffleId AND email = :email")
+    int countByEmail(long raffleId, String email);
 }

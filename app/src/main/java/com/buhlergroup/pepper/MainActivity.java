@@ -27,6 +27,8 @@ import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
 import com.buhlergroup.pepper.action.memory.MemoryGameController;
 import com.buhlergroup.pepper.action.memory.MemoryGameView;
+import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
+import com.buhlergroup.pepper.action.raffle.RaffleJoinView;
 import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieView;
 import com.buhlergroup.pepper.lang.LanguageManager;
@@ -67,6 +69,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         SelfieView selfieView = findViewById(R.id.selfieView);
         SelfieController.get().attachView(selfieView);
 
+        RaffleJoinView raffleJoinView = findViewById(R.id.raffleJoinView);
+        RaffleJoinController.get().attachView(raffleJoinView);
+
         AdminView adminView = findViewById(R.id.adminView);
         AdminController.get().attachView(adminView);
         adminButton = findViewById(R.id.adminButton);
@@ -86,6 +91,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         MemoryGameController.get().detachView();
         SelfieController.get().detachView();
         SelfieController.get().stopServer();
+        RaffleJoinController.get().detachView();
         AdminController.get().detachView();
         QiSDK.unregister(this);
         recognizer.cancel();

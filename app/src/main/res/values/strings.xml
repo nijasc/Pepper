@@ -53,4 +53,14 @@
     <string name="raffle_status_ended">Beendet · %1$d Teilnehmer</string>
     <string name="raffle_no_entries">Noch keine Teilnehmer</string>
     <string name="raffle_finish">Verlosung beenden</string>
+    <string name="raffle_join_prompt">Trag dich hier für die Verlosung ein</string>
+    <string name="raffle_join_name_hint">Name</string>
+    <string name="raffle_join_email_hint">E-Mail</string>
+    <string name="raffle_join_phone_hint">Telefon</string>
+    <string name="raffle_join_save">Mitmachen</string>
+    <string name="raffle_join_cancel">Abbrechen</string>
+    <string name="raffle_join_name_required">Bitte gib deinen Namen ein.</string>
+    <string name="raffle_join_email_invalid">Bitte gib eine gültige E-Mail-Adresse ein.</string>
+    <string name="raffle_join_phone_required">Bitte gib deine Telefonnummer ein.</string>
+    <string name="raffle_join_duplicate">Mit dieser E-Mail bist du bereits eingetragen.</string>
 </resources>
