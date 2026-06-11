@@ -85,19 +85,23 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
-            <androidx.appcompat.widget.AppCompatButton
+            <TextView
                 android:id="@+id/selfieOkay"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:background="@drawable/bg_pill_teal"
-                android:paddingLeft="44dp"
-                android:paddingTop="14dp"
-                android:paddingRight="44dp"
-                android:paddingBottom="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:paddingLeft="48dp"
+                android:paddingTop="16dp"
+                android:paddingRight="48dp"
+                android:paddingBottom="16dp"
                 android:text="@string/selfie_okay"
                 android:textColor="@color/white"
-                android:textSize="20sp" />
+                android:textSize="22sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </LinearLayout>
 

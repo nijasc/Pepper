@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -22,7 +21,7 @@ public class SelfieView extends FrameLayout {
     private ImageView wifiQrView;
     private View wifiBlock;
     private TextView statusView;
-    private Button okayButton;
+    private TextView okayButton;
     private volatile Runnable closeListener;
 
     public SelfieView(Context context) {
