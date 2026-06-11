@@ -566,6 +566,7 @@ Die folgende Übersicht zeigt die wichtigsten Klassen und ihre Verantwortung –
 | `RaffleRepository` / `RaffleDatabase` | Persistenz der [Verlosung](#verlosung) in einer eigenen `raffle.db` (Verlosungen + Teilnehmer-Einträge), erzwingt max. eine aktive Verlosung und den automatischen `ACTIVE`→`ENDED`-Übergang. |
 | `RaffleJoinController` / `RaffleJoinView` | Schritt-für-Schritt-Beitrittsformular mit Pepper-Sprachbegleitung, Validierung, Duplikat-Prüfung und Abschlussscreen. |
 | `RaffleInfoAction` / `JoinRaffleAction` | Actions für Verlosungs-Auskunft bzw. -Beitritt per Sprachbefehl. |
+| `CameraSettings` / `WifiCameraManager` | Persistente Konfiguration und minimaler PTP/IP-Client für eine [externe DSLR-Kamera](#externe-kamera) (Pairing, Auslösen, Bildabruf). |
 
 ### Ressourcen verwalten
 
@@ -633,6 +634,13 @@ Weitere grundsätzlich kompatible Modelle (nicht abschliessend):
 - **Nikon mit eingebautem WiFi:** D5600, D5500, D7500, D7200, Z-Serie
 - **Nikon mit WU-1a Adapter:** D3200, D3300, D5200, D5300, D7100
 - **Canon EOS mit eingebautem WiFi:** 90D, R-Serie und neuere EOS-Modelle
+
+**Konfiguration:** Die Kamera wird im [Admin-Bereich](#admin-bereich) unter der Kachel **«Kamera»** eingerichtet: IP-Adresse, Port (Standard 15740), ein Toggle «Externe Kamera aktiv» sowie ein Verbindungstest mit Statusanzeige. Die Werte werden über `SharedPreferences` persistiert (`CameraSettings`). Ist die externe Kamera aktiv und erreichbar, nutzt `SelfieController` sie anstelle von Peppers eigener Kamera; das empfangene Bild durchläuft danach identisch Overlay, Speicherung und QR-Code. Schlägt die externe Aufnahme fehl, fällt Pepper automatisch auf die eigene Kamera zurück. Bei aktiver externer Kamera ändert sich zudem Peppers Dialog: «Stell dich bitte vor die Kamera», warten auf den Sprachbefehl «Start» und ein lauter Countdown vor der Auslösung.
+
+**Protokoll-Entscheidung:** Für PTP/IP existiert keine ausgereifte, in Maven verfügbare Java-Bibliothek, die die Canon-EOS-Eigenheiten (Pairing-Handshake, Event-Polling über den Command-Channel) abdeckt. Daher implementiert `WifiCameraManager` eine **minimale eigene TCP-Umsetzung** der benötigten PTP/IP-Operationen: Init-Command-/Event-Channel-Pairing, `OpenSession`, Canon `SetRemoteMode`/`SetEventMode`, Auslösen via `RemoteRelease`, Event-Polling (`EOS_GetEvent`) bis zum `ObjectAdded`-Ereignis und Abruf des Bildes via `GetObject`. Alles Little-Endian, Hostnamen UTF-16LE.
+
+> [!WARNING]
+> Die PTP/IP-Implementierung in `WifiCameraManager` ist ein **ungetestetes Gerüst**, das ohne echte Kamera nicht verifiziert werden konnte. Die genauen Canon-Operation-Codes und der Capture-/Event-Ablauf müssen am Gerät mit der Canon EOS 80D nachgezogen werden. Referenz: <https://julianschroden.com/post/2023-05-10-pairing-and-initializing-a-ptp-ip-connection-with-a-canon-eos-camera/>
 
 ### Glossar
 

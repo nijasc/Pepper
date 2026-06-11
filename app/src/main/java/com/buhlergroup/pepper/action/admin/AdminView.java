@@ -29,6 +29,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.camera.CameraSettings;
+import com.buhlergroup.pepper.action.camera.WifiCameraManager;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
@@ -71,6 +73,7 @@ public class AdminView extends FrameLayout {
     private static final int PANEL_HISTORY = 6;
     private static final int PANEL_RAFFLE_CREATE = 7;
     private static final int PANEL_RAFFLE = 8;
+    private static final int PANEL_CAMERA = 9;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final StringBuilder entered = new StringBuilder();
@@ -84,6 +87,7 @@ public class AdminView extends FrameLayout {
     private View historyPanel;
     private View raffleCreatePanel;
     private View rafflePanel;
+    private View cameraPanel;
     private ScrollView devLogScroll;
     private ScrollView historyScroll;
     private LinearLayout historyContainer;
@@ -118,6 +122,11 @@ public class AdminView extends FrameLayout {
     private LinearLayout raffleEntries;
     private long currentRaffleId;
 
+    private EditText cameraIp;
+    private EditText cameraPort;
+    private CheckBox cameraEnabled;
+    private TextView cameraStatus;
+
     public AdminView(Context context) {
         super(context);
         init(context);
@@ -148,6 +157,7 @@ public class AdminView extends FrameLayout {
         historyPanel = findViewById(R.id.adminHistoryPanel);
         raffleCreatePanel = findViewById(R.id.adminRaffleCreatePanel);
         rafflePanel = findViewById(R.id.adminRafflePanel);
+        cameraPanel = findViewById(R.id.adminCameraPanel);
         devLogScroll = findViewById(R.id.adminDevLogScroll);
         historyScroll = findViewById(R.id.adminHistoryScroll);
         historyContainer = findViewById(R.id.adminHistoryContainer);
@@ -175,6 +185,10 @@ public class AdminView extends FrameLayout {
         raffleOverviewTitle = findViewById(R.id.adminRaffleTitle);
         raffleOverviewStatus = findViewById(R.id.adminRaffleStatus);
         raffleEntries = findViewById(R.id.adminRaffleEntries);
+        cameraIp = findViewById(R.id.cameraIp);
+        cameraPort = findViewById(R.id.cameraPort);
+        cameraEnabled = findViewById(R.id.cameraEnabled);
+        cameraStatus = findViewById(R.id.cameraStatus);
 
         wireKeypad();
         findViewById(R.id.adminPinCancel).setOnClickListener(v -> hide());
@@ -201,6 +215,10 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.raffleCreateBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminRaffleFinish).setOnClickListener(v -> finishCurrentRaffle());
         findViewById(R.id.adminRaffleBack).setOnClickListener(v -> showPanel(PANEL_MENU));
+        findViewById(R.id.adminCamera).setOnClickListener(v -> showCamera());
+        findViewById(R.id.cameraTest).setOnClickListener(v -> testCamera());
+        findViewById(R.id.cameraSave).setOnClickListener(v -> saveCamera());
+        findViewById(R.id.adminCameraBack).setOnClickListener(v -> showPanel(PANEL_MENU));
 
         selfieAdapter = new SelfieAdapter(this::showDetail);
         selfieGrid.setLayoutManager(new GridLayoutManager(context, 3));
@@ -290,6 +308,7 @@ public class AdminView extends FrameLayout {
         historyPanel.setVisibility(which == PANEL_HISTORY ? VISIBLE : GONE);
         raffleCreatePanel.setVisibility(which == PANEL_RAFFLE_CREATE ? VISIBLE : GONE);
         rafflePanel.setVisibility(which == PANEL_RAFFLE ? VISIBLE : GONE);
+        cameraPanel.setVisibility(which == PANEL_CAMERA ? VISIBLE : GONE);
     }
 
     private void showLanguage() {
@@ -520,6 +539,44 @@ public class AdminView extends FrameLayout {
             RaffleRepository.get(getContext()).finishRaffle(id);
             post(this::openRaffle);
         });
+    }
+
+    private void showCamera() {
+        cameraIp.setText(CameraSettings.getIp(getContext()));
+        cameraPort.setText(String.valueOf(CameraSettings.getPort(getContext())));
+        cameraEnabled.setChecked(CameraSettings.isEnabled(getContext()));
+        cameraStatus.setText("");
+        showPanel(PANEL_CAMERA);
+    }
+
+    private int readCameraPort() {
+        try {
+            int port = Integer.parseInt(cameraPort.getText().toString().trim());
+            return port > 0 ? port : CameraSettings.DEFAULT_PORT;
+        } catch (NumberFormatException e) {
+            return CameraSettings.DEFAULT_PORT;
+        }
+    }
+
+    private void testCamera() {
+        String ip = cameraIp.getText().toString().trim();
+        if (ip.isEmpty()) {
+            cameraStatus.setText(R.string.camera_status_no_ip);
+            return;
+        }
+        int port = readCameraPort();
+        cameraStatus.setText(R.string.camera_status_testing);
+        dbExecutor.submit(() -> {
+            boolean reachable = new WifiCameraManager().testConnection(ip, port);
+            post(() -> cameraStatus.setText(
+                    reachable ? R.string.camera_status_ok : R.string.camera_status_fail));
+        });
+    }
+
+    private void saveCamera() {
+        CameraSettings.save(getContext(), cameraIp.getText().toString().trim(),
+                readCameraPort(), cameraEnabled.isChecked());
+        Toast.makeText(getContext(), R.string.camera_saved, Toast.LENGTH_SHORT).show();
     }
 
     private void onClearHistory() {

@@ -7,12 +7,20 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.util.Log;
 
+import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
+import com.aldebaran.qi.sdk.builder.ListenBuilder;
+import com.aldebaran.qi.sdk.builder.PhraseSetBuilder;
 import com.aldebaran.qi.sdk.builder.TakePictureBuilder;
 import com.aldebaran.qi.sdk.object.camera.TakePicture;
+import com.aldebaran.qi.sdk.object.conversation.Listen;
+import com.aldebaran.qi.sdk.object.conversation.ListenResult;
+import com.aldebaran.qi.sdk.object.conversation.PhraseSet;
 import com.aldebaran.qi.sdk.object.image.EncodedImage;
 import com.aldebaran.qi.sdk.object.image.TimestampedImageHandle;
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.camera.CameraSettings;
+import com.buhlergroup.pepper.action.camera.WifiCameraManager;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
@@ -33,6 +41,7 @@ public final class SelfieController {
     private static final String TAG = "Selfie";
     private static final int SERVER_PORT = 8080;
     private static final long DISPLAY_MS = 22000;
+    private static final long START_TIMEOUT_MS = 15000;
     private static final SelfieController INSTANCE = new SelfieController();
 
     public interface StateListener {
@@ -104,8 +113,15 @@ public final class SelfieController {
         running = true;
         notifyState(true);
         try {
-            say(context, "Klar, machen wir ein Selfie! Stell dich vor mich und schau in meine Augen.");
-            say(context, "Drei… zwei… eins… lächeln!");
+            if (CameraSettings.isActive(context)) {
+                say(context, "Klar, machen wir ein Selfie! Stell dich bitte vor die Kamera.");
+                say(context, "Sag «Start», wenn du bereit bist.");
+                waitForStart(context);
+                say(context, "Drei… Zwei… Eins!");
+            } else {
+                say(context, "Klar, machen wir ein Selfie! Stell dich vor mich und schau in meine Augen.");
+                say(context, "Drei… zwei… eins… lächeln!");
+            }
 
             Bitmap photo = capture(context);
             if (photo == null) {
@@ -186,6 +202,14 @@ public final class SelfieController {
     }
 
     private Bitmap capture(QiContext context) {
+        if (CameraSettings.isActive(context)) {
+            Bitmap external = new WifiCameraManager()
+                    .capture(CameraSettings.getIp(context), CameraSettings.getPort(context));
+            if (external != null) {
+                return external;
+            }
+            Log.w(TAG, "External camera capture failed, falling back to Pepper camera");
+        }
         try {
             TakePicture takePicture = TakePictureBuilder.with(context).build();
             TimestampedImageHandle handle = takePicture.run();
@@ -198,6 +222,26 @@ public final class SelfieController {
         } catch (Exception e) {
             Log.e(TAG, "Capture failed", e);
             return null;
+        }
+    }
+
+    private void waitForStart(QiContext context) {
+        try {
+            PhraseSet phrases = PhraseSetBuilder.with(context)
+                    .withTexts("start", "los", "los geht's", "bereit", "ready").build();
+            Listen listen = ListenBuilder.with(context).withPhraseSet(phrases).build();
+            Future<ListenResult> future = listen.async().run();
+            long deadline = System.currentTimeMillis() + START_TIMEOUT_MS;
+            while (!future.isDone() && System.currentTimeMillis() < deadline) {
+                Thread.sleep(150);
+            }
+            if (!future.isDone()) {
+                future.requestCancellation();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            Log.w(TAG, "waitForStart failed: " + e.getMessage());
         }
     }
 
