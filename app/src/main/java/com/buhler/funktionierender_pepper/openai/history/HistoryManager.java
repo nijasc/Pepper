@@ -3,15 +3,13 @@ package com.buhler.funktionierender_pepper.openai.history;
 import com.buhler.funktionierender_pepper.action.Action;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class HistoryManager implements Cloneable {
     public static final int MAX_HISTORY = 10;
-    private final Map<Long, HistoryEntry> history = new HashMap<>();
+    private final List<HistoryEntry> history = new ArrayList<>();
 
     public void addUser(String content) {
         add(HistoryRole.USER, content, null);
@@ -21,20 +19,29 @@ public class HistoryManager implements Cloneable {
         add(HistoryRole.ASSISTANT, content, action);
     }
 
+    public void addDeveloper(String content) {
+        add(HistoryRole.DEVELOPER, content, null);
+    }
+
     public void addDeveloper(String content, Action action) {
         add(HistoryRole.DEVELOPER, content, action);
     }
 
+    public void clear() {
+        history.clear();
+        addDeveloper("History cleared.");
+    }
+
     private void add(HistoryRole role, String content, Action action) {
-        if (history.size() == MAX_HISTORY) {
-            removeLast();
+        if (role != HistoryRole.DEVELOPER && conversationalSize() >= MAX_HISTORY) {
+            removeOldestConversational();
         }
-        history.put(System.currentTimeMillis(), new HistoryEntry(role, content, action));
+        history.add(new HistoryEntry(role, content, action));
     }
 
     public List<Map<String, String>> toInput() {
         List<Map<String, String>> input = new ArrayList<>();
-        for (HistoryEntry entry : orderedEntries()) {
+        for (HistoryEntry entry : history) {
             Map<String, String> msg = new HashMap<>();
             msg.put("role", entry.getRole().apiValue());
             msg.put("content", entry.getContent());
@@ -43,18 +50,29 @@ public class HistoryManager implements Cloneable {
         return input;
     }
 
-    private List<HistoryEntry> orderedEntries() {
-        return new ArrayList<>(new TreeMap<>(history).values());
-    }
-
-    private void removeLast() {
-        if (history.isEmpty()) {
-            return;
-        }
-        history.remove(Collections.min(history.keySet()));
-    }
-
     public int historySize() {
-        return history.size();
+        return conversationalSize();
+    }
+
+    private int conversationalSize() {
+        int count = 0;
+        for (HistoryEntry entry : history) {
+            if (entry.getRole() != HistoryRole.DEVELOPER) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void removeOldestConversational() {
+        for (int i = 0; i < history.size(); i++) {
+            if (history.get(i).getRole() != HistoryRole.DEVELOPER) {
+                history.remove(i);
+                break;
+            }
+        }
+        while (!history.isEmpty() && history.get(0).getRole() == HistoryRole.DEVELOPER) {
+            history.remove(0);
+        }
     }
 }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">funktionierender_pepper</string>
+    <string name="app_name">Bühler Messebot</string>
     <string name="screen_title">Bühler Pepper</string>
     <string name="logo_description">Bühler Logo</string>
     <string name="stop_follow">STOPP</string>

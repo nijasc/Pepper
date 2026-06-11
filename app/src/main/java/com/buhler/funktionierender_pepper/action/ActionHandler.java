@@ -40,8 +40,12 @@ public class ActionHandler {
             return;
         }
 
+        historyManager.addDeveloper("User input captured: \"" + input + "\"");
+
         Action intent = intentEngine.getIntent(input);
         Log.i(this.getClass().getSimpleName(), "Found intent: " + intent.getClass().getSimpleName());
+
+        historyManager.addDeveloper("Action started: " + intent.getClass().getSimpleName(), intent);
         intent.execute(context, input);
     }
 
