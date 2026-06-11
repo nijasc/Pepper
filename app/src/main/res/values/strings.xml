@@ -31,4 +31,5 @@
     <string name="admin_delete">Löschen</string>
     <string name="admin_favorite_add">Als Favorit</string>
     <string name="admin_favorite_remove">Favorit entfernen</string>
+    <string name="admin_language">Sprache</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.buhler.funktionierender_pepper.action.admin;
 
+import com.buhler.funktionierender_pepper.lang.LanguageManager;
+import com.buhler.funktionierender_pepper.lang.SupportedLanguage;
 import com.buhler.funktionierender_pepper.openai.history.HistoryManager;
 
 import java.util.Collections;
@@ -11,6 +13,7 @@ public final class AdminController {
 
     private volatile AdminView view;
     private volatile HistoryManager historyManager;
+    private volatile LanguageManager languageManager;
     private volatile boolean open = false;
 
     private AdminController() {
@@ -31,6 +34,22 @@ public final class AdminController {
 
     public void setHistoryManager(HistoryManager historyManager) {
         this.historyManager = historyManager;
+    }
+
+    public void setLanguageManager(LanguageManager languageManager) {
+        this.languageManager = languageManager;
+    }
+
+    public void setLanguage(SupportedLanguage language) {
+        LanguageManager lm = languageManager;
+        if (lm != null) {
+            lm.applyLanguage(language);
+        }
+    }
+
+    public SupportedLanguage getCurrentLanguage() {
+        LanguageManager lm = languageManager;
+        return lm != null ? lm.getCurrent() : null;
     }
 
     public void open() {

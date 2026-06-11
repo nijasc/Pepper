@@ -110,6 +110,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             historyManager = new HistoryManager();
         }
         AdminController.get().setHistoryManager(historyManager);
+        AdminController.get().setLanguageManager(languageManager);
         try {
             if (executionHandler == null) {
                 executionHandler = new ActionHandler(languageManager, historyManager);

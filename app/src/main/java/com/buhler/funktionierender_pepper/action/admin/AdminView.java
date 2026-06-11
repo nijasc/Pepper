@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.buhler.funktionierender_pepper.R;
 import com.buhler.funktionierender_pepper.action.selfie.SelfieRepository;
 import com.buhler.funktionierender_pepper.action.selfie.data.SelfieEntity;
+import com.buhler.funktionierender_pepper.lang.SupportedLanguage;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -36,6 +37,7 @@ public class AdminView extends FrameLayout {
     private static final int PANEL_DEVLOG = 2;
     private static final int PANEL_GALLERY = 3;
     private static final int PANEL_DETAIL = 4;
+    private static final int PANEL_LANG = 5;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final StringBuilder entered = new StringBuilder();
@@ -45,11 +47,13 @@ public class AdminView extends FrameLayout {
     private View devLogPanel;
     private View galleryPanel;
     private View detailPanel;
+    private View langPanel;
 
     private TextView pinDots;
     private TextView pinError;
     private TextView devLogText;
     private TextView galleryEmpty;
+    private TextView langCurrent;
     private RecyclerView selfieGrid;
     private SelfieAdapter selfieAdapter;
 
@@ -85,11 +89,13 @@ public class AdminView extends FrameLayout {
         devLogPanel = findViewById(R.id.adminDevLogPanel);
         galleryPanel = findViewById(R.id.adminGalleryPanel);
         detailPanel = findViewById(R.id.adminDetailPanel);
+        langPanel = findViewById(R.id.adminLangPanel);
 
         pinDots = findViewById(R.id.adminPinDots);
         pinError = findViewById(R.id.adminPinError);
         devLogText = findViewById(R.id.adminDevLogText);
         galleryEmpty = findViewById(R.id.adminGalleryEmpty);
+        langCurrent = findViewById(R.id.adminLangCurrent);
         selfieGrid = findViewById(R.id.adminSelfieGrid);
         detailImage = findViewById(R.id.adminDetailImage);
         detailNumber = findViewById(R.id.adminDetailNumber);
@@ -107,6 +113,10 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminDetailBack).setOnClickListener(v -> showGallery());
         detailFavorite.setOnClickListener(v -> toggleFavorite());
         findViewById(R.id.adminDetailDelete).setOnClickListener(v -> deleteCurrent());
+        findViewById(R.id.adminLanguage).setOnClickListener(v -> showLanguage());
+        findViewById(R.id.adminLangDe).setOnClickListener(v -> setLanguage(SupportedLanguage.GERMAN));
+        findViewById(R.id.adminLangEn).setOnClickListener(v -> setLanguage(SupportedLanguage.ENGLISH));
+        findViewById(R.id.adminLangBack).setOnClickListener(v -> showPanel(PANEL_MENU));
 
         selfieAdapter = new SelfieAdapter(this::showDetail);
         selfieGrid.setLayoutManager(new GridLayoutManager(context, 3));
@@ -192,6 +202,22 @@ public class AdminView extends FrameLayout {
         devLogPanel.setVisibility(which == PANEL_DEVLOG ? VISIBLE : GONE);
         galleryPanel.setVisibility(which == PANEL_GALLERY ? VISIBLE : GONE);
         detailPanel.setVisibility(which == PANEL_DETAIL ? VISIBLE : GONE);
+        langPanel.setVisibility(which == PANEL_LANG ? VISIBLE : GONE);
+    }
+
+    private void showLanguage() {
+        updateLanguageLabel();
+        showPanel(PANEL_LANG);
+    }
+
+    private void setLanguage(SupportedLanguage language) {
+        AdminController.get().setLanguage(language);
+        updateLanguageLabel();
+    }
+
+    private void updateLanguageLabel() {
+        SupportedLanguage current = AdminController.get().getCurrentLanguage();
+        langCurrent.setText(current != null ? current.getDisplayName() : "");
     }
 
     private void onClearHistory() {
