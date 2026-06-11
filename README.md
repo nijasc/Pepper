@@ -635,6 +635,30 @@ Weitere grundsätzlich kompatible Modelle (nicht abschliessend):
 - **Nikon mit WU-1a Adapter:** D3200, D3300, D5200, D5300, D7100
 - **Canon EOS mit eingebautem WiFi:** 90D, R-Serie und neuere EOS-Modelle
 
+#### Einrichtung Schritt für Schritt
+
+Beide Geräte müssen im **selben WLAN** sein (Infrastructure-Mode – die Kamera verbindet sich mit demselben Router wie Pepper, **nicht** mit Peppers eigenem Hotspot).
+
+**1. An der Kamera (Canon EOS 80D)**
+
+1. **Menü → Einstellungen (gelb) → «Drahtloskommunikations-Einstellungen»** öffnen und **«Wi-Fi» auf «Aktivieren»** stellen. Beim ersten Mal einen Geräte-Nickname vergeben.
+2. Im selben Menü **«Wi-Fi-Funktion»** wählen und das Symbol **«Fernsteuerung (EOS Utility)»** (Computer-Verbindung) antippen.
+3. **«Verbindung mit Gerät registrieren» → «Netzwerk auswählen»**, das WLAN aus der Liste wählen und das **WLAN-Passwort** eingeben (= Infrastructure-Mode).
+4. Bei der **IP-Adresseinstellung «Automatische Einstellung» (DHCP)** wählen. Die Kamera erhält dann eine IP vom Router.
+5. Die Kamera zeigt nun **«Warten auf Verbindung»** / «EOS-Software auf dem Computer starten» an und wartet auf das Pairing. Diesen Schritt übernimmt Pepper (sein Verbindungsaufbau ersetzt EOS Utility).
+
+> **Kamera-IP herausfinden:** In der Wi-Fi-Funktion unter den Verbindungsinformationen anzeigen, oder in der Geräteliste / DHCP-Tabelle des Routers nachsehen. Tipp: Im Router eine feste IP (DHCP-Reservierung) für die Kamera vergeben, damit sie sich nicht ändert.
+
+**2. An Pepper**
+
+1. Sicherstellen, dass **Pepper im selben WLAN** wie die Kamera ist.
+2. [Admin-Bereich](#admin-bereich) öffnen (Admin-Button / «Admin» + PIN) und die Kachel **«Kamera»** wählen.
+3. **Kamera-IP** und **Port** (Standard **15740**) eintragen.
+4. **«Verbindung testen»** – bei Erfolg erscheint **«Kamera erreichbar»** (die Kamera muss dafür im Wartemodus aus Schritt 1.5 stehen).
+5. **«Externe Kamera aktiv»** anhaken und **«Speichern»**.
+
+Danach nutzt Pepper bei jedem Selfie die externe Kamera: Er bittet «Stell dich bitte vor die Kamera», wartet auf den Sprachbefehl **«Start»**, zählt laut herunter und löst aus. Ist die Kamera nicht erreichbar, fällt Pepper automatisch auf seine eigene Kamera zurück.
+
 **Konfiguration:** Die Kamera wird im [Admin-Bereich](#admin-bereich) unter der Kachel **«Kamera»** eingerichtet: IP-Adresse, Port (Standard 15740), ein Toggle «Externe Kamera aktiv» sowie ein Verbindungstest mit Statusanzeige. Die Werte werden über `SharedPreferences` persistiert (`CameraSettings`). Ist die externe Kamera aktiv und erreichbar, nutzt `SelfieController` sie anstelle von Peppers eigener Kamera; das empfangene Bild durchläuft danach identisch Overlay, Speicherung und QR-Code. Schlägt die externe Aufnahme fehl, fällt Pepper automatisch auf die eigene Kamera zurück. Bei aktiver externer Kamera ändert sich zudem Peppers Dialog: «Stell dich bitte vor die Kamera», warten auf den Sprachbefehl «Start» und ein lauter Countdown vor der Auslösung.
 
 **Protokoll-Entscheidung:** Für PTP/IP existiert keine ausgereifte, in Maven verfügbare Java-Bibliothek, die die Canon-EOS-Eigenheiten (Pairing-Handshake, Event-Polling über den Command-Channel) abdeckt. Daher implementiert `WifiCameraManager` eine **minimale eigene TCP-Umsetzung** der benötigten PTP/IP-Operationen: Init-Command-/Event-Channel-Pairing, `OpenSession`, Canon `SetRemoteMode`/`SetEventMode`, Auslösen via `RemoteRelease`, Event-Polling (`EOS_GetEvent`) bis zum `ObjectAdded`-Ereignis und Abruf des Bildes via `GetObject`. Alles Little-Endian, Hostnamen UTF-16LE.
