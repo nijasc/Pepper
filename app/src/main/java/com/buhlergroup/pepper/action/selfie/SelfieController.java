@@ -31,15 +31,35 @@ public final class SelfieController {
     private static final long DISPLAY_MS = 22000;
     private static final SelfieController INSTANCE = new SelfieController();
 
+    public interface StateListener {
+        void onSelfieStateChanged(boolean active);
+    }
+
     private volatile SelfieView view;
     private volatile LocalImageServer server;
     private volatile boolean running = false;
+    private volatile StateListener stateListener;
 
     private SelfieController() {
     }
 
     public static SelfieController get() {
         return INSTANCE;
+    }
+
+    public void setStateListener(StateListener listener) {
+        this.stateListener = listener;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    private void notifyState(boolean active) {
+        StateListener l = stateListener;
+        if (l != null) {
+            l.onSelfieStateChanged(active);
+        }
     }
 
     public void attachView(SelfieView view) {
@@ -70,6 +90,7 @@ public final class SelfieController {
         }
 
         running = true;
+        notifyState(true);
         try {
             say(context, "Klar, machen wir ein Selfie! Stell dich vor mich und schau in meine Augen.");
             say(context, "Drei… zwei… eins… lächeln!");
@@ -124,6 +145,7 @@ public final class SelfieController {
             board.hide();
         } finally {
             running = false;
+            notifyState(false);
         }
         return null;
     }

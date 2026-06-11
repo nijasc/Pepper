@@ -76,9 +76,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         AdminController.get().attachView(adminView);
         adminButton = findViewById(R.id.adminButton);
         adminButton.setOnClickListener(v -> AdminController.get().open());
-        AdminController.get().setAdminStateListener(isOpen ->
-                runOnUiThread(() ->
-                        adminButton.setVisibility(isOpen ? View.GONE : View.VISIBLE)));
+
+        AdminController.get().setAdminStateListener(open -> updateHomeControls());
+        SelfieController.get().setStateListener(active -> updateHomeControls());
+        RaffleJoinController.get().setStateListener(active -> updateHomeControls());
 
         initSpeech();
     }
@@ -89,9 +90,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         MemoryGameController.get().abort();
         MemoryGameController.get().detachView();
+        SelfieController.get().setStateListener(null);
         SelfieController.get().detachView();
         SelfieController.get().stopServer();
+        RaffleJoinController.get().setStateListener(null);
         RaffleJoinController.get().detachView();
+        AdminController.get().setAdminStateListener(null);
         AdminController.get().detachView();
         QiSDK.unregister(this);
         recognizer.cancel();
@@ -160,6 +164,17 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 Log.i("MainActivity_request", "Permission Granted");
         }
         Log.i("MainActivity", "Permission");
+    }
+
+    private void updateHomeControls() {
+        boolean overlayOpen = AdminController.get().isOpen()
+                || SelfieController.get().isRunning()
+                || RaffleJoinController.get().isBusy();
+        runOnUiThread(() -> {
+            int visibility = overlayOpen ? View.GONE : View.VISIBLE;
+            adminButton.setVisibility(visibility);
+            languageLabel.setVisibility(visibility);
+        });
     }
 
     private void updateLanguageLabel(SupportedLanguage lang) {

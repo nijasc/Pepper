@@ -23,9 +23,14 @@ public final class RaffleJoinController {
 
     private static final RaffleJoinController INSTANCE = new RaffleJoinController();
 
+    public interface StateListener {
+        void onJoinStateChanged(boolean active);
+    }
+
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private volatile RaffleJoinView view;
     private volatile boolean busy = false;
+    private volatile StateListener stateListener;
 
     private RaffleJoinController() {
     }
@@ -42,6 +47,21 @@ public final class RaffleJoinController {
         this.view = null;
     }
 
+    public void setStateListener(StateListener listener) {
+        this.stateListener = listener;
+    }
+
+    public boolean isBusy() {
+        return busy;
+    }
+
+    private void notifyState(boolean active) {
+        StateListener l = stateListener;
+        if (l != null) {
+            l.onJoinStateChanged(active);
+        }
+    }
+
     public void join(QiContext context, RaffleEntity raffle) {
         RaffleJoinView board = view;
         if (board == null) {
@@ -52,6 +72,7 @@ public final class RaffleJoinController {
             return;
         }
         busy = true;
+        notifyState(true);
         try {
             CountDownLatch done = new CountDownLatch(1);
             board.show(raffle.title, raffle.requiresPhone, new RaffleJoinView.Listener() {
@@ -72,6 +93,7 @@ public final class RaffleJoinController {
         } finally {
             board.hide();
             busy = false;
+            notifyState(false);
         }
     }
 
