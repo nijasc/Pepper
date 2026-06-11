@@ -11,6 +11,7 @@ public final class AdminController {
 
     private volatile AdminView view;
     private volatile HistoryManager historyManager;
+    private volatile boolean open = false;
 
     private AdminController() {
     }
@@ -25,6 +26,7 @@ public final class AdminController {
 
     public void detachView() {
         this.view = null;
+        this.open = false;
     }
 
     public void setHistoryManager(HistoryManager historyManager) {
@@ -34,8 +36,17 @@ public final class AdminController {
     public void open() {
         AdminView current = view;
         if (current != null) {
+            open = true;
             current.open();
         }
+    }
+
+    public boolean isOpen() {
+        return open;
+    }
+
+    void markClosed() {
+        open = false;
     }
 
     public boolean clearHistory() {

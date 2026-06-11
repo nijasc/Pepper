@@ -137,6 +137,7 @@ public class AdminView extends FrameLayout {
     }
 
     public void hide() {
+        AdminController.get().markClosed();
         post(() -> setVisibility(GONE));
     }
 

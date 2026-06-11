@@ -157,13 +157,11 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void listenToSpeech() {
-        if (FollowController.get().isFollowing()) {
-            while (FollowController.get().isFollowing()) {
-                try {
-                    Thread.sleep(200);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        while (FollowController.get().isFollowing() || AdminController.get().isOpen()) {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         }
         if (intent.resolveActivity(getPackageManager()) != null) {
