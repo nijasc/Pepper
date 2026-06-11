@@ -46,11 +46,23 @@ public final class RaffleRepository {
     }
 
     public boolean hasActiveRaffle() {
+        refreshExpired();
         return raffleDao.countActive() > 0;
     }
 
     public RaffleEntity getCurrentRaffle() {
+        refreshExpired();
         return raffleDao.getCurrent();
+    }
+
+    private void refreshExpired() {
+        RaffleEntity current = raffleDao.getCurrent();
+        if (current != null
+                && current.status == RaffleStatus.ACTIVE
+                && current.endDate > 0
+                && current.endDate < System.currentTimeMillis()) {
+            raffleDao.setStatus(current.id, RaffleStatus.ENDED);
+        }
     }
 
     public RaffleEntity findRaffle(long id) {

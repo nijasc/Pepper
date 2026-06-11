@@ -1,5 +1,7 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -10,6 +12,8 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -24,6 +28,10 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.raffle.RaffleRepository;
+import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
+import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
+import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
@@ -37,6 +45,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Calendar;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,6 +63,8 @@ public class AdminView extends FrameLayout {
     private static final int PANEL_DETAIL = 4;
     private static final int PANEL_LANG = 5;
     private static final int PANEL_HISTORY = 6;
+    private static final int PANEL_RAFFLE_CREATE = 7;
+    private static final int PANEL_RAFFLE = 8;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final StringBuilder entered = new StringBuilder();
@@ -65,6 +76,8 @@ public class AdminView extends FrameLayout {
     private View detailPanel;
     private View langPanel;
     private View historyPanel;
+    private View raffleCreatePanel;
+    private View rafflePanel;
     private ScrollView devLogScroll;
     private ScrollView historyScroll;
     private LinearLayout historyContainer;
@@ -83,6 +96,20 @@ public class AdminView extends FrameLayout {
     private TextView detailDate;
     private Button detailFavorite;
     private SelfieEntity currentDetail;
+
+    private EditText raffleTitle;
+    private EditText raffleDescription;
+    private Button raffleEndDateButton;
+    private CheckBox raffleRequiresSelfie;
+    private CheckBox raffleRequiresPhone;
+    private TextView raffleCreateError;
+    private Button raffleCreateSave;
+    private long raffleEndDateMillis;
+
+    private TextView raffleOverviewTitle;
+    private TextView raffleOverviewStatus;
+    private LinearLayout raffleEntries;
+    private long currentRaffleId;
 
     public AdminView(Context context) {
         super(context);
@@ -112,6 +139,8 @@ public class AdminView extends FrameLayout {
         detailPanel = findViewById(R.id.adminDetailPanel);
         langPanel = findViewById(R.id.adminLangPanel);
         historyPanel = findViewById(R.id.adminHistoryPanel);
+        raffleCreatePanel = findViewById(R.id.adminRaffleCreatePanel);
+        rafflePanel = findViewById(R.id.adminRafflePanel);
         devLogScroll = findViewById(R.id.adminDevLogScroll);
         historyScroll = findViewById(R.id.adminHistoryScroll);
         historyContainer = findViewById(R.id.adminHistoryContainer);
@@ -127,6 +156,17 @@ public class AdminView extends FrameLayout {
         detailNumber = findViewById(R.id.adminDetailNumber);
         detailDate = findViewById(R.id.adminDetailDate);
         detailFavorite = findViewById(R.id.adminDetailFavorite);
+
+        raffleTitle = findViewById(R.id.raffleTitle);
+        raffleDescription = findViewById(R.id.raffleDescription);
+        raffleEndDateButton = findViewById(R.id.raffleEndDate);
+        raffleRequiresSelfie = findViewById(R.id.raffleRequiresSelfie);
+        raffleRequiresPhone = findViewById(R.id.raffleRequiresPhone);
+        raffleCreateError = findViewById(R.id.raffleCreateError);
+        raffleCreateSave = findViewById(R.id.raffleCreateSave);
+        raffleOverviewTitle = findViewById(R.id.adminRaffleTitle);
+        raffleOverviewStatus = findViewById(R.id.adminRaffleStatus);
+        raffleEntries = findViewById(R.id.adminRaffleEntries);
 
         wireKeypad();
         findViewById(R.id.adminPinCancel).setOnClickListener(v -> hide());
@@ -146,6 +186,12 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminLangBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminHistory).setOnClickListener(v -> showHistory());
         findViewById(R.id.adminHistoryBack).setOnClickListener(v -> showPanel(PANEL_MENU));
+        findViewById(R.id.adminRaffle).setOnClickListener(v -> openRaffle());
+        raffleEndDateButton.setOnClickListener(v -> pickEndDate());
+        raffleCreateSave.setOnClickListener(v -> onSaveRaffle());
+        findViewById(R.id.raffleCreateBack).setOnClickListener(v -> showPanel(PANEL_MENU));
+        findViewById(R.id.adminRaffleFinish).setOnClickListener(v -> finishCurrentRaffle());
+        findViewById(R.id.adminRaffleBack).setOnClickListener(v -> showPanel(PANEL_MENU));
 
         selfieAdapter = new SelfieAdapter(this::showDetail);
         selfieGrid.setLayoutManager(new GridLayoutManager(context, 3));
@@ -233,6 +279,8 @@ public class AdminView extends FrameLayout {
         detailPanel.setVisibility(which == PANEL_DETAIL ? VISIBLE : GONE);
         langPanel.setVisibility(which == PANEL_LANG ? VISIBLE : GONE);
         historyPanel.setVisibility(which == PANEL_HISTORY ? VISIBLE : GONE);
+        raffleCreatePanel.setVisibility(which == PANEL_RAFFLE_CREATE ? VISIBLE : GONE);
+        rafflePanel.setVisibility(which == PANEL_RAFFLE ? VISIBLE : GONE);
     }
 
     private void showLanguage() {
@@ -290,6 +338,140 @@ public class AdminView extends FrameLayout {
 
     private int dp(int value) {
         return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private void showRaffleCreate() {
+        raffleTitle.setText("");
+        raffleDescription.setText("");
+        raffleRequiresSelfie.setChecked(false);
+        raffleRequiresPhone.setChecked(false);
+        raffleEndDateMillis = 0L;
+        raffleEndDateButton.setText(R.string.raffle_end_date);
+        raffleCreateError.setVisibility(GONE);
+        raffleCreateSave.setEnabled(true);
+        raffleCreateSave.setAlpha(1f);
+        showPanel(PANEL_RAFFLE_CREATE);
+    }
+
+    private void pickEndDate() {
+        Calendar initial = Calendar.getInstance();
+        if (raffleEndDateMillis > 0) {
+            initial.setTimeInMillis(raffleEndDateMillis);
+        }
+        DatePickerDialog dateDialog = new DatePickerDialog(getContext(), (view, year, month, day) -> {
+            Calendar picked = Calendar.getInstance();
+            if (raffleEndDateMillis > 0) {
+                picked.setTimeInMillis(raffleEndDateMillis);
+            }
+            picked.set(Calendar.YEAR, year);
+            picked.set(Calendar.MONTH, month);
+            picked.set(Calendar.DAY_OF_MONTH, day);
+            new TimePickerDialog(getContext(), (timeView, hour, minute) -> {
+                picked.set(Calendar.HOUR_OF_DAY, hour);
+                picked.set(Calendar.MINUTE, minute);
+                picked.set(Calendar.SECOND, 0);
+                raffleEndDateMillis = picked.getTimeInMillis();
+                raffleEndDateButton.setText(new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
+                        .format(new Date(raffleEndDateMillis)));
+            }, picked.get(Calendar.HOUR_OF_DAY), picked.get(Calendar.MINUTE), true).show();
+        }, initial.get(Calendar.YEAR), initial.get(Calendar.MONTH), initial.get(Calendar.DAY_OF_MONTH));
+        dateDialog.show();
+    }
+
+    private void onSaveRaffle() {
+        String title = raffleTitle.getText().toString().trim();
+        String description = raffleDescription.getText().toString().trim();
+        if (title.isEmpty() || raffleEndDateMillis <= 0) {
+            raffleCreateError.setText(R.string.raffle_create_invalid);
+            raffleCreateError.setVisibility(VISIBLE);
+            return;
+        }
+        boolean requiresSelfie = raffleRequiresSelfie.isChecked();
+        boolean requiresPhone = raffleRequiresPhone.isChecked();
+        long endDate = raffleEndDateMillis;
+        raffleCreateSave.setEnabled(false);
+        dbExecutor.submit(() -> {
+            long id = RaffleRepository.get(getContext()).createRaffle(
+                    title, description, requiresSelfie, requiresPhone, endDate);
+            post(() -> {
+                if (id < 0) {
+                    raffleCreateError.setText(R.string.raffle_create_active_exists);
+                    raffleCreateError.setVisibility(VISIBLE);
+                    raffleCreateSave.setEnabled(true);
+                } else {
+                    Toast.makeText(getContext(), R.string.raffle_created, Toast.LENGTH_SHORT).show();
+                    openRaffle();
+                }
+            });
+        });
+    }
+
+    private void openRaffle() {
+        dbExecutor.submit(() -> {
+            RaffleRepository repo = RaffleRepository.get(getContext());
+            RaffleEntity raffle = repo.getCurrentRaffle();
+            if (raffle == null) {
+                post(this::showRaffleCreate);
+                return;
+            }
+            List<RaffleEntryEntity> entries = repo.getEntries(raffle.id);
+            post(() -> showRaffleOverview(raffle, entries));
+        });
+    }
+
+    private void showRaffleOverview(RaffleEntity raffle, List<RaffleEntryEntity> entries) {
+        currentRaffleId = raffle.id;
+        raffleOverviewTitle.setText(raffle.title);
+        if (raffle.status == RaffleStatus.ACTIVE) {
+            String end = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
+                    .format(new Date(raffle.endDate));
+            raffleOverviewStatus.setText(
+                    getContext().getString(R.string.raffle_status_active, end, entries.size()));
+        } else {
+            raffleOverviewStatus.setText(
+                    getContext().getString(R.string.raffle_status_ended, entries.size()));
+        }
+        raffleEntries.removeAllViews();
+        if (entries.isEmpty()) {
+            TextView empty = new TextView(getContext());
+            empty.setText(R.string.raffle_no_entries);
+            empty.setTextColor(0xCCFFFFFF);
+            int pad = dp(8);
+            empty.setPadding(pad, pad, pad, pad);
+            raffleEntries.addView(empty);
+        } else {
+            for (RaffleEntryEntity entry : entries) {
+                raffleEntries.addView(createEntryRow(entry));
+            }
+        }
+        showPanel(PANEL_RAFFLE);
+    }
+
+    private TextView createEntryRow(RaffleEntryEntity entry) {
+        StringBuilder sb = new StringBuilder(entry.name).append(" · ").append(entry.email);
+        if (entry.phone != null && !entry.phone.isEmpty()) {
+            sb.append(" · ").append(entry.phone);
+        }
+        if (entry.selfieId != null && !entry.selfieId.isEmpty()) {
+            sb.append("  📷");
+        }
+        TextView row = new TextView(getContext());
+        row.setText(sb.toString());
+        row.setTextColor(0xFFFFFFFF);
+        int pv = dp(6);
+        row.setPadding(0, pv, 0, pv);
+        return row;
+    }
+
+    private void finishCurrentRaffle() {
+        long id = currentRaffleId;
+        if (id <= 0) {
+            return;
+        }
+        dbExecutor.submit(() -> {
+            RaffleRepository.get(getContext()).finishRaffle(id);
+            post(this::openRaffle);
+        });
     }
 
     private void onClearHistory() {

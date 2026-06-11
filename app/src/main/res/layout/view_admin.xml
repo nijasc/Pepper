@@ -135,6 +135,11 @@
             android:text="@string/admin_history_view" />
 
         <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminRaffle"
+            style="@style/AdminMenuButton"
+            android:text="@string/admin_raffle" />
+
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminClose"
             style="@style/AdminMenuButton"
             android:layout_marginTop="32dp"
@@ -387,5 +392,205 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="12dp"
             android:text="@string/admin_back" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adminRaffleCreatePanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/raffle_create_title"
+            android:textColor="@color/white"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/raffleTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/raffle_title_hint"
+                    android:inputType="text"
+                    android:textColor="@color/white"
+                    android:textColorHint="#88FFFFFF" />
+
+                <EditText
+                    android:id="@+id/raffleDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="top"
+                    android:hint="@string/raffle_description_hint"
+                    android:inputType="textMultiLine"
+                    android:minLines="2"
+                    android:textColor="@color/white"
+                    android:textColorHint="#88FFFFFF" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/raffleEndDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_pill_teal"
+                    android:paddingLeft="28dp"
+                    android:paddingTop="12dp"
+                    android:paddingRight="28dp"
+                    android:paddingBottom="12dp"
+                    android:text="@string/raffle_end_date"
+                    android:textColor="@color/white"
+                    android:textSize="18sp" />
+
+                <CheckBox
+                    android:id="@+id/raffleRequiresSelfie"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/raffle_requires_selfie"
+                    android:textColor="@color/white"
+                    android:textSize="18sp" />
+
+                <CheckBox
+                    android:id="@+id/raffleRequiresPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/raffle_requires_phone"
+                    android:textColor="@color/white"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/raffleCreateError"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:textColor="@color/pad_red"
+                    android:textSize="16sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/raffleCreateSave"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_pill_teal"
+                android:paddingLeft="40dp"
+                android:paddingTop="14dp"
+                android:paddingRight="40dp"
+                android:paddingBottom="14dp"
+                android:text="@string/raffle_save"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/raffleCreateBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill_teal"
+                android:paddingLeft="40dp"
+                android:paddingTop="14dp"
+                android:paddingRight="40dp"
+                android:paddingBottom="14dp"
+                android:text="@string/admin_back"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adminRafflePanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/adminRaffleTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/adminRaffleStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textColor="@color/buhler_teal"
+            android:textSize="18sp" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="12dp">
+
+            <LinearLayout
+                android:id="@+id/adminRaffleEntries"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminRaffleFinish"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_pill_red"
+                android:paddingLeft="40dp"
+                android:paddingTop="14dp"
+                android:paddingRight="40dp"
+                android:paddingBottom="14dp"
+                android:text="@string/raffle_finish"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminRaffleBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_pill_teal"
+                android:paddingLeft="40dp"
+                android:paddingTop="14dp"
+                android:paddingRight="40dp"
+                android:paddingBottom="14dp"
+                android:text="@string/admin_back"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+        </LinearLayout>
     </LinearLayout>
 </merge>

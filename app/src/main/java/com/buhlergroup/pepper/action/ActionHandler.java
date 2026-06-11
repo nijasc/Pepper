@@ -12,6 +12,7 @@ import com.buhlergroup.pepper.action.highfive.HighFiveAction;
 import com.buhlergroup.pepper.action.lang.ChangeLanguageAction;
 import com.buhlergroup.pepper.action.memory.MemoryGameAction;
 import com.buhlergroup.pepper.action.names.SiriAction;
+import com.buhlergroup.pepper.action.raffle.RaffleInfoAction;
 import com.buhlergroup.pepper.action.saxophone.SaxophoneAction;
 import com.buhlergroup.pepper.action.say.SayAction;
 import com.buhlergroup.pepper.action.selfie.SelfieAction;
@@ -66,6 +67,7 @@ public class ActionHandler {
         actions.add(new MemoryGameAction());
         actions.add(new SelfieAction());
         actions.add(new OpenAdminAction());
+        actions.add(new RaffleInfoAction(actions));
 
         for (Action action : actions) {
             Log.i("ActionHandler", "Registered action: " + action.getClass().getSimpleName());

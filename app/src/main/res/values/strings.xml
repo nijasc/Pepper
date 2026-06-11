@@ -38,4 +38,19 @@
     <string name="admin_export_preparing">ZIP wird erstellt …</string>
     <string name="admin_export_failed">Export fehlgeschlagen</string>
     <string name="admin_export_share_title">Selfies exportieren</string>
+    <string name="admin_raffle">Verlosung</string>
+    <string name="raffle_create_title">Verlosung erstellen</string>
+    <string name="raffle_title_hint">Titel</string>
+    <string name="raffle_description_hint">Beschreibung</string>
+    <string name="raffle_end_date">Enddatum wählen</string>
+    <string name="raffle_requires_selfie">Selfie erforderlich</string>
+    <string name="raffle_requires_phone">Telefon erforderlich</string>
+    <string name="raffle_save">Speichern</string>
+    <string name="raffle_create_active_exists">Es läuft bereits eine Verlosung.</string>
+    <string name="raffle_create_invalid">Bitte Titel und Enddatum angeben.</string>
+    <string name="raffle_created">Verlosung erstellt</string>
+    <string name="raffle_status_active">Aktiv bis %1$s · %2$d Teilnehmer</string>
+    <string name="raffle_status_ended">Beendet · %1$d Teilnehmer</string>
+    <string name="raffle_no_entries">Noch keine Teilnehmer</string>
+    <string name="raffle_finish">Verlosung beenden</string>
 </resources>

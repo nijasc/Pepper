@@ -10,6 +10,9 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.util.IOUtils;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.action.raffle.RaffleRepository;
+import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
+import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 import com.buhlergroup.pepper.perception.EmotionReader;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,8 +25,11 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import io.github.cdimascio.dotenv.Dotenv;
@@ -88,7 +94,43 @@ public class OpenAIService {
                     .append("conversation, but never mention it in every reply and never force it.\n");
         }
 
+        appendRaffleHint(context, prompt);
+
         return prompt.toString();
+    }
+
+    private void appendRaffleHint(Context context, StringBuilder prompt) {
+        try {
+            RaffleEntity raffle = RaffleRepository.get(context).getCurrentRaffle();
+            if (raffle == null) {
+                return;
+            }
+            if (raffle.status == RaffleStatus.ACTIVE) {
+                String end = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
+                        .format(new Date(raffle.endDate));
+                prompt.append("\n## Active Raffle\n")
+                        .append("There is currently an active raffle the visitor can join: \"")
+                        .append(raffle.title).append("\". ");
+                if (raffle.description != null && !raffle.description.isEmpty()) {
+                    prompt.append(raffle.description).append(' ');
+                }
+                prompt.append("It ends on ").append(end).append(". ")
+                        .append("To take part the visitor gives their name and a valid e-mail address");
+                if (raffle.requiresPhone) {
+                    prompt.append(", and a phone number");
+                }
+                if (raffle.requiresSelfie) {
+                    prompt.append(", and takes a selfie with you");
+                }
+                prompt.append(". Proactively and naturally invite the visitor to take part when it fits ")
+                        .append("the conversation, but do not repeat it in every single reply.\n");
+            } else if (raffle.status == RaffleStatus.ENDED) {
+                prompt.append("\n## Raffle Ended\n")
+                        .append("If the visitor asks about the raffle, tell them it has unfortunately ")
+                        .append("already ended. Do not invite them to take part.\n");
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     public String sendOpenAiRequest(String path, @Nullable Map<String, Object> body) throws IOException {
