@@ -45,9 +45,9 @@
             android:layout_marginTop="12dp"
             android:orientation="horizontal">
 
-            <Button android:id="@+id/adminKey1" style="@style/AdminKey" android:text="1" />
-            <Button android:id="@+id/adminKey2" style="@style/AdminKey" android:text="2" />
-            <Button android:id="@+id/adminKey3" style="@style/AdminKey" android:text="3" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey1" style="@style/AdminKey" android:text="1" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey2" style="@style/AdminKey" android:text="2" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey3" style="@style/AdminKey" android:text="3" />
         </LinearLayout>
 
         <LinearLayout
@@ -55,9 +55,9 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Button android:id="@+id/adminKey4" style="@style/AdminKey" android:text="4" />
-            <Button android:id="@+id/adminKey5" style="@style/AdminKey" android:text="5" />
-            <Button android:id="@+id/adminKey6" style="@style/AdminKey" android:text="6" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey4" style="@style/AdminKey" android:text="4" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey5" style="@style/AdminKey" android:text="5" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey6" style="@style/AdminKey" android:text="6" />
         </LinearLayout>
 
         <LinearLayout
@@ -65,9 +65,9 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Button android:id="@+id/adminKey7" style="@style/AdminKey" android:text="7" />
-            <Button android:id="@+id/adminKey8" style="@style/AdminKey" android:text="8" />
-            <Button android:id="@+id/adminKey9" style="@style/AdminKey" android:text="9" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey7" style="@style/AdminKey" android:text="7" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey8" style="@style/AdminKey" android:text="8" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey9" style="@style/AdminKey" android:text="9" />
         </LinearLayout>
 
         <LinearLayout
@@ -75,12 +75,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Button android:id="@+id/adminKeyClear" style="@style/AdminKey" android:text="@string/admin_key_clear" />
-            <Button android:id="@+id/adminKey0" style="@style/AdminKey" android:text="0" />
-            <Button android:id="@+id/adminKeyBackspace" style="@style/AdminKey" android:text="@string/admin_key_backspace" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKeyClear" style="@style/AdminKey" android:text="@string/admin_key_clear" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey0" style="@style/AdminKey" android:text="0" />
+            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKeyBackspace" style="@style/AdminKey" android:text="@string/admin_key_backspace" />
         </LinearLayout>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminPinCancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -109,22 +109,22 @@
             android:textSize="30sp"
             android:textStyle="bold" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminClearHistory"
             style="@style/AdminMenuButton"
             android:text="@string/admin_clear_history" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminDevLogs"
             style="@style/AdminMenuButton"
             android:text="@string/admin_dev_logs" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminSelfies"
             style="@style/AdminMenuButton"
             android:text="@string/admin_selfies" />
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminClose"
             style="@style/AdminMenuButton"
             android:layout_marginTop="32dp"
@@ -162,7 +162,7 @@
                 android:textSize="15sp" />
         </ScrollView>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminDevLogBack"
             style="@style/AdminMenuButton"
             android:layout_gravity="center_horizontal"
@@ -208,7 +208,7 @@
                 android:visibility="gone" />
         </FrameLayout>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminGalleryBack"
             style="@style/AdminMenuButton"
             android:layout_gravity="center_horizontal"
@@ -256,7 +256,7 @@
             android:layout_marginTop="12dp"
             android:orientation="horizontal">
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/adminDetailFavorite"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -269,7 +269,7 @@
                 android:textColor="@color/white"
                 android:textSize="18sp" />
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/adminDetailDelete"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -283,7 +283,7 @@
                 android:textSize="18sp" />
         </LinearLayout>
 
-        <Button
+        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminDetailBack"
             style="@style/AdminMenuButton"
             android:layout_marginTop="10dp"
