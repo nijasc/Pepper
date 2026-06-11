@@ -40,6 +40,10 @@
     - [Anforderungen](#anforderungen)
     - [Env-Setup](#env-setup)
     - [Der erste Start](#der-erste-start)
+  - [Release & Deployment](#release--deployment)
+    - [Signierung einrichten](#signierung-einrichten)
+    - [Release-APK bauen](#release-apk-bauen)
+    - [Dauerhaft auf Pepper installieren](#dauerhaft-auf-pepper-installieren)
   - [Kernkomponenten](#kernkomponenten)
   - [Ressourcen verwalten](#ressourcen-verwalten)
   - [Eine Funktion erstellen](#eine-funktion-erstellen)
@@ -399,6 +403,64 @@ OPENAI_API_TOKEN=<YOUR_TOKEN>
 4. Starte die Applikation über die **app**-Start-Konfiguration in Android Studio.
 
 Wurden alle Schritte korrekt ausgeführt, startet die App nun auf dem Pepper-Roboter und ein Google-Popup erscheint. Teste anschliessend, ob alle Funktionen wie erwartet arbeiten – am besten, indem du nacheinander je einen Befehl pro Funktion ausprobierst.
+
+### Release & Deployment
+
+Dieser Abschnitt beschreibt, wie du eine **signierte Release-APK** baust und sie **dauerhaft** auf Pepper installierst – also unabhängig davon, ob das Projekt gerade in Android Studio läuft.
+
+#### Signierung einrichten
+
+Eine Release-APK muss signiert sein, sonst lässt sie sich nicht über `adb` installieren. Die Keystore-Zugangsdaten werden **nicht** im Quellcode hinterlegt, sondern aus der lokalen Datei `keystore.properties` im Projektwurzelverzeichnis gelesen. Diese Datei ist über `.gitignore` ausgeschlossen (ebenso `*.jks` und `*.keystore`) und gelangt damit nie in die Versionskontrolle. Die Signing-Konfiguration in `app/build.gradle` greift automatisch, sobald die Datei vorhanden ist – fehlt sie, bleibt der Build lauffähig, erzeugt dann aber eine unsignierte APK.
+
+**Aufbau von `keystore.properties`:**
+
+| Schlüssel       | Beschreibung                                                  |
+| --------------- | ------------------------------------------------------------ |
+| `storeFile`     | Pfad zur Keystore-Datei, relativ zum Projektwurzelverzeichnis. |
+| `storePassword` | Passwort des Keystores.                                       |
+| `keyAlias`      | Alias des Signaturschlüssels.                                 |
+| `keyPassword`   | Passwort des Schlüssels.                                      |
+
+**So richtest du die Signierung ein:**
+
+1. Erzeuge im Projektwurzelverzeichnis einmalig einen Keystore:
+
+   ```powershell
+   keytool -genkeypair -v -keystore buhler-messebot.jks -alias buhler-messebot -keyalg RSA -keysize 2048 -validity 10000
+   ```
+
+   Folge den Eingabeaufforderungen (Passwort, Name/Organisation).
+2. Kopiere die Vorlage `keystore.properties.template` und benenne die Kopie in `keystore.properties` um.
+3. Trage in `keystore.properties` deine Passwörter sowie – falls abweichend – den Alias ein.
+
+> **Wichtig:** Bewahre den Keystore sicher auf und committe ihn niemals. Geht er verloren, lassen sich auf bereits installierten Geräten keine Updates derselben App mehr ausliefern. Im Repository verbleibt ausschliesslich die Vorlage `keystore.properties.template`.
+
+#### Release-APK bauen
+
+Baue die signierte APK über den Gradle-Task `assembleRelease`:
+
+```powershell
+.\gradlew assembleRelease
+```
+
+Das Ergebnis liegt anschliessend unter `app/build/outputs/apk/release/app-release.apk`.
+
+> **Build-JDK:** Gradle 7.2 / AGP 7.1.3 laufen nur mit **JDK 11–17**. Baue entweder direkt aus Android Studio (`Build → Generate Signed Bundle / APK` oder den Task `assembleRelease` im Studio-Terminal – Studio nutzt sein gebündeltes JBR), oder setze für die Kommandozeile `org.gradle.java.home` in `gradle.properties` auf ein JDK 17. Das in `compileOptions` gesetzte Java 8 betrifft nur die Quellcode-Kompatibilität, nicht das Build-JDK.
+
+> **SDK-Pfad:** Für Kommandozeilen-Builds muss der Pfad zum Android-SDK bekannt sein – entweder über die Datei `local.properties` (`sdk.dir=…`) oder die Umgebungsvariable `ANDROID_HOME`. Android Studio legt `local.properties` automatisch an.
+
+#### Dauerhaft auf Pepper installieren
+
+Eine installierte APK bleibt dauerhaft auf dem Tablet – auch nach dem Trennen von Android Studio. Um sie ohne Kabel aufzuspielen, nutze `adb` über WLAN:
+
+```powershell
+adb connect <PEPPER-IP>:5555
+adb install -r app\build\outputs\apk\release\app-release.apk
+```
+
+Die IP-Adresse findest du auf dem Pepper-Tablet unter den Netzwerk-Einstellungen. Das Flag `-r` installiert über eine bestehende Version, ohne deren Daten zu löschen. Nach der Installation erscheint die App in der App-Liste des Tablets und lässt sich direkt auf Pepper starten.
+
+> **Hinweis – Autostart:** Damit die App von selbst startet (z. B. nach einem Neustart oder als dauerhafte Messe-Anwendung), sind zusätzliche Schritte nötig – etwa ein `BroadcastReceiver` auf `BOOT_COMPLETED` oder der Betrieb im Kiosk-/Launcher-Modus mit Screen-Pinning. Beachte dabei, dass Peppers «Autonomous Life» mit einer selbst gestarteten App kollidieren kann.
 
 ### Kernkomponenten
 
