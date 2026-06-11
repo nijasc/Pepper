@@ -46,6 +46,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private LanguageManager languageManager;
     private HistoryManager historyManager;
     private Button stopFollowButton;
+    private Button adminButton;
     private TextView languageLabel;
 
     @Override
@@ -68,7 +69,11 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         AdminView adminView = findViewById(R.id.adminView);
         AdminController.get().attachView(adminView);
-        findViewById(R.id.adminButton).setOnClickListener(v -> AdminController.get().open());
+        adminButton = findViewById(R.id.adminButton);
+        adminButton.setOnClickListener(v -> AdminController.get().open());
+        AdminController.get().setAdminStateListener(isOpen ->
+                runOnUiThread(() ->
+                        adminButton.setVisibility(isOpen ? View.GONE : View.VISIBLE)));
 
         initSpeech();
     }

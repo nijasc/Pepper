@@ -10,18 +10,27 @@ import java.util.List;
 
 public final class AdminController {
 
+    public interface AdminStateListener {
+        void onAdminStateChanged(boolean open);
+    }
+
     private static final AdminController INSTANCE = new AdminController();
 
     private volatile AdminView view;
     private volatile HistoryManager historyManager;
     private volatile LanguageManager languageManager;
     private volatile boolean open = false;
+    private volatile AdminStateListener stateListener;
 
     private AdminController() {
     }
 
     public static AdminController get() {
         return INSTANCE;
+    }
+
+    public void setAdminStateListener(AdminStateListener listener) {
+        this.stateListener = listener;
     }
 
     public void attachView(AdminView view) {
@@ -57,6 +66,8 @@ public final class AdminController {
         AdminView current = view;
         if (current != null) {
             open = true;
+            AdminStateListener l = stateListener;
+            if (l != null) l.onAdminStateChanged(true);
             current.open();
         }
     }
@@ -67,6 +78,8 @@ public final class AdminController {
 
     void markClosed() {
         open = false;
+        AdminStateListener l = stateListener;
+        if (l != null) l.onAdminStateChanged(false);
     }
 
     public boolean clearHistory() {
