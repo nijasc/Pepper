@@ -77,7 +77,7 @@ public final class SelfieController {
 
         running = true;
         try {
-            say(context, "Klar, machen wir ein Selfie! Stell dich neben mich und schau in meine Augen.");
+            say(context, "Klar, machen wir ein Selfie! Stell dich vor mich und schau in meine Augen.");
             say(context, "Drei… zwei… eins… lächeln!");
 
             Bitmap photo = capture(context);
