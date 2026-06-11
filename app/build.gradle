@@ -19,6 +19,12 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = ["room.schemaLocation": "$projectDir/schemas".toString()]
+            }
+        }
     }
 
     signingConfigs {
@@ -59,6 +65,7 @@ dependencies {
     implementation 'com.aldebaran:qisdk:1.7.5'
     implementation 'com.aldebaran:qisdk-design:1.7.5'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.7.2'
-    implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation 'com.google.zxing:core:3.5.3'
+    implementation 'androidx.room:room-runtime:2.5.2'
+    annotationProcessor 'androidx.room:room-compiler:2.5.2'
 }

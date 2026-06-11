@@ -14,19 +14,18 @@ import com.aldebaran.qi.sdk.object.image.EncodedImage;
 import com.aldebaran.qi.sdk.object.image.TakePicture;
 import com.aldebaran.qi.sdk.object.image.TimestampedImageHandle;
 import com.buhler.funktionierender_pepper.R;
+import com.buhler.funktionierender_pepper.action.selfie.data.SelfieEntity;
 import com.buhler.funktionierender_pepper.lang.SpeechManager;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Locale;
-import java.util.UUID;
-
-import fi.iki.elonen.NanoHTTPD;
 
 public final class SelfieController {
 
@@ -85,18 +84,21 @@ public final class SelfieController {
             }
 
             Bitmap composed = addOverlay(context, photo);
-            File file = save(context, composed);
-            String url = serveAndBuildUrl(context, file);
-            if (url == null) {
-                say(context, "Ich konnte das Bild leider nicht bereitstellen. Bin ich mit dem WLAN verbunden?");
+            SelfieEntity entity = SelfieRepository.get(context).save(toJpeg(composed));
+
+            ensureServer(SelfieRepository.get(context).imagesDir());
+            String ip = localIp(context);
+            if (ip == null) {
+                say(context, "Ich bin gerade nicht mit dem WLAN verbunden, deshalb kann ich das Selfie nicht teilen.");
                 board.hide();
                 return;
             }
 
+            String url = "http://" + ip + ":" + SERVER_PORT + "/" + entity.filename;
             Bitmap qr = QrGenerator.encode(url, 600);
             board.setStatus("Dein Selfie ist bereit!");
             board.show(composed, qr);
-            Log.i(TAG, "Selfie served at " + url);
+            Log.i(TAG, "Selfie #" + entity.number + " at " + url);
 
             say(context, "Fertig! Scanne den QR-Code auf meinem Tablet, dann kannst du dein Selfie herunterladen. "
                     + "Verbinde dich dafür mit demselben WLAN wie ich.");
@@ -109,6 +111,14 @@ public final class SelfieController {
             board.hide();
         } finally {
             running = false;
+        }
+    }
+
+    private void ensureServer(File imagesDir) throws IOException {
+        if (server == null) {
+            LocalImageServer started = new LocalImageServer(imagesDir, SERVER_PORT);
+            started.start();
+            server = started;
         }
     }
 
@@ -148,35 +158,10 @@ public final class SelfieController {
         return result;
     }
 
-    private File save(Context context, Bitmap bitmap) throws Exception {
-        File dir = new File(context.getCacheDir(), "selfies");
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new Exception("Could not create selfie directory");
-        }
-        String name = UUID.randomUUID().toString().substring(0, 8) + ".jpg";
-        File file = new File(dir, name);
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
-        }
-        return file;
-    }
-
-    private String serveAndBuildUrl(Context context, File file) {
-        try {
-            if (server == null) {
-                LocalImageServer started = new LocalImageServer(file.getParentFile(), SERVER_PORT);
-                started.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
-                server = started;
-            }
-            String ip = localIp(context);
-            if (ip == null) {
-                return null;
-            }
-            return "http://" + ip + ":" + SERVER_PORT + "/" + file.getName();
-        } catch (Exception e) {
-            Log.e(TAG, "Server failed", e);
-            return null;
-        }
+    private byte[] toJpeg(Bitmap bitmap) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bos);
+        return bos.toByteArray();
     }
 
     private String localIp(Context context) {

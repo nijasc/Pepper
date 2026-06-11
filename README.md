@@ -248,7 +248,7 @@ Beispiel (de): Lass uns Memory spielen. / Lass uns Memory spielen, schwer.
 
 Auf Wunsch macht Pepper ein gemeinsames Selfie: Er nimmt mit seiner Kamera ein Foto auf, fügt ein Pepper-Motiv ins Bild ein und zeigt anschliessend auf dem Tablet einen QR-Code an. Über diesen QR-Code lässt sich das Bild auf das eigene Smartphone herunterladen.
 
-Das Bild wird dabei **nicht ins Internet hochgeladen**, sondern direkt von Peppers Tablet im lokalen Netzwerk bereitgestellt. Damit der Download funktioniert, muss sich das Smartphone im **selben WLAN wie Pepper** befinden. Die Aufnahme wird nach kurzer Zeit automatisch wieder gelöscht.
+Das Foto wird **lokal auf Peppers Tablet** gespeichert (Metadaten in einer Room-Datenbank, das Bild als Datei) und über einen kleinen, in die App eingebetteten Webserver bereitgestellt. Über den QR-Code lädt das Smartphone das Bild **direkt von Pepper** – nichts wird ins Internet hochgeladen. Damit der Download funktioniert, muss sich das Smartphone im **selben WLAN wie Pepper** befinden.
 
 **Zu beachten:**
 
