@@ -15,6 +15,7 @@ import com.aldebaran.qi.sdk.object.image.EncodedImage;
 import com.aldebaran.qi.sdk.object.image.TimestampedImageHandle;
 import com.buhler.funktionierender_pepper.R;
 import com.buhler.funktionierender_pepper.action.selfie.data.SelfieEntity;
+import com.buhler.funktionierender_pepper.config.Env;
 import com.buhler.funktionierender_pepper.lang.SpeechManager;
 
 import java.io.ByteArrayOutputStream;
@@ -26,6 +27,8 @@ import java.net.NetworkInterface;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public final class SelfieController {
 
@@ -96,14 +99,29 @@ public final class SelfieController {
 
             String url = "http://" + ip + ":" + SERVER_PORT + "/" + entity.filename;
             Bitmap qr = QrGenerator.encode(url, 600);
+            Bitmap wifiQr = buildWifiQr(context);
+
+            CountDownLatch dismiss = new CountDownLatch(1);
+            board.setOnCloseListener(dismiss::countDown);
             board.setStatus("Dein Selfie ist bereit!");
-            board.show(composed, qr);
+            board.show(composed, qr, wifiQr);
             Log.i(TAG, "Selfie #" + entity.number + " at " + url);
 
-            say(context, "Fertig! Scanne den QR-Code auf meinem Tablet, dann kannst du dein Selfie herunterladen. "
-                    + "Verbinde dich dafür mit demselben WLAN wie ich.");
+            if (wifiQr != null) {
+                say(context, "Fertig! Scanne den oberen QR-Code für dein Bild. "
+                        + "Über den unteren Code kannst du dich mit meinem WLAN verbinden. "
+                        + "Tippe auf Okay, wenn du fertig bist.");
+            } else {
+                say(context, "Fertig! Scanne den QR-Code auf meinem Tablet, dann kannst du dein Selfie herunterladen. "
+                        + "Tippe auf Okay, wenn du fertig bist.");
+            }
 
-            sleep(DISPLAY_MS);
+            try {
+                dismiss.await(DISPLAY_MS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            board.setOnCloseListener(null);
             board.hide();
         } catch (Exception e) {
             Log.e(TAG, "Selfie failed", e);
@@ -164,6 +182,35 @@ public final class SelfieController {
         return bos.toByteArray();
     }
 
+    private Bitmap buildWifiQr(Context context) {
+        String ssid = Env.get(context, "PEPPER_WIFI_SSID", "");
+        if (ssid.isEmpty()) {
+            return null;
+        }
+        String password = Env.get(context, "PEPPER_WIFI_PASSWORD", "");
+        String type = password.isEmpty() ? "nopass" : "WPA";
+        StringBuilder payload = new StringBuilder("WIFI:T:").append(type)
+                .append(";S:").append(escapeWifi(ssid)).append(";");
+        if (!password.isEmpty()) {
+            payload.append("P:").append(escapeWifi(password)).append(";");
+        }
+        payload.append(";");
+        try {
+            return QrGenerator.encode(payload.toString(), 400);
+        } catch (Exception e) {
+            Log.w(TAG, "WiFi QR generation failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private String escapeWifi(String value) {
+        return value.replace("\\", "\\\\")
+                .replace(";", "\\;")
+                .replace(",", "\\,")
+                .replace(":", "\\:")
+                .replace("\"", "\\\"");
+    }
+
     private String localIp(Context context) {
         try {
             WifiManager wm = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -200,14 +247,6 @@ public final class SelfieController {
             SpeechManager.getInstance().systemSay(context, text);
         } catch (Exception e) {
             Log.w(TAG, "say failed: " + e.getMessage());
-        }
-    }
-
-    private void sleep(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 }

@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -18,7 +19,11 @@ public class SelfieView extends FrameLayout {
 
     private ImageView photoView;
     private ImageView qrView;
+    private ImageView wifiQrView;
+    private View wifiBlock;
     private TextView statusView;
+    private Button okayButton;
+    private volatile Runnable closeListener;
 
     public SelfieView(Context context) {
         super(context);
@@ -43,13 +48,33 @@ public class SelfieView extends FrameLayout {
 
         photoView = findViewById(R.id.selfiePhoto);
         qrView = findViewById(R.id.selfieQr);
+        wifiQrView = findViewById(R.id.selfieWifiQr);
+        wifiBlock = findViewById(R.id.selfieWifiBlock);
         statusView = findViewById(R.id.selfieStatus);
+        okayButton = findViewById(R.id.selfieOkay);
+        okayButton.setOnClickListener(v -> {
+            Runnable listener = closeListener;
+            if (listener != null) {
+                listener.run();
+            }
+            hide();
+        });
     }
 
-    public void show(Bitmap photo, Bitmap qr) {
+    public void setOnCloseListener(Runnable listener) {
+        this.closeListener = listener;
+    }
+
+    public void show(Bitmap photo, Bitmap qr, Bitmap wifiQr) {
         post(() -> {
             photoView.setImageBitmap(photo);
             qrView.setImageBitmap(qr);
+            if (wifiQr != null) {
+                wifiQrView.setImageBitmap(wifiQr);
+                wifiBlock.setVisibility(View.VISIBLE);
+            } else {
+                wifiBlock.setVisibility(View.GONE);
+            }
             setVisibility(View.VISIBLE);
             bringToFront();
         });
@@ -64,6 +89,7 @@ public class SelfieView extends FrameLayout {
             setVisibility(View.GONE);
             photoView.setImageBitmap(null);
             qrView.setImageBitmap(null);
+            wifiQrView.setImageBitmap(null);
         });
     }
 }
