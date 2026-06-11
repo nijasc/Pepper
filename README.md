@@ -54,6 +54,7 @@
   - [Ressourcen verwalten](#ressourcen-verwalten)
   - [Eine Funktion erstellen](#eine-funktion-erstellen)
   - [OpenAI-Systemprompt anpassen](#openai-systemprompt-anpassen)
+  - [Externe Kamera](#externe-kamera)
   - [Glossar](#glossar)
   - [Anderes & Tipps](#anderes--tipps)
 
@@ -617,6 +618,21 @@ Das System ist so aufgebaut, dass sich neue Funktionen einfach ergänzen lassen.
 Um die Instruktionen von Peppers LLM anzupassen, bearbeite die Datei `instructions.md`. Achte darauf, dass am Ende des Systemprompts der Abschnitt **Available Skills** stehen bleibt – dort werden Peppers Fähigkeiten dynamisch eingefügt. Entfernst du diesen Abschnitt, weiss Pepper nicht mehr, welche Funktionen ihm zur Verfügung stehen.
 
 Die `instructions.md`-Datei findest du im Projekt unter `app/src/main/res/raw/instructions.md`.
+
+### Externe Kamera
+
+Für die geplante Anbindung einer externen DSLR-Kamera via WiFi (PTP/IP, Port 15740) gilt folgende Kompatibilitätsübersicht. Voraussetzung ist eingebautes WiFi und Unterstützung des Infrastructure-Mode (Kamera im selben WLAN wie Pepper).
+
+| Kamera | WiFi | Kompatibel | Bemerkung |
+| ------ | ---- | ---------- | --------- |
+| Canon EOS 80D | ✅ eingebaut | ✅ Ja | PTP/IP Port 15740, Infrastructure-Mode. Canon-spezifischer Pairing-Schritt nötig: Kamera → Menü → Wireless → Computer-Verbindung erstellen. |
+| Nikon D5000 | ❌ kein WiFi | ❌ Nein | Kein eingebautes WiFi, kein WT/WU-Adapter-Support. |
+
+Weitere grundsätzlich kompatible Modelle (nicht abschliessend):
+
+- **Nikon mit eingebautem WiFi:** D5600, D5500, D7500, D7200, Z-Serie
+- **Nikon mit WU-1a Adapter:** D3200, D3300, D5200, D5300, D7100
+- **Canon EOS mit eingebautem WiFi:** 90D, R-Serie und neuere EOS-Modelle
 
 ### Glossar
 

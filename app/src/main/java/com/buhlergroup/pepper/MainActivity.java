@@ -19,8 +19,11 @@ import androidx.core.content.ContextCompat;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
 import com.aldebaran.qi.sdk.RobotLifecycleCallbacks;
+import com.aldebaran.qi.sdk.builder.HolderBuilder;
 import com.aldebaran.qi.sdk.design.activity.RobotActivity;
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayStrategy;
+import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
+import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.buhlergroup.pepper.action.ActionHandler;
 import com.buhlergroup.pepper.action.follow.FollowController;
 import com.buhlergroup.pepper.action.admin.AdminController;
@@ -49,6 +52,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private HistoryManager historyManager;
     private Button stopFollowButton;
     private Button adminButton;
+    private Holder backgroundMovementHolder;
     private TextView languageLabel;
 
     @Override
@@ -110,6 +114,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         s.setC(qiContext);
         s.getAuthToken(qiContext);
         Log.e("Mainactivity", "AFocus Gained");
+        holdBackgroundMovement(qiContext);
         FollowController.get().onFocusGained(qiContext);
         FollowController.get().setFollowStateListener(following ->
                 runOnUiThread(() ->
@@ -145,7 +150,30 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         MemoryGameController.get().abort();
         FollowController.get().setFollowStateListener(null);
         FollowController.get().onFocusLost();
+        releaseBackgroundMovement();
         Log.e("Mainactivity", "AFocus Lost");
+    }
+
+    private void holdBackgroundMovement(QiContext qiContext) {
+        releaseBackgroundMovement();
+        try {
+            backgroundMovementHolder = HolderBuilder.with(qiContext)
+                    .withAutonomousAbilities(AutonomousAbilitiesType.BACKGROUND_MOVEMENT)
+                    .build();
+            backgroundMovementHolder.hold();
+        } catch (Exception e) {
+            Log.e("Mainactivity", "holdBackgroundMovement failed: " + e.getMessage());
+        }
+    }
+
+    private void releaseBackgroundMovement() {
+        if (backgroundMovementHolder != null) {
+            try {
+                backgroundMovementHolder.release();
+            } catch (Exception ignored) {
+            }
+            backgroundMovementHolder = null;
+        }
     }
 
     @Override
