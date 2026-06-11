@@ -25,6 +25,8 @@ import com.buhler.funktionierender_pepper.action.ActionHandler;
 import com.buhler.funktionierender_pepper.action.follow.FollowController;
 import com.buhler.funktionierender_pepper.action.memory.MemoryGameController;
 import com.buhler.funktionierender_pepper.action.memory.MemoryGameView;
+import com.buhler.funktionierender_pepper.action.selfie.SelfieController;
+import com.buhler.funktionierender_pepper.action.selfie.SelfieView;
 import com.buhler.funktionierender_pepper.lang.LanguageManager;
 import com.buhler.funktionierender_pepper.lang.SpeechManager;
 import com.buhler.funktionierender_pepper.lang.SupportedLanguage;
@@ -59,6 +61,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         MemoryGameView memoryGame = findViewById(R.id.memoryGame);
         MemoryGameController.get().attachView(memoryGame);
 
+        SelfieView selfieView = findViewById(R.id.selfieView);
+        SelfieController.get().attachView(selfieView);
+
         initSpeech();
     }
 
@@ -68,6 +73,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         MemoryGameController.get().abort();
         MemoryGameController.get().detachView();
+        SelfieController.get().detachView();
+        SelfieController.get().stopServer();
         QiSDK.unregister(this);
         recognizer.cancel();
         recognizer.destroy();

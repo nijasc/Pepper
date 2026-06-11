@@ -9,4 +9,7 @@
     <string name="mem_status_idle">Bereit?</string>
     <string name="mem_score_idle">Punkte: 0</string>
     <string name="mem_hint">Wiederhole Peppers Sequenz</string>
+    <string name="selfie_title">Selfie mit Pepper</string>
+    <string name="selfie_scan_hint">Scanne den QR-Code, um dein Bild herunterzuladen</string>
+    <string name="selfie_wifi_hint">Verbinde dich dazu mit demselben WLAN wie Pepper</string>
 </resources>

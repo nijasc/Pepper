@@ -27,6 +27,7 @@
   - [Saxofon](#saxofon)
   - [High Five](#high-five)
   - [Memory-Minispiel](#memory-minispiel)
+  - [Selfie](#selfie)
   - [Lautstärke](#lautstärke)
   - [Sprache](#sprache)
   - [Dokumentation](#dokumentation)
@@ -241,6 +242,22 @@ Pro Runde wird die Sequenz um ein Element länger und das Tempo etwas schneller.
 ```text
 Beispiel (en): Let's play the memory game.
 Beispiel (de): Lass uns Memory spielen. / Lass uns Memory spielen, schwer.
+```
+
+### Selfie
+
+Auf Wunsch macht Pepper ein gemeinsames Selfie: Er nimmt mit seiner Kamera ein Foto auf, fügt ein Pepper-Motiv ins Bild ein und zeigt anschliessend auf dem Tablet einen QR-Code an. Über diesen QR-Code lässt sich das Bild auf das eigene Smartphone herunterladen.
+
+Das Bild wird dabei **nicht ins Internet hochgeladen**, sondern direkt von Peppers Tablet im lokalen Netzwerk bereitgestellt. Damit der Download funktioniert, muss sich das Smartphone im **selben WLAN wie Pepper** befinden. Die Aufnahme wird nach kurzer Zeit automatisch wieder gelöscht.
+
+**Zu beachten:**
+
+- Während der Aufnahme und der QR-Code-Anzeige überdeckt die Selfie-Ansicht die übrige Oberfläche und verschwindet nach einigen Sekunden automatisch.
+- Smartphone und Pepper müssen im selben WLAN sein, sonst kann das Bild nicht heruntergeladen werden.
+
+```text
+Beispiel (en): Let's take a selfie.
+Beispiel (de): Lass uns ein Selfie machen.
 ```
 
 ### Lautstärke

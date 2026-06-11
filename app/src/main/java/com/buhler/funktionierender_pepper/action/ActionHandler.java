@@ -13,6 +13,7 @@ import com.buhler.funktionierender_pepper.action.memory.MemoryGameAction;
 import com.buhler.funktionierender_pepper.action.names.SiriAction;
 import com.buhler.funktionierender_pepper.action.saxophone.SaxophoneAction;
 import com.buhler.funktionierender_pepper.action.say.SayAction;
+import com.buhler.funktionierender_pepper.action.selfie.SelfieAction;
 import com.buhler.funktionierender_pepper.action.system.SystemInfoAction;
 import com.buhler.funktionierender_pepper.action.test.TestAction;
 import com.buhler.funktionierender_pepper.action.volume.ChangeVolumeAction;
@@ -62,6 +63,7 @@ public class ActionHandler {
         actions.add(new SystemInfoAction(languageManager, actions));
         actions.add(new FollowMeAction());
         actions.add(new MemoryGameAction());
+        actions.add(new SelfieAction());
 
         for (Action action : actions) {
             Log.i("ActionHandler", "Registered action: " + action.getClass().getSimpleName());
