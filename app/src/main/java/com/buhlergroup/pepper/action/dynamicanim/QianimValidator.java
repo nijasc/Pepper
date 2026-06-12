@@ -44,6 +44,10 @@ public final class QianimValidator {
     private QianimValidator() {
     }
 
+    static float[] limitsFor(String actuator) {
+        return LIMITS.get(actuator);
+    }
+
     public static String validate(String xml) {
         if (xml == null || xml.trim().isEmpty()) {
             return "empty animation";
