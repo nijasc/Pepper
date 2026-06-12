@@ -49,6 +49,10 @@ public final class NavigationManager {
         void onError(String error);
     }
 
+    public interface MapUpdateListener {
+        void onMapBitmap(Bitmap bitmap);
+    }
+
     private static final NavigationManager INSTANCE = new NavigationManager();
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -62,6 +66,8 @@ public final class NavigationManager {
     private volatile RoomScanEntity activeScan;
     private volatile boolean localized;
     private volatile boolean scanning;
+    private volatile MapUpdateListener mapUpdateListener;
+    private volatile int pollGeneration;
 
     private NavigationManager() {
     }
@@ -75,12 +81,17 @@ public final class NavigationManager {
     }
 
     public void onFocusLost() {
+        stopMapPolling();
         cancelLocalize();
         cancelMapping();
         releaseAbilities();
         localized = false;
         scanning = false;
         qiContext = null;
+    }
+
+    public void setMapUpdateListener(MapUpdateListener listener) {
+        this.mapUpdateListener = listener;
     }
 
     public boolean isLocalized() {
@@ -109,6 +120,7 @@ public final class NavigationManager {
                 mappingFuture = lam.async().run();
                 scanning = true;
                 cb.onResult(null);
+                startMapPolling();
                 autoScanRotate(c);
             } catch (Exception e) {
                 releaseAbilities();
@@ -140,10 +152,12 @@ public final class NavigationManager {
                 activeMap = map;
                 activeScan = scan;
                 cb.onResult(scan);
+                publishMap(map);
             } catch (Exception e) {
                 Log.w(TAG, "stopAndSaveScan failed: " + e.getMessage());
                 cb.onError("Scan konnte nicht gespeichert werden.");
             } finally {
+                stopMapPolling();
                 cancelMapping();
                 releaseAbilities();
                 scanning = false;
@@ -363,22 +377,66 @@ public final class NavigationManager {
                 cb.onError("Noch keine Karte vorhanden. Erst scannen oder aktivieren.");
                 return;
             }
-            try {
-                ByteBuffer buffer = map.getTopGraphicalRepresentation().getImage().getData();
-                buffer.rewind();
-                byte[] bytes = new byte[buffer.remaining()];
-                buffer.get(bytes);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                if (bitmap == null) {
-                    cb.onError("Karte konnte nicht gelesen werden.");
+            Bitmap bitmap = renderMap(map);
+            if (bitmap == null) {
+                cb.onError("Karte konnte nicht erzeugt werden.");
+                return;
+            }
+            cb.onResult(bitmap);
+        });
+    }
+
+    private Bitmap renderMap(ExplorationMap map) {
+        try {
+            ByteBuffer buffer = map.getTopGraphicalRepresentation().getImage().getData();
+            buffer.rewind();
+            byte[] bytes = new byte[buffer.remaining()];
+            buffer.get(bytes);
+            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+        } catch (Exception e) {
+            Log.w(TAG, "renderMap failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private void publishMap(ExplorationMap map) {
+        MapUpdateListener listener = mapUpdateListener;
+        if (listener == null || map == null) {
+            return;
+        }
+        Bitmap bitmap = renderMap(map);
+        if (bitmap != null) {
+            listener.onMapBitmap(bitmap);
+        }
+    }
+
+    private void startMapPolling() {
+        final int gen = ++pollGeneration;
+        Thread poller = new Thread(() -> {
+            while (gen == pollGeneration && scanning) {
+                try {
+                    LocalizeAndMap lam = currentMapping;
+                    if (lam == null) {
+                        break;
+                    }
+                    publishMap(lam.dumpMap());
+                } catch (Exception e) {
+                    Log.d(TAG, "Map snapshot not available yet: " + e.getMessage());
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                     return;
                 }
-                cb.onResult(bitmap);
-            } catch (Exception e) {
-                Log.w(TAG, "getMapBitmap failed: " + e.getMessage());
-                cb.onError("Karte konnte nicht erzeugt werden.");
             }
-        });
+        }, "map-poller");
+        poller.setDaemon(true);
+        poller.start();
+    }
+
+    private void stopMapPolling() {
+        pollGeneration++;
     }
 
     private void autoScanRotate(QiContext c) {

@@ -72,6 +72,10 @@ public class NavigationView extends FrameLayout {
     }
 
     public void open() {
+        NavigationManager.get().setMapUpdateListener(bitmap -> post(() -> {
+            mapImage.setImageBitmap(bitmap);
+            mapImage.setVisibility(VISIBLE);
+        }));
         post(() -> {
             setVisibility(VISIBLE);
             bringToFront();
@@ -80,6 +84,7 @@ public class NavigationView extends FrameLayout {
     }
 
     public void hide() {
+        NavigationManager.get().setMapUpdateListener(null);
         post(() -> setVisibility(GONE));
     }
 
