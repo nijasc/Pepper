@@ -232,7 +232,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void listenToSpeech() {
-        while (FollowController.get().isFollowing() || AdminController.get().isOpen()) {
+        while (FollowController.get().isFollowing()
+                || AdminController.get().isOpen()
+                || NavigationController.get().isOpen()) {
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {
