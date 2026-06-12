@@ -6,6 +6,7 @@ import android.util.Log;
 import com.buhlergroup.pepper.action.dance.data.DanceDao;
 import com.buhlergroup.pepper.action.dance.data.DanceDatabase;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
+import com.buhlergroup.pepper.action.dance.spotify.SpotifySearch;
 import com.buhlergroup.pepper.action.dance.youtube.YoutubeSearch;
 import com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator;
 
@@ -35,30 +36,68 @@ public final class DanceRepository {
             dao.deleteById(bySong.youtubeId);
         }
 
-        YoutubeSearch.Result result = new YoutubeSearch().search(songName);
+        SongSource source = resolveSource(context, songName);
 
-        DanceEntity existing = dao.findById(result.videoId);
+        DanceEntity existing = dao.findById(source.sourceId);
         if (existing != null && existing.qianimPath != null
                 && new File(existing.qianimPath).exists()) {
             return existing;
         }
 
-        long durationMs = result.durationMs > 0 ? result.durationMs : 25000L;
+        long durationMs = source.durationMs > 0 ? source.durationMs : 25000L;
         int seconds = (int) Math.max(8, Math.min(30, durationMs / 1000));
         String qianim = generator.generateValidatedDance(context, songName, seconds);
         if (qianim == null) {
             throw new Exception("Tanz-Choreografie konnte nicht erzeugt werden.");
         }
 
-        File qianimFile = new File(danceDir, result.videoId + ".qianim");
+        File qianimFile = new File(danceDir, sanitizeFileName(source.sourceId) + ".qianim");
         writeFile(qianimFile, qianim);
 
         DanceEntity entity = new DanceEntity(
-                result.videoId, songName, qianimFile.getAbsolutePath(),
-                durationMs, false, System.currentTimeMillis());
+                source.sourceId, songName, qianimFile.getAbsolutePath(),
+                source.previewUrl, durationMs, false, System.currentTimeMillis());
         dao.insert(entity);
-        Log.i(TAG, "Created dance for " + songName);
+        Log.i(TAG, "Created dance for " + songName + " from " + source.origin);
         return entity;
+    }
+
+    private static final class SongSource {
+        final String sourceId;
+        final String previewUrl;
+        final long durationMs;
+        final String origin;
+
+        SongSource(String sourceId, String previewUrl, long durationMs, String origin) {
+            this.sourceId = sourceId;
+            this.previewUrl = previewUrl;
+            this.durationMs = durationMs;
+            this.origin = origin;
+        }
+    }
+
+    private SongSource resolveSource(Context context, String songName) throws Exception {
+        SpotifySearch spotify = new SpotifySearch();
+        if (spotify.isConfigured(context)) {
+            try {
+                SpotifySearch.Result result = spotify.search(context, songName);
+                if (result.previewUrl != null) {
+                    long durationMs = result.durationMs > 0
+                            ? Math.min(result.durationMs, 30000L) : 30000L;
+                    return new SongSource("spotify:" + result.trackId,
+                            result.previewUrl, durationMs, "spotify");
+                }
+                Log.i(TAG, "Spotify track without preview, falling back to YouTube");
+            } catch (Exception e) {
+                Log.w(TAG, "Spotify search failed, falling back to YouTube: " + e.getMessage());
+            }
+        }
+        YoutubeSearch.Result result = new YoutubeSearch().search(songName);
+        return new SongSource(result.videoId, null, result.durationMs, "youtube");
+    }
+
+    private String sanitizeFileName(String value) {
+        return value.replaceAll("[^A-Za-z0-9_-]", "_");
     }
 
     private String normalizeSongName(String query) {

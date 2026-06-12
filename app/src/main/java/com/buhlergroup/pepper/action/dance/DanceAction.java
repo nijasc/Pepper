@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action.dance;
 
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.util.Log;
 
@@ -61,7 +62,10 @@ public class DanceAction extends Action {
             Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 
-            DancePlayerController.get().play(dance.youtubeId);
+            boolean snippetPlaying = dance.previewUrl != null && startAudioUrl(dance.previewUrl);
+            if (!snippetPlaying && !dance.youtubeId.startsWith("spotify:")) {
+                DancePlayerController.get().play(dance.youtubeId);
+            }
             Future<Void> animationFuture = animate.async().run();
             QiFutures.consume(animationFuture, TAG, "dance animation");
 
@@ -69,13 +73,32 @@ public class DanceAction extends Action {
             sleep(playMs);
 
             DancePlayerController.get().stop();
+            stopAudio();
             if (animationFuture != null && !animationFuture.isDone()) {
                 animationFuture.requestCancellation();
             }
         } catch (Exception e) {
             Log.w(TAG, "Dance playback failed: " + e.getMessage());
             DancePlayerController.get().stop();
+            stopAudio();
             playFallback(context);
+        }
+    }
+
+    private boolean startAudioUrl(String url) {
+        stopAudio();
+        try {
+            MediaPlayer player = new MediaPlayer();
+            mediaPlayer = player;
+            player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            player.setDataSource(url);
+            player.prepare();
+            player.start();
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "Snippet playback failed, falling back to video player: " + e.getMessage());
+            stopAudio();
+            return false;
         }
     }
 
