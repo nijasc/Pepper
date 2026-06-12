@@ -28,6 +28,8 @@ import com.buhlergroup.pepper.action.ActionHandler;
 import com.buhlergroup.pepper.action.follow.FollowController;
 import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
+import com.buhlergroup.pepper.action.dance.DanceLibraryController;
+import com.buhlergroup.pepper.action.dance.DanceLibraryView;
 import com.buhlergroup.pepper.action.dialogue.DialogueController;
 import com.buhlergroup.pepper.action.dialogue.DialogueView;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
@@ -92,10 +94,14 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         NavigationView navigationView = findViewById(R.id.navigationView);
         NavigationController.get().attachView(navigationView);
 
+        DanceLibraryView danceLibraryView = findViewById(R.id.danceLibraryView);
+        DanceLibraryController.get().attachView(danceLibraryView);
+
         AdminController.get().setAdminStateListener(open -> updateHomeControls());
         SelfieController.get().setStateListener(active -> updateHomeControls());
         RaffleJoinController.get().setStateListener(active -> updateHomeControls());
         NavigationController.get().setStateListener(open -> updateHomeControls());
+        DanceLibraryController.get().setStateListener(open -> updateHomeControls());
 
         initSpeech();
     }
@@ -117,6 +123,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         NavigationController.get().setStateListener(null);
         NavigationController.get().detachView();
         NavigationManager.get().onFocusLost();
+        DanceLibraryController.get().setStateListener(null);
+        DanceLibraryController.get().detachView();
         QiSDK.unregister(this);
         recognizer.cancel();
         recognizer.destroy();
@@ -216,7 +224,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         boolean overlayOpen = AdminController.get().isOpen()
                 || SelfieController.get().isRunning()
                 || RaffleJoinController.get().isBusy()
-                || NavigationController.get().isOpen();
+                || NavigationController.get().isOpen()
+                || DanceLibraryController.get().isOpen();
         DialogueController.get().setSuppressed(overlayOpen);
         runOnUiThread(() -> {
             int visibility = overlayOpen ? View.GONE : View.VISIBLE;
@@ -234,7 +243,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private void listenToSpeech() {
         while (FollowController.get().isFollowing()
                 || AdminController.get().isOpen()
-                || NavigationController.get().isOpen()) {
+                || NavigationController.get().isOpen()
+                || DanceLibraryController.get().isOpen()) {
             try {
                 Thread.sleep(200);
             } catch (InterruptedException e) {

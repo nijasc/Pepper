@@ -41,7 +41,17 @@
     <string name="admin_raffle">Verlosung</string>
     <string name="admin_camera">Kamera</string>
     <string name="admin_navigation">Navigation</string>
+    <string name="admin_dances">Tänze</string>
     <string name="admin_camera_title">Externe Kamera</string>
+
+    <string name="dance_title">Tanz-Bibliothek</string>
+    <string name="dance_subtitle">Automatisch generierte Tänze zu YouTube-Songs.</string>
+    <string name="dance_close">Schließen</string>
+    <string name="dance_favorite">Favorit</string>
+    <string name="dance_rename">Umbenennen</string>
+    <string name="dance_delete">Löschen</string>
+    <string name="dance_empty">Noch keine Tänze. Bitte Pepper einen Song zum Tanzen nennen.</string>
+    <string name="dance_load_failed">Tänze konnten nicht geladen werden.</string>
 
     <string name="nav_title">Navigation &amp; Wegpunkte</string>
     <string name="nav_section_scan">Raum-Scan</string>

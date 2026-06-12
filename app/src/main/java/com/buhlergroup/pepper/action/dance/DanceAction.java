@@ -1,7 +1,9 @@
 package com.buhlergroup.pepper.action.dance;
 
 import android.media.MediaPlayer;
+import android.util.Log;
 
+import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
 import com.aldebaran.qi.sdk.builder.AnimationBuilder;
@@ -9,43 +11,133 @@ import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.action.dance.data.DanceEntity;
+import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
+import java.io.File;
+
 public class DanceAction extends Action {
-    private MediaPlayer mediaPlayer = new MediaPlayer();
+
+    private static final String TAG = "Dance";
+    private static final long MAX_PLAY_MS = 35000;
+    private static final long MIN_PLAY_MS = 5000;
+
+    private final DanceRepository repository = new DanceRepository();
+    private MediaPlayer mediaPlayer;
 
     @Override
     public void execute(QiContext context, String input) {
-        SpeechManager.getInstance().systemSay(context, "Diese Tanzeinlage habe ich extra einstudiert für dich!");
+        SpeechManager.getInstance().systemSay(context,
+                "Lass mich kurz einen passenden Tanz für dich einstudieren.");
 
-        Animation myAnimation = AnimationBuilder.with(context)
-                .withResources(R.raw.wyoming_dance)
-                .build();
-
-        Animate animate = AnimateBuilder.with(context)
-                .withAnimation(myAnimation)
-                .build();
-
-        animate.async().run();
-        playMedia(context, R.raw.wyoming);
-
+        ThinkingController.get().start(context);
+        DanceEntity dance;
         try {
-            Thread.sleep(15000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            dance = repository.getOrCreate(context, query(input));
+        } catch (Exception e) {
+            ThinkingController.get().stop();
+            Log.w(TAG, "Dance preparation failed: " + e.getMessage());
+            SpeechManager.getInstance().systemSay(context,
+                    "Diesen Song bekomme ich gerade nicht, ich tanze etwas Eigenes.");
+            playFallback(context);
+            return;
         }
-        mediaPlayer.stop();
+        ThinkingController.get().stop();
+        playDance(context, dance);
     }
 
-    private void playMedia(QiContext context, int mediaResource) {
-        mediaPlayer.reset();
-        mediaPlayer = MediaPlayer.create(context, mediaResource);
-        mediaPlayer.start();
+    private String query(String input) {
+        if (input == null || input.trim().isEmpty()) {
+            return "dance music";
+        }
+        return input.trim();
     }
 
+    private void playDance(QiContext context, DanceEntity dance) {
+        try {
+            String qianim = DanceRepository.readQianim(new File(dance.qianimPath));
+            Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
+            Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
+
+            Future<Void> animationFuture = animate.async().run();
+            startAudio(dance.audioPath);
+
+            long playMs = Math.max(MIN_PLAY_MS, Math.min(MAX_PLAY_MS, dance.durationMs));
+            sleep(playMs);
+
+            stopAudio();
+            if (animationFuture != null && !animationFuture.isDone()) {
+                animationFuture.requestCancellation();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Dance playback failed: " + e.getMessage());
+            playFallback(context);
+        }
+    }
+
+    private void playFallback(QiContext context) {
+        try {
+            Animation animation = AnimationBuilder.with(context)
+                    .withResources(R.raw.wyoming_dance).build();
+            Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
+            animate.async().run();
+            startAudioResource(context, R.raw.wyoming);
+            sleep(15000);
+            stopAudio();
+        } catch (Exception e) {
+            Log.w(TAG, "Fallback dance failed: " + e.getMessage());
+        }
+    }
+
+    private void startAudio(String path) {
+        try {
+            stopAudio();
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setDataSource(path);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+        } catch (Exception e) {
+            Log.w(TAG, "Audio start failed: " + e.getMessage());
+        }
+    }
+
+    private void startAudioResource(QiContext context, int resId) {
+        stopAudio();
+        mediaPlayer = MediaPlayer.create(context, resId);
+        if (mediaPlayer != null) {
+            mediaPlayer.start();
+        }
+    }
+
+    private void stopAudio() {
+        MediaPlayer player = mediaPlayer;
+        mediaPlayer = null;
+        if (player != null) {
+            try {
+                if (player.isPlaying()) {
+                    player.stop();
+                }
+            } catch (Exception ignored) {
+            }
+            try {
+                player.release();
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
     @Override
     public String getDescription() {
-        return "Makes Pepper perform a dance routine with music.";
+        return "Makes Pepper dance to a song. The user can name any song or artist; Pepper fetches the "
+                + "music from YouTube and performs a generated choreography to it.";
     }
 }

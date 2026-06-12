@@ -32,6 +32,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.camera.CameraSettings;
 import com.buhlergroup.pepper.action.camera.WifiCameraManager;
+import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
@@ -240,6 +241,7 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.cameraSave).setOnClickListener(v -> saveCamera());
         findViewById(R.id.adminCameraBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminNavigation).setOnClickListener(v -> openNavigation());
+        findViewById(R.id.adminDances).setOnClickListener(v -> openDanceLibrary());
 
         selfieAdapter = new SelfieAdapter(this::showDetail);
         selfieGrid.setLayoutManager(new GridLayoutManager(context, 3));
@@ -277,6 +279,11 @@ public class AdminView extends FrameLayout {
     private void openNavigation() {
         hide();
         NavigationController.get().open();
+    }
+
+    private void openDanceLibrary() {
+        hide();
+        DanceLibraryController.get().open();
     }
 
     private void onDigit(int digit) {
