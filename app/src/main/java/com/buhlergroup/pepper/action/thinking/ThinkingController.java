@@ -40,14 +40,30 @@ public final class ThinkingController {
             "Good question, one moment."
     };
 
+    private static final String[] PROGRESS_DE = {
+            "Gleich hab ich's.",
+            "Dauert nicht mehr lange.",
+            "Fast fertig, einen Moment noch."
+    };
+
+    private static final String[] PROGRESS_EN = {
+            "Almost there.",
+            "It won't take much longer.",
+            "Nearly done, one more moment."
+    };
+
+    private static final long LOOP_INTERVAL_MS = 8000;
+
     private static final ThinkingController INSTANCE = new ThinkingController();
 
     private volatile Future<Void> animationFuture;
     private volatile Future<Void> fillerFuture;
     private volatile MediaPlayer fillerPlayer;
     private volatile boolean active;
+    private volatile Thread loopThread;
     private int lastFiller = -1;
     private int lastClip = -1;
+    private int lastProgress = -1;
 
     private ThinkingController() {
     }
@@ -63,6 +79,7 @@ public final class ThinkingController {
         active = true;
         startPose(context);
         startFiller(context);
+        startLoop(context);
     }
 
     public synchronized void stop() {
@@ -70,11 +87,50 @@ public final class ThinkingController {
             return;
         }
         active = false;
+        Thread t = loopThread;
+        loopThread = null;
+        if (t != null) {
+            t.interrupt();
+        }
         cancel(animationFuture);
         cancel(fillerFuture);
         releaseFillerPlayer();
         animationFuture = null;
         fillerFuture = null;
+    }
+
+    private void startLoop(QiContext context) {
+        Thread t = new Thread(() -> {
+            int round = 0;
+            while (active) {
+                try {
+                    Thread.sleep(LOOP_INTERVAL_MS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+                if (!active) {
+                    return;
+                }
+                round++;
+                restartPoseIfDone(context);
+                if (round % 2 == 0) {
+                    speakProgress(context);
+                } else {
+                    startFiller(context);
+                }
+            }
+        }, "thinking-loop");
+        t.setDaemon(true);
+        loopThread = t;
+        t.start();
+    }
+
+    private void restartPoseIfDone(QiContext context) {
+        Future<Void> f = animationFuture;
+        if (f == null || f.isDone()) {
+            startPose(context);
+        }
     }
 
     private void startPose(QiContext context) {
@@ -156,16 +212,32 @@ public final class ThinkingController {
             String[] fillers = lang == SupportedLanguage.ENGLISH ? FILLERS_EN : FILLERS_DE;
             int index = pickIndex(fillers.length, lastFiller);
             lastFiller = index;
-            Locale locale = new Locale(lang.getQiLang(), lang.getRegion());
-            Say say = SayBuilder.with(context)
-                    .withText(fillers[index])
-                    .withLocale(locale)
-                    .build();
-            fillerFuture = say.async().run();
-            consume(fillerFuture, "thinking filler");
+            say(context, fillers[index], lang);
         } catch (Exception e) {
             Log.w(TAG, "Thinking filler failed: " + e.getMessage());
         }
+    }
+
+    private void speakProgress(QiContext context) {
+        try {
+            SupportedLanguage lang = SpeechManager.getInstance().currentLanguage();
+            String[] phrases = lang == SupportedLanguage.ENGLISH ? PROGRESS_EN : PROGRESS_DE;
+            int index = pickIndex(phrases.length, lastProgress);
+            lastProgress = index;
+            say(context, phrases[index], lang);
+        } catch (Exception e) {
+            Log.w(TAG, "Progress filler failed: " + e.getMessage());
+        }
+    }
+
+    private void say(QiContext context, String text, SupportedLanguage lang) {
+        Locale locale = new Locale(lang.getQiLang(), lang.getRegion());
+        Say say = SayBuilder.with(context)
+                .withText(text)
+                .withLocale(locale)
+                .build();
+        fillerFuture = say.async().run();
+        consume(fillerFuture, "thinking filler");
     }
 
     private int pickIndex(int length, int last) {
