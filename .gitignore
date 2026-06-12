@@ -20,3 +20,6 @@ app/src/main/assets/env
 keystore.properties
 *.jks
 *.keystore
+*.log
+*.lol
+logcat*.txt
