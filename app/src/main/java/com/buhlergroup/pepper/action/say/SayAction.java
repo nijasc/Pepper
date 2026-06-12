@@ -20,7 +20,7 @@ public class SayAction extends Action {
         String answer = openAi.getResponse(getHistoryManager(), context);
         getHistoryManager().addAssistant(answer, this);
 
-        SpeechManager.getInstance().say(context, answer);
+        SpeechManager.getInstance().say(context, answer, openAi.lastLanguageTag());
     }
 
     @Override

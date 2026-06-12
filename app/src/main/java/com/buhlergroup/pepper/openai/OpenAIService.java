@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -43,6 +45,10 @@ public class OpenAIService {
     private final List<Action> actions;
     private static String cachedToken;
     private Context c;
+
+    private static final Pattern LANG_TAG =
+            Pattern.compile("\\[\\[\\s*lang\\s*:\\s*([A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?)\\s*\\]\\]");
+    private String lastLanguageTag;
 
     public OpenAIService(List<Action> actions) {
         this.actions = actions;
@@ -57,11 +63,26 @@ public class OpenAIService {
         try {
             String res = sendOpenAiRequest("/responses", body);
             res = parseOutput(res);
+            res = extractLanguageTag(res);
             return sanitizeResponse(res);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return "Etwas ist unerwartet schief gelaufen.";
+    }
+
+    private String extractLanguageTag(String text) {
+        if (text == null) {
+            lastLanguageTag = null;
+            return null;
+        }
+        Matcher matcher = LANG_TAG.matcher(text);
+        lastLanguageTag = matcher.find() ? matcher.group(1) : null;
+        return LANG_TAG.matcher(text).replaceAll("").trim();
+    }
+
+    public String lastLanguageTag() {
+        return lastLanguageTag;
     }
 
     private String parseOutput(String responseJson) throws JsonProcessingException {
@@ -95,6 +116,13 @@ public class OpenAIService {
         }
 
         appendRaffleHint(context, prompt);
+
+        prompt.append("\n## Internal Language Marker\n")
+                .append("Begin every reply with a machine marker of the exact form [[lang:CODE]] where CODE is the ")
+                .append("ISO 639-1 code of the language you are replying in (for example [[lang:de]], [[lang:en]], ")
+                .append("[[lang:ja]]). Write the marker exactly once at the very start with nothing before it, then ")
+                .append("your normal spoken reply. The marker is removed automatically before your reply is spoken ")
+                .append("and must never appear inside the reply or influence its wording.\n");
 
         return prompt.toString();
     }

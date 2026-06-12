@@ -19,6 +19,7 @@ import com.buhlergroup.pepper.action.say.SayAction;
 import com.buhlergroup.pepper.action.selfie.SelfieAction;
 import com.buhlergroup.pepper.action.system.SystemInfoAction;
 import com.buhlergroup.pepper.action.test.TestAction;
+import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.action.volume.ChangeVolumeAction;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
@@ -46,11 +47,21 @@ public class ActionHandler {
 
         historyManager.addDeveloper("User input captured: \"" + input + "\"");
 
-        Action intent = intentEngine.getIntent(input);
-        Log.i(this.getClass().getSimpleName(), "Found intent: " + intent.getClass().getSimpleName());
+        ThinkingController.get().start(context);
+        try {
+            Action intent = intentEngine.getIntent(input);
+            if (intent == null) {
+                Log.w(this.getClass().getSimpleName(), "No intent resolved for input: " + input);
+                SpeechManager.getInstance().systemSay(context, "Entschuldige, das habe ich gerade nicht verstanden.");
+                return;
+            }
+            Log.i(this.getClass().getSimpleName(), "Found intent: " + intent.getClass().getSimpleName());
 
-        historyManager.addDeveloper("Action started: " + intent.getClass().getSimpleName(), intent);
-        intent.execute(context, input);
+            historyManager.addDeveloper("Action started: " + intent.getClass().getSimpleName(), intent);
+            intent.execute(context, input);
+        } finally {
+            ThinkingController.get().stop();
+        }
     }
 
     private void initActions(LanguageManager languageManager) {

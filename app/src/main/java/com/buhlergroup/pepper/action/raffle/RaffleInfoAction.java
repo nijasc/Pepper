@@ -30,7 +30,7 @@ public class RaffleInfoAction extends Action {
         String answer = openAi.getResponse(getHistoryManager(), context);
 
         getHistoryManager().addAssistant(answer, this);
-        SpeechManager.getInstance().systemSay(context, answer);
+        SpeechManager.getInstance().say(context, answer, openAi.lastLanguageTag());
     }
 
     private String buildInfo(RaffleEntity raffle) {
