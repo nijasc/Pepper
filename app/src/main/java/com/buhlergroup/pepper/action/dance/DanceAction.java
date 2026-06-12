@@ -80,15 +80,33 @@ public class DanceAction extends Action {
 
     private void playFallback(QiContext context) {
         try {
+            SpeechManager.getInstance().systemSay(context, "Six... seven!");
+
+            int audioRes = context.getResources()
+                    .getIdentifier("doot_doot", "raw", context.getPackageName());
+            if (audioRes == 0) {
+                audioRes = R.raw.wyoming;
+            }
+            startAudioResource(context, audioRes);
+
+            long clipMs = mediaPlayer != null ? mediaPlayer.getDuration() : 0;
+            if (clipMs <= 0) {
+                clipMs = 15000;
+            }
+            long playMs = Math.max(MIN_PLAY_MS, Math.min(MAX_PLAY_MS, clipMs));
+
             Animation animation = AnimationBuilder.with(context)
-                    .withResources(R.raw.wyoming_dance).build();
+                    .withResources(R.raw.six_seven).build();
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
-            consume(animate.async().run(), "fallback dance animation");
-            startAudioResource(context, R.raw.wyoming);
-            sleep(15000);
+
+            long end = System.currentTimeMillis() + playMs;
+            while (System.currentTimeMillis() < end) {
+                animate.run();
+            }
             stopAudio();
         } catch (Exception e) {
             Log.w(TAG, "Fallback dance failed: " + e.getMessage());
+            stopAudio();
         }
     }
 

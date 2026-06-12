@@ -579,7 +579,7 @@ Android erzeugt für jede Datei in `res/raw/` automatisch eine Konstante `R.raw.
 | Typ | Beispiele | Verwendung im Code |
 | --- | --------- | ------------------ |
 | Audio (`.mp3`) | `wyoming`, `summer`, `saxophone_song` | `MediaPlayer.create(context, R.raw.wyoming).start()` |
-| Animationen (`.qianim`) | `wyoming_dance`, `pepper_highfive`, `tanz_001` | `AnimationBuilder.with(context).withResources(R.raw.pepper_highfive)` → `AnimateBuilder` → `animate.async().run()` |
+| Animationen (`.qianim`) | `six_seven`, `pepper_highfive`, `tanz_001` | `AnimationBuilder.with(context).withResources(R.raw.pepper_highfive)` → `AnimateBuilder` → `animate.async().run()` |
 | Text / Markdown | `instructions` (Systemprompt) | `IOUtils.fromRaw(context, R.raw.instructions)` |
 | Zertifikat (`.pem`) | `gh_root` | `getResources().openRawResource(R.raw.gh_root)` |
 
