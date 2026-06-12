@@ -21,7 +21,8 @@ import java.util.concurrent.TimeoutException;
 public final class SystemSpeechRewriter {
 
     private static final String TAG = "SysSpeech";
-    private static final String MODEL = "gpt-4o-mini";
+    private static final String MODEL =
+            ModelSelector.modelFor(ModelSelector.ModelTask.REWRITE);
     private static final long TIMEOUT_MS = 1500;
     private static final int MIN_LENGTH = 12;
 

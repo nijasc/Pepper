@@ -6,6 +6,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.OpenAIService;
 
 import org.json.JSONArray;
@@ -68,8 +69,8 @@ public class DocumentationAction extends Action {
         conversation.add(userMessage);
 
         Map<String, Object> body = new HashMap<>();
-        body.put("model", OpenAIService.DEFAULT_MODEL);
-          body.put("instructions", service.formDefaultSystemPrompt(context));
+        body.put("model", ModelSelector.modelFor(ModelSelector.ModelTask.DOCUMENTATION));
+        body.put("instructions", service.formDefaultSystemPrompt(context));
         body.put("input", conversation);
 
         try {

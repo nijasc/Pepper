@@ -3,6 +3,7 @@ package com.buhlergroup.pepper.action.dynamicanim;
 import android.content.Context;
 import android.util.Log;
 
+import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.OpenAIService;
 
 import org.json.JSONObject;
@@ -15,7 +16,8 @@ import java.util.Map;
 public final class AnimationGenerator {
 
     private static final String TAG = "DynAnim";
-    private static final String MODEL = "gpt-5.5";
+    private static final String MODEL =
+            ModelSelector.modelFor(ModelSelector.ModelTask.GENERATION);
     private static final int MAX_ATTEMPTS = 3;
     private static final int MAX_SECONDS = 30;
     private static final int GENERATION_TIMEOUT_MS = 120000;

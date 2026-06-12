@@ -40,7 +40,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 public class OpenAIService {
 
-    public static final String DEFAULT_MODEL = "gpt-5.4";
+    public static final String DEFAULT_MODEL = ModelSelector.STRONG;
     private static final int MAX_OUTPUT_TOKENS = 600;
     private static final String URL = "https://api.openai.com/v1";
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -69,7 +69,7 @@ public class OpenAIService {
 
     public String getResponse(HistoryManager historyManager, QiContext context) {
         Map<String, Object> body = new HashMap<>();
-        body.put("model", DEFAULT_MODEL);
+        body.put("model", ModelSelector.modelFor(ModelSelector.ModelTask.CONVERSATION));
         body.put("input", historyManager.toInput());
         body.put("instructions", formDefaultSystemPrompt(context));
         body.put("max_output_tokens", MAX_OUTPUT_TOKENS);
@@ -114,7 +114,7 @@ public class OpenAIService {
         input.add(userEntry);
 
         Map<String, Object> body = new HashMap<>();
-        body.put("model", DEFAULT_MODEL);
+        body.put("model", ModelSelector.modelFor(ModelSelector.ModelTask.CONVERSATION));
         body.put("input", input);
         body.put("instructions", formRoutingSystemPrompt(context));
         body.put("max_output_tokens", MAX_OUTPUT_TOKENS);

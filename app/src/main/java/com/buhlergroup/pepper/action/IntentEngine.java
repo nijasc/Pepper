@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action;
 
+import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
@@ -14,7 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 public class IntentEngine {
-    private static final String MODEL = "gpt-4o-mini";
+    private static final String MODEL =
+            ModelSelector.modelFor(ModelSelector.ModelTask.CLASSIFICATION);
     private final Map<String, Action> intents = new HashMap<>();
     private final OpenAIService openAi;
     private final HistoryManager historyManager;
