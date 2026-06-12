@@ -65,7 +65,8 @@ public final class AnimationGenerator {
     private String systemPrompt() {
         return "You generate a single Pepper robot animation in qianim 2.0 XML and output ONLY the raw XML "
                 + "(no Markdown, no code fences, no explanation).\n\n"
-                + "Structure:\n"
+                + "Structure (the first line must be exactly the XML declaration shown):\n"
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<Animation typeVersion=\"2.0\" xmlns:editor=\"http://www.aldebaran.com/animation/editor\">\n"
                 + "  <ActuatorCurve fps=\"25\" actuator=\"JOINT\" mute=\"false\" unit=\"radian\">\n"
                 + "    <Key value=\"FLOAT\" frame=\"INT\"/>\n"
@@ -74,6 +75,7 @@ public final class AnimationGenerator {
                 + "  ... more curves ...\n"
                 + "</Animation>\n\n"
                 + "Rules:\n"
+                + "- Start the output with the exact line <?xml version=\"1.0\" encoding=\"utf-8\"?> and nothing before it.\n"
                 + "- fps is always 25. Frames are integers starting at 0. Keep it short: last frame <= 125 (5 seconds).\n"
                 + "- Only include curves for the joints that must move for the requested gesture.\n"
                 + "- Every moving joint needs at least a start key at frame 0 and a key returning near the start "
@@ -99,6 +101,8 @@ public final class AnimationGenerator {
         return map;
     }
 
+    private static final String XML_PROLOG = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
+
     private String stripFences(String raw) {
         if (raw == null) {
             return null;
@@ -109,15 +113,18 @@ public final class AnimationGenerator {
             if (firstNewline >= 0) {
                 text = text.substring(firstNewline + 1);
             }
-            if (text.endsWith("```")) {
-                text = text.substring(0, text.length() - 3);
+            int lastFence = text.lastIndexOf("```");
+            if (lastFence >= 0) {
+                text = text.substring(0, lastFence);
             }
         }
+        text = text.trim();
         int start = text.indexOf("<Animation");
         int end = text.lastIndexOf("</Animation>");
-        if (start >= 0 && end >= 0) {
-            text = text.substring(start, end + "</Animation>".length());
+        if (start < 0 || end < 0) {
+            return text;
         }
-        return text.trim();
+        String body = text.substring(start, end + "</Animation>".length());
+        return XML_PROLOG + "\n" + body;
     }
 }
