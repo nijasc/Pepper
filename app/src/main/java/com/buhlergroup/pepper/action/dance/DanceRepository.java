@@ -6,7 +6,7 @@ import android.util.Log;
 import com.buhlergroup.pepper.action.dance.data.DanceDao;
 import com.buhlergroup.pepper.action.dance.data.DanceDatabase;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
-import com.buhlergroup.pepper.action.dance.youtube.YoutubeAudioDownloader;
+import com.buhlergroup.pepper.action.dance.youtube.YoutubeSearch;
 import com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator;
 
 import java.io.File;
@@ -25,27 +25,27 @@ public final class DanceRepository {
         DanceDao dao = DanceDatabase.get(context).danceDao();
         File danceDir = danceDir(context);
 
-        YoutubeAudioDownloader.Result result = new YoutubeAudioDownloader().download(query, danceDir);
+        YoutubeSearch.Result result = new YoutubeSearch().search(query);
 
-        DanceEntity existing = dao.findById(result.youtubeId);
+        DanceEntity existing = dao.findById(result.videoId);
         if (existing != null && existing.qianimPath != null
-                && new File(existing.qianimPath).exists()
-                && new File(existing.audioPath).exists()) {
+                && new File(existing.qianimPath).exists()) {
             return existing;
         }
 
-        int seconds = (int) Math.max(8, Math.min(30, result.durationMs / 1000));
+        long durationMs = result.durationMs > 0 ? result.durationMs : 25000L;
+        int seconds = (int) Math.max(8, Math.min(30, durationMs / 1000));
         String qianim = generator.generateValidatedDance(context, result.title, seconds);
         if (qianim == null) {
             throw new Exception("Tanz-Choreografie konnte nicht erzeugt werden.");
         }
 
-        File qianimFile = new File(danceDir, result.youtubeId + ".qianim");
+        File qianimFile = new File(danceDir, result.videoId + ".qianim");
         writeFile(qianimFile, qianim);
 
         DanceEntity entity = new DanceEntity(
-                result.youtubeId, result.title, result.file.getAbsolutePath(),
-                qianimFile.getAbsolutePath(), result.durationMs, false, System.currentTimeMillis());
+                result.videoId, result.title, qianimFile.getAbsolutePath(),
+                durationMs, false, System.currentTimeMillis());
         dao.insert(entity);
         Log.i(TAG, "Created dance for " + result.title);
         return entity;
@@ -65,7 +65,6 @@ public final class DanceRepository {
 
     public void delete(Context context, DanceEntity dance) {
         DanceDatabase.get(context).danceDao().deleteById(dance.youtubeId);
-        deleteQuietly(dance.audioPath);
         deleteQuietly(dance.qianimPath);
     }
 

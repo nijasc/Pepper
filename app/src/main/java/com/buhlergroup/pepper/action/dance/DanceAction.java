@@ -60,18 +60,19 @@ public class DanceAction extends Action {
             Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 
+            DancePlayerController.get().play(dance.youtubeId);
             Future<Void> animationFuture = animate.async().run();
-            startAudio(dance.audioPath);
 
             long playMs = Math.max(MIN_PLAY_MS, Math.min(MAX_PLAY_MS, dance.durationMs));
             sleep(playMs);
 
-            stopAudio();
+            DancePlayerController.get().stop();
             if (animationFuture != null && !animationFuture.isDone()) {
                 animationFuture.requestCancellation();
             }
         } catch (Exception e) {
             Log.w(TAG, "Dance playback failed: " + e.getMessage());
+            DancePlayerController.get().stop();
             playFallback(context);
         }
     }
@@ -87,18 +88,6 @@ public class DanceAction extends Action {
             stopAudio();
         } catch (Exception e) {
             Log.w(TAG, "Fallback dance failed: " + e.getMessage());
-        }
-    }
-
-    private void startAudio(String path) {
-        try {
-            stopAudio();
-            mediaPlayer = new MediaPlayer();
-            mediaPlayer.setDataSource(path);
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-        } catch (Exception e) {
-            Log.w(TAG, "Audio start failed: " + e.getMessage());
         }
     }
 

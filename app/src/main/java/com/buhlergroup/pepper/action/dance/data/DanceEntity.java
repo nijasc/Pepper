@@ -18,10 +18,6 @@ public class DanceEntity {
     @NonNull
     public String songName;
 
-    @ColumnInfo(name = "audio_path")
-    @NonNull
-    public String audioPath;
-
     @ColumnInfo(name = "qianim_path")
     @Nullable
     public String qianimPath;
@@ -34,11 +30,10 @@ public class DanceEntity {
     @ColumnInfo(name = "created_at")
     public long createdAt;
 
-    public DanceEntity(@NonNull String youtubeId, @NonNull String songName, @NonNull String audioPath,
+    public DanceEntity(@NonNull String youtubeId, @NonNull String songName,
                        @Nullable String qianimPath, long durationMs, boolean favorite, long createdAt) {
         this.youtubeId = youtubeId;
         this.songName = songName;
-        this.audioPath = audioPath;
         this.qianimPath = qianimPath;
         this.durationMs = durationMs;
         this.favorite = favorite;

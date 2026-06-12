@@ -13,9 +13,6 @@ dependencyResolutionManagement {
         maven {
             url 'https://android.aldebaran.com/sdk/maven'
         }
-        maven {
-            url 'https://jitpack.io'
-        }
     }
 }
 rootProject.name = "funktionierender_pepper"

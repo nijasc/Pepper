@@ -48,7 +48,6 @@ android {
         }
     }
     compileOptions {
-        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -70,6 +69,4 @@ dependencies {
     implementation 'androidx.room:room-runtime:2.5.2'
     annotationProcessor 'androidx.room:room-compiler:2.5.2'
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.0.4'
-    implementation 'com.github.teamnewpipe:NewPipeExtractor:v0.26.0'
 }

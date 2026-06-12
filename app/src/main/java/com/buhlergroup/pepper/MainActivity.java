@@ -30,6 +30,8 @@ import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.dance.DanceLibraryView;
+import com.buhlergroup.pepper.action.dance.DancePlayerController;
+import com.buhlergroup.pepper.action.dance.DancePlayerView;
 import com.buhlergroup.pepper.action.dialogue.DialogueController;
 import com.buhlergroup.pepper.action.dialogue.DialogueView;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
@@ -97,6 +99,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         DanceLibraryView danceLibraryView = findViewById(R.id.danceLibraryView);
         DanceLibraryController.get().attachView(danceLibraryView);
 
+        DancePlayerView dancePlayerView = findViewById(R.id.dancePlayerView);
+        DancePlayerController.get().attachView(dancePlayerView);
+
         AdminController.get().setAdminStateListener(open -> updateHomeControls());
         SelfieController.get().setStateListener(active -> updateHomeControls());
         RaffleJoinController.get().setStateListener(active -> updateHomeControls());
@@ -125,6 +130,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         NavigationManager.get().onFocusLost();
         DanceLibraryController.get().setStateListener(null);
         DanceLibraryController.get().detachView();
+        DancePlayerController.get().detachView();
         QiSDK.unregister(this);
         recognizer.cancel();
         recognizer.destroy();
