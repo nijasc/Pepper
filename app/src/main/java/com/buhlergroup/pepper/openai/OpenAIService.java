@@ -91,7 +91,7 @@ public class OpenAIService {
         return "Etwas ist unerwartet schief gelaufen.";
     }
 
-    private String extractLanguageTag(String text) {
+    public String extractLanguageTag(String text) {
         if (text == null) {
             lastLanguageTag = null;
             return null;

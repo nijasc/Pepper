@@ -75,10 +75,10 @@ public class DocumentationAction extends Action {
 
         try {
             String response = service.sendOpenAiRequest("/responses", body);
-            String answer = parseAnswer(response);
+            String answer = service.extractLanguageTag(parseAnswer(response));
             getHistoryManager().addUser(input);
             getHistoryManager().addAssistant(answer, this);
-            SpeechManager.getInstance().systemSay(context, answer);
+            SpeechManager.getInstance().say(context, answer, service.lastLanguageTag());
         } catch (IOException | JSONException e) {
             e.printStackTrace();
             SpeechManager.getInstance().systemSay(context,
