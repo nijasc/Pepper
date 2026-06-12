@@ -39,19 +39,20 @@ public final class AnimationGenerator {
 
     private String generate(Context context, String systemPrompt, String userBase) {
         openAi.setC(context);
-        String lastError = null;
+        String lastValidationError = null;
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
-                String qianim = stripFences(requestAnimation(systemPrompt, userBase, lastError));
+                String qianim = stripFences(requestAnimation(systemPrompt, userBase, lastValidationError));
                 String error = QianimValidator.validate(qianim);
                 if (error == null) {
                     return QianimPostProcessor.ensureTangents(QianimLooper.expand(qianim));
                 }
                 Log.w(TAG, "Attempt " + attempt + " invalid: " + error);
-                lastError = error;
+                lastValidationError = error;
             } catch (Exception e) {
-                Log.w(TAG, "Attempt " + attempt + " failed: " + e.getMessage());
-                lastError = e.getMessage();
+                Log.w(TAG, "Attempt " + attempt + " failed (client/network, retrying fresh): "
+                        + e.getMessage());
+                lastValidationError = null;
             }
         }
         return null;
