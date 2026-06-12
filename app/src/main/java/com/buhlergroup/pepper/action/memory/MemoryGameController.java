@@ -8,6 +8,7 @@ import com.aldebaran.qi.sdk.builder.AnimationBuilder;
 import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.util.ArrayList;
@@ -216,11 +217,7 @@ public final class MemoryGameController {
             Animate animate = AnimateBuilder.with(context)
                     .withAnimation(animation)
                     .build();
-            animate.async().run().thenConsume(f -> {
-                if (f.hasError()) {
-                    Log.w(TAG, "Animation did not finish: " + f.getError().getMessage());
-                }
-            });
+            QiFutures.consume(animate.async().run(), TAG, "Animation");
         } catch (Exception e) {
             Log.w(TAG, "Animation fehlgeschlagen: " + e.getMessage());
         }

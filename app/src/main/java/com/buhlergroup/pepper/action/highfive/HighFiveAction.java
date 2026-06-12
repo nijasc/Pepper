@@ -1,7 +1,5 @@
 package com.buhlergroup.pepper.action.highfive;
 
-import android.util.Log;
-
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
 import com.aldebaran.qi.sdk.builder.AnimationBuilder;
@@ -9,6 +7,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class HighFiveAction extends Action {
@@ -24,11 +23,7 @@ public class HighFiveAction extends Action {
                 .withAnimation(myAnimation)
                 .build();
 
-        animate.async().run().thenConsume(f -> {
-            if (f.hasError()) {
-                Log.w("HighFive", "Animation did not finish: " + f.getError().getMessage());
-            }
-        });
+        QiFutures.consume(animate.async().run(), "HighFive", "Animation");
 
         try {
             Thread.sleep(7000);

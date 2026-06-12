@@ -14,6 +14,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.aldebaran.qi.sdk.object.conversation.Say;
 import com.aldebaran.qi.sdk.object.locale.Locale;
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 
@@ -142,21 +143,10 @@ public final class ThinkingController {
                     .withAnimation(animation)
                     .build();
             animationFuture = animate.async().run();
-            consume(animationFuture, "thinking pose");
+            QiFutures.consume(animationFuture, TAG, "thinking pose");
         } catch (Exception e) {
             Log.w(TAG, "Thinking pose failed: " + e.getMessage());
         }
-    }
-
-    private void consume(Future<Void> future, String label) {
-        if (future == null) {
-            return;
-        }
-        future.thenConsume(done -> {
-            if (done.hasError()) {
-                Log.w(TAG, label + " did not finish: " + done.getError().getMessage());
-            }
-        });
     }
 
     private void startFiller(QiContext context) {
@@ -238,7 +228,7 @@ public final class ThinkingController {
                 .withLocale(locale)
                 .build();
         fillerFuture = say.async().run();
-        consume(fillerFuture, "thinking filler");
+        QiFutures.consume(fillerFuture, TAG, "thinking filler");
     }
 
     private int pickIndex(int length, int last) {

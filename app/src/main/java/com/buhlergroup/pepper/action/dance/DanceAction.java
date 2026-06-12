@@ -11,6 +11,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.lang.SpeechManager;
@@ -62,7 +63,7 @@ public class DanceAction extends Action {
 
             DancePlayerController.get().play(dance.youtubeId);
             Future<Void> animationFuture = animate.async().run();
-            consume(animationFuture, "dance animation");
+            QiFutures.consume(animationFuture, TAG, "dance animation");
 
             long playMs = Math.max(MIN_PLAY_MS, Math.min(MAX_PLAY_MS, dance.durationMs));
             sleep(playMs);
@@ -133,17 +134,6 @@ public class DanceAction extends Action {
             } catch (Exception ignored) {
             }
         }
-    }
-
-    private void consume(Future<Void> future, String label) {
-        if (future == null) {
-            return;
-        }
-        future.thenConsume(done -> {
-            if (done.hasError()) {
-                Log.w(TAG, label + " did not finish: " + done.getError().getMessage());
-            }
-        });
     }
 
     private void sleep(long ms) {

@@ -1,7 +1,6 @@
 package com.buhlergroup.pepper.action.saxophone;
 
 import android.media.MediaPlayer;
-import android.util.Log;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
@@ -10,6 +9,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class SaxophoneAction extends Action {
@@ -28,11 +28,7 @@ public class SaxophoneAction extends Action {
                 .withAnimation(myAnimation)
                 .build();
 
-        animate.async().run().thenConsume(f -> {
-            if (f.hasError()) {
-                Log.w("Saxophone", "Animation did not finish: " + f.getError().getMessage());
-            }
-        });
+        QiFutures.consume(animate.async().run(), "Saxophone", "Animation");
         playMedia(context, R.raw.saxophone_song);
 
         try {
