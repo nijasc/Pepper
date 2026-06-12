@@ -54,6 +54,8 @@ public class OpenAIService {
             Pattern.compile("\\[\\[\\s*action\\s*:\\s*([A-Za-z0-9_]+)\\s*\\]\\]");
     private static final Pattern LEADING_MARKER =
             Pattern.compile("^\\s*\\[\\[\\s*(lang|action)\\s*:\\s*([^\\]\\s]+)\\s*\\]\\]");
+    private static final Pattern LANG_VALUE =
+            Pattern.compile("[A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?");
     private String lastLanguageTag;
 
     public interface StreamListener {
@@ -220,7 +222,9 @@ public class OpenAIService {
                 String value = matcher.group(2);
                 pending.delete(0, matcher.end());
                 if ("lang".equals(kind)) {
-                    lastLanguageTag = value;
+                    if (LANG_VALUE.matcher(value).matches()) {
+                        lastLanguageTag = value;
+                    }
                 } else if (!listener.onAction(value)) {
                     return -1;
                 }

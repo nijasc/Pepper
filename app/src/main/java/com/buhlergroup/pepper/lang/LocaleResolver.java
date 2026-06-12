@@ -47,8 +47,11 @@ public final class LocaleResolver {
             return fallbackLocale;
         }
 
-        String primary = tag.trim().toLowerCase().split("[-_]")[0];
-        String[] names = MAP.get(primary);
+        String[] parts = tag.trim().toLowerCase().split("[-_]");
+        if (parts.length == 0 || parts[0].isEmpty()) {
+            return fallbackLocale;
+        }
+        String[] names = MAP.get(parts[0]);
         if (names == null) {
             Log.i(TAG, "No mapping for language tag '" + tag + "', falling back to " + fallback.name());
             return fallbackLocale;
