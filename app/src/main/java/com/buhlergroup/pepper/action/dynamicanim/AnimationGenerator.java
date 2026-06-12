@@ -15,7 +15,7 @@ import java.util.Map;
 public final class AnimationGenerator {
 
     private static final String TAG = "DynAnim";
-    private static final String MODEL = OpenAIService.DEFAULT_MODEL;
+    private static final String MODEL = "gpt-5.5";
     private static final int MAX_ATTEMPTS = 3;
     private static final int MAX_SECONDS = 30;
 
