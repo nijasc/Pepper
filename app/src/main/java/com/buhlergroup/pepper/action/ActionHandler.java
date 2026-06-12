@@ -10,6 +10,7 @@ import com.buhlergroup.pepper.action.documentation.DocumentationAction;
 import com.buhlergroup.pepper.action.dynamicanim.DynamicAnimationAction;
 import com.buhlergroup.pepper.action.follow.FollowMeAction;
 import com.buhlergroup.pepper.action.highfive.HighFiveAction;
+import com.buhlergroup.pepper.action.hold.HoldMyBeerAction;
 import com.buhlergroup.pepper.action.lang.ChangeLanguageAction;
 import com.buhlergroup.pepper.action.memory.MemoryGameAction;
 import com.buhlergroup.pepper.action.names.SiriAction;
@@ -140,6 +141,7 @@ public class ActionHandler {
         actions.add(new SiriAction(languageManager));
         actions.add(new SaxophoneAction());
         actions.add(new HighFiveAction());
+        actions.add(new HoldMyBeerAction());
         actions.add(new ChangeLanguageAction(languageManager));
         actions.add(new ChangeVolumeAction());
         actions.add(new DocumentationAction(actions));

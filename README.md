@@ -26,6 +26,7 @@
   - [Tanzen](#tanzen)
   - [Saxofon](#saxofon)
   - [High Five](#high-five)
+  - [Hold my beer](#hold-my-beer)
   - [Memory-Minispiel](#memory-minispiel)
   - [Selfie](#selfie)
   - [Verlosung](#verlosung)
@@ -230,6 +231,17 @@ Der rechte Arm wird für 7 Sekunden in eine High-Five-Position gehoben und fähr
 ```text
 Beispiel (en): High Five.
 Beispiel (de): High Five.
+```
+
+### Hold my beer
+
+Pepper hält auf Zuruf ein leichtes Objekt (Becher, PET-Flasche, max. ca. 300 g — keine schweren Gegenstände, der Arm trägt nur etwa 0,5 kg) in der rechten Hand. Ablauf: Pepper hebt den Arm mit offener Hand, erkennt die Übergabe über den Berührungssensor am Handrücken (alternativ über den Bestätigungs-Button auf dem Tablet, falls ein leichtes Objekt den Sensor nicht auslöst), schließt die Hand und hält das Objekt mit Haltetimer auf dem Tablet und gelegentlichen Sprüchen.
+
+**Sicherheit:** Die Hand öffnet sich nie von selbst. Zurückgeben nur über den großen STOP-Button auf dem Tablet oder per Sprachbefehl («Stopp», «Danke», «Gib her»); danach zählt Pepper an («3, 2, 1») und öffnet erst dann die Hand. Nach 10 Minuten Maximalhaltezeit fordert Pepper aktiv zur Abnahme auf, lässt aber weiterhin nicht von selbst los. Verliert die App den Roboter-Fokus (z. B. Absturz oder App-Wechsel), endet die Session ohne Öffnungs-Animation und der Roboter fällt in den Autonomous Mode zurück — die Handmotoren können dann entspannen, das Objekt vorher abnehmen.
+
+```text
+Beispiel (en): Hold my beer.
+Beispiel (de): Halt mal mein Bier.
 ```
 
 ### Memory-Minispiel

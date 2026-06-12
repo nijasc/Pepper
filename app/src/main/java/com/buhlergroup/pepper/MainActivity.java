@@ -34,6 +34,8 @@ import com.buhlergroup.pepper.action.dance.DancePlayerController;
 import com.buhlergroup.pepper.action.dance.DancePlayerView;
 import com.buhlergroup.pepper.action.dialogue.DialogueController;
 import com.buhlergroup.pepper.action.dialogue.DialogueView;
+import com.buhlergroup.pepper.action.hold.HoldController;
+import com.buhlergroup.pepper.action.hold.HoldView;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
 import com.buhlergroup.pepper.action.navigation.NavigationManager;
 import com.buhlergroup.pepper.action.navigation.NavigationView;
@@ -102,11 +104,15 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         DancePlayerView dancePlayerView = findViewById(R.id.dancePlayerView);
         DancePlayerController.get().attachView(dancePlayerView);
 
+        HoldView holdView = findViewById(R.id.holdView);
+        HoldController.get().attachView(holdView);
+
         AdminController.get().setAdminStateListener(open -> updateHomeControls());
         SelfieController.get().setStateListener(active -> updateHomeControls());
         RaffleJoinController.get().setStateListener(active -> updateHomeControls());
         NavigationController.get().setStateListener(open -> updateHomeControls());
         DanceLibraryController.get().setStateListener(open -> updateHomeControls());
+        HoldController.get().setStateListener(active -> updateHomeControls());
 
         initSpeech();
     }
@@ -131,6 +137,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         DanceLibraryController.get().setStateListener(null);
         DanceLibraryController.get().detachView();
         DancePlayerController.get().detachView();
+        HoldController.get().setStateListener(null);
+        HoldController.get().detachView();
         QiSDK.unregister(this);
         recognizer.cancel();
         recognizer.destroy();
@@ -181,6 +189,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         MemoryGameController.get().abort();
         FollowController.get().setFollowStateListener(null);
         FollowController.get().onFocusLost();
+        HoldController.get().onFocusLost();
         NavigationManager.get().onFocusLost();
         releaseBackgroundMovement();
         Log.d("Mainactivity", "AFocus Lost");
@@ -231,7 +240,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 || SelfieController.get().isRunning()
                 || RaffleJoinController.get().isBusy()
                 || NavigationController.get().isOpen()
-                || DanceLibraryController.get().isOpen();
+                || DanceLibraryController.get().isOpen()
+                || HoldController.get().isActive();
         DialogueController.get().setSuppressed(overlayOpen);
         runOnUiThread(() -> {
             int visibility = overlayOpen ? View.GONE : View.VISIBLE;
@@ -248,6 +258,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     private void listenToSpeech() {
         while (FollowController.get().isFollowing()
+                || HoldController.get().isActive()
                 || AdminController.get().isOpen()
                 || NavigationController.get().isOpen()
                 || DanceLibraryController.get().isOpen()) {
