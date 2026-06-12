@@ -15,7 +15,6 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 import com.buhlergroup.pepper.perception.EmotionReader;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
@@ -269,15 +268,27 @@ public class OpenAIService {
         return null;
     }
 
-    private String parseOutput(String responseJson) throws JsonProcessingException {
+    private String parseOutput(String responseJson) throws IOException {
         OpenAiResponse res = objectMapper.readValue(responseJson, OpenAiResponse.class);
         Content out = null;
-        for (Output currOut : res.getOutput()) {
-            if (!currOut.getContent().isEmpty()) {
-                out = currOut.getContent().get(0);
+        if (res.getOutput() != null) {
+            for (Output currOut : res.getOutput()) {
+                if (currOut.getContent() != null && !currOut.getContent().isEmpty()) {
+                    out = currOut.getContent().get(0);
+                }
             }
         }
+        if (out == null || out.getText() == null) {
+            throw new IOException("OpenAI-Antwort ohne Output-Content: " + snippet(responseJson));
+        }
         return out.getText();
+    }
+
+    private String snippet(String json) {
+        if (json == null) {
+            return "null";
+        }
+        return json.length() <= 300 ? json : json.substring(0, 300) + "…";
     }
 
     private String sanitizeResponse(String originalResponse) {
