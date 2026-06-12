@@ -28,6 +28,8 @@ import com.buhlergroup.pepper.action.ActionHandler;
 import com.buhlergroup.pepper.action.follow.FollowController;
 import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
+import com.buhlergroup.pepper.action.dialogue.DialogueController;
+import com.buhlergroup.pepper.action.dialogue.DialogueView;
 import com.buhlergroup.pepper.action.memory.MemoryGameController;
 import com.buhlergroup.pepper.action.memory.MemoryGameView;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
@@ -76,6 +78,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         RaffleJoinView raffleJoinView = findViewById(R.id.raffleJoinView);
         RaffleJoinController.get().attachView(raffleJoinView);
 
+        DialogueView dialogueView = findViewById(R.id.dialogueView);
+        DialogueController.get().attachView(dialogueView);
+
         AdminView adminView = findViewById(R.id.adminView);
         AdminController.get().attachView(adminView);
         adminButton = findViewById(R.id.adminButton);
@@ -101,6 +106,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         RaffleJoinController.get().detachView();
         AdminController.get().setAdminStateListener(null);
         AdminController.get().detachView();
+        DialogueController.get().detachView();
         QiSDK.unregister(this);
         recognizer.cancel();
         recognizer.destroy();
@@ -198,6 +204,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         boolean overlayOpen = AdminController.get().isOpen()
                 || SelfieController.get().isRunning()
                 || RaffleJoinController.get().isBusy();
+        DialogueController.get().setSuppressed(overlayOpen);
         runOnUiThread(() -> {
             int visibility = overlayOpen ? View.GONE : View.VISIBLE;
             adminButton.setVisibility(visibility);

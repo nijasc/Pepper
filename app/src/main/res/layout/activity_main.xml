@@ -61,6 +61,12 @@
         android:textColor="@color/white"
         android:textSize="18sp" />
 
+    <com.buhlergroup.pepper.action.dialogue.DialogueView
+        android:id="@+id/dialogueView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
     <com.buhlergroup.pepper.action.memory.MemoryGameView
         android:id="@+id/memoryGame"
         android:layout_width="match_parent"
