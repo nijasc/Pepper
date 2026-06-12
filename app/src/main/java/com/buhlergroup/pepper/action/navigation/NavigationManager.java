@@ -1,7 +1,11 @@
 package com.buhlergroup.pepper.action.navigation;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
+
+import java.nio.ByteBuffer;
 
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
@@ -105,6 +109,7 @@ public final class NavigationManager {
                 mappingFuture = lam.async().run();
                 scanning = true;
                 cb.onResult(null);
+                autoScanRotate(c);
             } catch (Exception e) {
                 releaseAbilities();
                 Log.w(TAG, "startScan failed: " + e.getMessage());
@@ -332,6 +337,48 @@ public final class NavigationManager {
         } catch (Exception e) {
             Log.w(TAG, "driveToFotostand failed: " + e.getMessage());
             return false;
+        }
+    }
+
+    public void getMapBitmap(Callback<Bitmap> cb) {
+        executor.execute(() -> {
+            ExplorationMap map = activeMap;
+            if (map == null) {
+                cb.onError("Noch keine Karte vorhanden. Erst scannen oder aktivieren.");
+                return;
+            }
+            try {
+                ByteBuffer buffer = map.getTopGraphicalRepresentation().getImage().getData();
+                buffer.rewind();
+                byte[] bytes = new byte[buffer.remaining()];
+                buffer.get(bytes);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                if (bitmap == null) {
+                    cb.onError("Karte konnte nicht gelesen werden.");
+                    return;
+                }
+                cb.onResult(bitmap);
+            } catch (Exception e) {
+                Log.w(TAG, "getMapBitmap failed: " + e.getMessage());
+                cb.onError("Karte konnte nicht erzeugt werden.");
+            }
+        });
+    }
+
+    private void autoScanRotate(QiContext c) {
+        int steps = 6;
+        double angle = Math.toRadians(60);
+        for (int i = 0; i < steps && scanning; i++) {
+            try {
+                Frame robotFrame = c.getActuation().robotFrame();
+                Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, angle);
+                FreeFrame target = c.getMapping().makeFreeFrame();
+                target.update(robotFrame, t, 0L);
+                GoToBuilder.with(c).withFrame(target.frame()).build().run();
+            } catch (Exception e) {
+                Log.w(TAG, "autoScanRotate step failed: " + e.getMessage());
+                break;
+            }
         }
     }
 

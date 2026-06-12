@@ -33,6 +33,38 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
+                android:text="@string/nav_section_map"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <com.buhlergroup.pepper.action.navigation.WaypointMapView
+                android:id="@+id/navWaypointMap"
+                android:layout_width="match_parent"
+                android:layout_height="240dp"
+                android:layout_marginTop="8dp" />
+
+            <ImageView
+                android:id="@+id/navMapImage"
+                android:layout_width="match_parent"
+                android:layout_height="240dp"
+                android:layout_marginTop="8dp"
+                android:adjustViewBounds="true"
+                android:background="#11FFFFFF"
+                android:contentDescription="@string/nav_section_map"
+                android:scaleType="fitCenter"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/navMapRefresh"
+                style="@style/NavPill"
+                android:layout_marginTop="8dp"
+                android:text="@string/nav_map_refresh" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
                 android:text="@string/nav_section_scan"
                 android:textColor="@color/white"
                 android:textSize="20sp"

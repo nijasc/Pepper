@@ -54,6 +54,9 @@
     <string name="dance_load_failed">Tänze konnten nicht geladen werden.</string>
 
     <string name="nav_title">Navigation &amp; Wegpunkte</string>
+    <string name="nav_section_map">Karte</string>
+    <string name="nav_map_refresh">Karte aktualisieren</string>
+    <string name="nav_map_failed">Karte konnte nicht geladen werden.</string>
     <string name="nav_section_scan">Raum-Scan</string>
     <string name="nav_section_waypoints">Wegpunkte</string>
     <string name="nav_scan_name_hint">Name des Raum-Scans</string>

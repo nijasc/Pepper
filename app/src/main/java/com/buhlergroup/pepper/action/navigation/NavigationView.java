@@ -1,6 +1,7 @@
 package com.buhlergroup.pepper.action.navigation;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -8,6 +9,7 @@ import android.view.View;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -29,6 +31,8 @@ public class NavigationView extends FrameLayout {
     private CheckBox fotostand;
     private LinearLayout scanList;
     private LinearLayout waypointList;
+    private ImageView mapImage;
+    private WaypointMapView waypointMap;
 
     public NavigationView(Context context) {
         super(context);
@@ -57,7 +61,10 @@ public class NavigationView extends FrameLayout {
         fotostand = findViewById(R.id.navWpFotostand);
         scanList = findViewById(R.id.navScanList);
         waypointList = findViewById(R.id.navWpList);
+        mapImage = findViewById(R.id.navMapImage);
+        waypointMap = findViewById(R.id.navWaypointMap);
 
+        findViewById(R.id.navMapRefresh).setOnClickListener(v -> loadMap());
         findViewById(R.id.navScanStart).setOnClickListener(v -> startScan());
         findViewById(R.id.navScanStop).setOnClickListener(v -> stopScan());
         findViewById(R.id.navWpSave).setOnClickListener(v -> saveWaypoint());
@@ -161,6 +168,23 @@ public class NavigationView extends FrameLayout {
         });
     }
 
+    private void loadMap() {
+        NavigationManager.get().getMapBitmap(new NavigationManager.Callback<Bitmap>() {
+            @Override
+            public void onResult(Bitmap value) {
+                post(() -> {
+                    mapImage.setImageBitmap(value);
+                    mapImage.setVisibility(VISIBLE);
+                });
+            }
+
+            @Override
+            public void onError(String error) {
+                post(() -> toastText(error));
+            }
+        });
+    }
+
     private void loadScans() {
         NavigationManager.get().listScans(new NavigationManager.Callback<List<RoomScanEntity>>() {
             @Override
@@ -206,6 +230,7 @@ public class NavigationView extends FrameLayout {
     }
 
     private void renderWaypoints(List<WaypointEntity> waypoints) {
+        waypointMap.setWaypoints(waypoints);
         waypointList.removeAllViews();
         if (waypoints == null || waypoints.isEmpty()) {
             waypointList.addView(emptyLabel(R.string.nav_no_waypoints));
