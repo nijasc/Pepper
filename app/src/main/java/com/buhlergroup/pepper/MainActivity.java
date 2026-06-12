@@ -271,10 +271,19 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void checkPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-            return;
+        String[] required = {
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        for (String permission : required) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                missing.add(permission);
+            }
         }
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1);
+        if (!missing.isEmpty()) {
+            ActivityCompat.requestPermissions(this, missing.toArray(new String[0]), 1);
+        }
     }
 
     @Override
