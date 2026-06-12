@@ -37,7 +37,7 @@ public final class AnimationGenerator {
                 String qianim = stripFences(requestAnimation(systemPrompt, userBase, lastError));
                 String error = QianimValidator.validate(qianim);
                 if (error == null) {
-                    return qianim;
+                    return QianimPostProcessor.ensureTangents(qianim);
                 }
                 Log.w(TAG, "Attempt " + attempt + " invalid: " + error);
                 lastError = error;
