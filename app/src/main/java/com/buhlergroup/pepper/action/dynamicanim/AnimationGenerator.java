@@ -94,8 +94,9 @@ public final class AnimationGenerator {
                 + "regularly spaced beats (a keyframe roughly every 8-15 frames).\n"
                 + "- The motif must start and end on exactly the same pose (every moving joint has identical "
                 + "values at frame 0 and at the last frame), so repetitions chain seamlessly.\n"
-                + "- Keep that shared start/end pose close to a neutral stand so entering and leaving the dance "
-                + "is smooth.\n"
+                + "- Make that shared start/end pose an engaged dance stance WITHIN the groove (arms in motion), "
+                + "NOT a neutral stand - the dance must keep flowing across repetitions. The runtime returns "
+                + "Pepper to neutral after the final cycle automatically.\n"
                 + jointRangesFooter();
     }
 
@@ -121,13 +122,15 @@ public final class AnimationGenerator {
                 + "- MODE A, repetitive motion (waving, nodding, dance moves, 'do X for N seconds'): author "
                 + "exactly ONE cycle of 1-5 seconds where every moving joint has identical values at frame 0 "
                 + "and at the last frame, and set repeatCycles so cycle length times K matches the target "
-                + "duration.\n"
+                + "duration. The shared boundary pose must be a natural point WITHIN the ongoing motion "
+                + "(e.g. mid-swing), NOT a neutral stand - the cycles must flow into each other without any "
+                + "visible reset. After the final cycle the runtime automatically brings Pepper back to a "
+                + "neutral stand; do not author that return yourself.\n"
                 + "- MODE B, held pose ('lift your arm and hold it for N seconds'): set repeatCycles=\"1\" and "
                 + "author the full duration yourself: move into the pose quickly (about 1 second), then HOLD it "
                 + "with two identical keys spanning the hold time, then return to neutral in the final second. "
                 + "The last frame must be at the target duration.\n"
-                + "- Total played frames (cycle length times repeatCycles) must not exceed 750 (30 seconds).\n"
-                + "- Every animation must end at (or very near) a neutral standing pose after the final cycle.\n";
+                + "- Total played frames (cycle length times repeatCycles) must not exceed 750 (30 seconds).\n";
     }
 
     private String jointRulesHeader() {

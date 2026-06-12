@@ -10,8 +10,11 @@ import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -27,6 +30,29 @@ public final class QianimLooper {
     private static final String XML_PROLOG = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
     private static final String REPEAT_ATTR = "repeatCycles";
     private static final int MAX_TOTAL_FRAMES = 750;
+    private static final int RETURN_FRAMES = 25;
+
+    private static final Map<String, Float> NEUTRAL = new HashMap<>();
+
+    static {
+        NEUTRAL.put("HeadYaw", 0f);
+        NEUTRAL.put("HeadPitch", -0.2f);
+        NEUTRAL.put("LShoulderPitch", 1.4f);
+        NEUTRAL.put("RShoulderPitch", 1.4f);
+        NEUTRAL.put("LShoulderRoll", 0.12f);
+        NEUTRAL.put("RShoulderRoll", -0.12f);
+        NEUTRAL.put("LElbowYaw", -1.2f);
+        NEUTRAL.put("RElbowYaw", 1.2f);
+        NEUTRAL.put("LElbowRoll", -0.5f);
+        NEUTRAL.put("RElbowRoll", 0.5f);
+        NEUTRAL.put("LWristYaw", 0f);
+        NEUTRAL.put("RWristYaw", 0f);
+        NEUTRAL.put("LHand", 0.6f);
+        NEUTRAL.put("RHand", 0.6f);
+        NEUTRAL.put("HipRoll", 0f);
+        NEUTRAL.put("HipPitch", -0.03f);
+        NEUTRAL.put("KneePitch", 0f);
+    }
 
     private QianimLooper() {
     }
@@ -50,9 +76,10 @@ public final class QianimLooper {
             if (cycleFrames <= 0) {
                 return serialize(doc);
             }
-            int maxCycles = Math.max(1, MAX_TOTAL_FRAMES / cycleFrames);
+            int maxCycles = Math.max(1, (MAX_TOTAL_FRAMES - RETURN_FRAMES) / cycleFrames);
             cycles = Math.min(cycles, maxCycles);
 
+            int lastCycleEnd = cycles * cycleFrames;
             NodeList curves = doc.getElementsByTagName("ActuatorCurve");
             for (int c = 0; c < curves.getLength(); c++) {
                 Element curve = (Element) curves.item(c);
@@ -65,7 +92,7 @@ public final class QianimLooper {
                     int offset = rep * cycleFrames;
                     for (Element key : originals) {
                         int newFrame = frameOf(key) + offset;
-                        if (newFrame > MAX_TOTAL_FRAMES || usedFrames.contains(newFrame)) {
+                        if (newFrame > lastCycleEnd || usedFrames.contains(newFrame)) {
                             continue;
                         }
                         Element clone = (Element) key.cloneNode(true);
@@ -74,13 +101,26 @@ public final class QianimLooper {
                         usedFrames.add(newFrame);
                     }
                 }
+                appendNeutralReturn(doc, curve, lastCycleEnd + RETURN_FRAMES);
             }
-            Log.i(TAG, "Expanded animation to " + cycles + " cycles of " + cycleFrames + " frames");
+            Log.i(TAG, "Expanded animation to " + cycles + " cycles of " + cycleFrames
+                    + " frames plus neutral return");
             return serialize(doc);
         } catch (Exception e) {
             Log.w(TAG, "expand failed, using original qianim: " + e.getMessage());
             return xml;
         }
+    }
+
+    private static void appendNeutralReturn(org.w3c.dom.Document doc, Element curve, int frame) {
+        Float neutral = NEUTRAL.get(curve.getAttribute("actuator"));
+        if (neutral == null) {
+            return;
+        }
+        Element key = doc.createElement("Key");
+        key.setAttribute("value", String.format(Locale.US, "%.4f", neutral));
+        key.setAttribute("frame", String.valueOf(frame));
+        curve.appendChild(key);
     }
 
     private static List<Element> keysOf(Element curve) {
