@@ -7,6 +7,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.admin.OpenAdminAction;
 import com.buhlergroup.pepper.action.dance.DanceAction;
 import com.buhlergroup.pepper.action.documentation.DocumentationAction;
+import com.buhlergroup.pepper.action.dynamicanim.DynamicAnimationAction;
 import com.buhlergroup.pepper.action.follow.FollowMeAction;
 import com.buhlergroup.pepper.action.highfive.HighFiveAction;
 import com.buhlergroup.pepper.action.lang.ChangeLanguageAction;
@@ -67,6 +68,7 @@ public class ActionHandler {
     private void initActions(LanguageManager languageManager) {
         actions.add(new SayAction(actions));
         actions.add(new DanceAction());
+        actions.add(new DynamicAnimationAction());
         actions.add(new SiriAction(languageManager));
         actions.add(new SaxophoneAction());
         actions.add(new HighFiveAction());
