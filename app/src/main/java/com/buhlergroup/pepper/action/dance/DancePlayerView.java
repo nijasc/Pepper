@@ -29,6 +29,8 @@ public class DancePlayerView extends FrameLayout {
         init(context);
     }
 
+    private static final String BASE_ORIGIN = "https://www.youtube.com";
+
     @SuppressLint("SetJavaScriptEnabled")
     private void init(Context context) {
         setBackgroundColor(0xFF000000);
@@ -37,6 +39,10 @@ public class DancePlayerView extends FrameLayout {
         settings.setJavaScriptEnabled(true);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setDomStorageEnabled(true);
+        String userAgent = settings.getUserAgentString();
+        if (userAgent != null && userAgent.contains("; wv")) {
+            settings.setUserAgentString(userAgent.replace("; wv", ""));
+        }
         webView.setWebChromeClient(new WebChromeClient());
         addView(webView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         setVisibility(GONE);
@@ -44,12 +50,26 @@ public class DancePlayerView extends FrameLayout {
 
     public void play(String videoId) {
         post(() -> {
-            String url = "https://www.youtube.com/embed/" + videoId
-                    + "?autoplay=1&playsinline=1&controls=0&rel=0";
-            webView.loadUrl(url);
+            webView.loadDataWithBaseURL(BASE_ORIGIN, buildEmbedHtml(videoId),
+                    "text/html", "utf-8", null);
             setVisibility(VISIBLE);
             bringToFront();
         });
+    }
+
+    private String buildEmbedHtml(String videoId) {
+        String src = "https://www.youtube-nocookie.com/embed/" + videoId
+                + "?autoplay=1&playsinline=1&controls=0&rel=0&enablejsapi=1&origin=" + BASE_ORIGIN;
+        return "<!DOCTYPE html><html><head>"
+                + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+                + "<style>html,body{margin:0;padding:0;background:#000;width:100%;height:100%;overflow:hidden}"
+                + "iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}</style>"
+                + "</head><body>"
+                + "<iframe src=\"" + src + "\" "
+                + "allow=\"autoplay; encrypted-media\" "
+                + "referrerpolicy=\"strict-origin-when-cross-origin\" "
+                + "allowfullscreen></iframe>"
+                + "</body></html>";
     }
 
     public void stop() {
