@@ -1,64 +1,32 @@
 package com.buhlergroup.pepper.action.dynamicanim;
 
-import android.util.Log;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.ByteArrayInputStream;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.TreeMap;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 public final class QianimPostProcessor {
 
-    private static final String TAG = "DynAnim";
-    private static final String XML_PROLOG = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
     private static final String EDITOR_NS = "http://www.aldebaran.com/animation/editor";
     private static final float SAFETY_MARGIN = 0.02f;
 
     private QianimPostProcessor() {
     }
 
-    public static String ensureTangents(String xml) {
-        if (xml == null) {
-            return null;
+    public static void ensureTangents(Document doc) {
+        Element root = doc.getDocumentElement();
+        if (root != null && !root.hasAttribute("xmlns:editor")) {
+            root.setAttribute("xmlns:editor", EDITOR_NS);
         }
-        try {
-            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-                    .parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
 
-            Element root = doc.getDocumentElement();
-            if (root != null && !root.hasAttribute("xmlns:editor")) {
-                root.setAttribute("xmlns:editor", EDITOR_NS);
-            }
-
-            NodeList curves = doc.getElementsByTagName("ActuatorCurve");
-            for (int i = 0; i < curves.getLength(); i++) {
-                rebuildCurve(doc, (Element) curves.item(i));
-            }
-
-            Transformer transformer = TransformerFactory.newInstance().newTransformer();
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            StringWriter writer = new StringWriter();
-            transformer.transform(new DOMSource(doc), new StreamResult(writer));
-            return XML_PROLOG + "\n" + writer.toString().trim();
-        } catch (Exception e) {
-            Log.w(TAG, "ensureTangents failed, using original qianim: " + e.getMessage());
-            return xml;
+        NodeList curves = doc.getElementsByTagName("ActuatorCurve");
+        for (int i = 0; i < curves.getLength(); i++) {
+            rebuildCurve(doc, (Element) curves.item(i));
         }
     }
 

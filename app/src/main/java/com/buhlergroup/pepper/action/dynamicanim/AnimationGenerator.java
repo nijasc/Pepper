@@ -7,6 +7,7 @@ import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.OpenAIService;
 
 import org.json.JSONObject;
+import org.w3c.dom.Document;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,9 +46,17 @@ public final class AnimationGenerator {
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
                 String qianim = stripFences(requestAnimation(systemPrompt, userBase, lastValidationError));
-                String error = QianimValidator.validate(qianim);
+                Document doc;
+                String error;
+                try {
+                    doc = XmlUtils.parse(qianim);
+                    error = QianimValidator.validate(doc);
+                } catch (Exception e) {
+                    doc = null;
+                    error = "not parseable: " + e.getMessage();
+                }
                 if (error == null) {
-                    return QianimPostProcessor.ensureTangents(QianimLooper.expand(qianim));
+                    return postProcess(doc, qianim);
                 }
                 Log.w(TAG, "Attempt " + attempt + " invalid: " + error);
                 lastValidationError = error;
@@ -58,6 +67,17 @@ public final class AnimationGenerator {
             }
         }
         return null;
+    }
+
+    private String postProcess(Document doc, String original) {
+        try {
+            QianimLooper.expand(doc);
+            QianimPostProcessor.ensureTangents(doc);
+            return XmlUtils.serialize(doc);
+        } catch (Exception e) {
+            Log.w(TAG, "Post-processing failed, using validated qianim: " + e.getMessage());
+            return original;
+        }
     }
 
     private String requestAnimation(String systemPrompt, String userBase, String previousError)

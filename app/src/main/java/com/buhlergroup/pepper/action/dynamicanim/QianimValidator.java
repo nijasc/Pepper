@@ -5,13 +5,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 public final class QianimValidator {
 
@@ -48,19 +43,10 @@ public final class QianimValidator {
         return LIMITS.get(actuator);
     }
 
-    public static String validate(String xml) {
-        if (xml == null || xml.trim().isEmpty()) {
+    public static String validate(Document doc) {
+        if (doc == null) {
             return "empty animation";
         }
-        Document doc;
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            doc = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception e) {
-            return "not parseable: " + e.getMessage();
-        }
-
         Element root = doc.getDocumentElement();
         if (root == null || !"Animation".equals(root.getNodeName())) {
             return "root element is not <Animation>";
