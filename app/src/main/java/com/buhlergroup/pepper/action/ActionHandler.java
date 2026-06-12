@@ -24,25 +24,33 @@ import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.action.volume.ChangeVolumeAction;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ActionHandler {
     private static final List<Action> actions = new ArrayList<>();
+    private final Map<String, Action> actionsByName = new HashMap<>();
     private final IntentEngine intentEngine;
     private final HistoryManager historyManager;
+    private final OpenAIService routingService;
 
     public ActionHandler(LanguageManager languageManager, HistoryManager historyManager) {
         this.historyManager = historyManager;
         initActions(languageManager);
         this.intentEngine = new IntentEngine(actions, historyManager);
+        this.routingService = new OpenAIService(actions);
+        for (Action action : actions) {
+            actionsByName.put(action.getClass().getSimpleName(), action);
+        }
     }
 
     public void handleInput(QiContext context, String input) {
         if (input.isEmpty()) {
-            //SpeechManager.getInstance().say(context, "Pepper ist jetzt startklar!");
             return;
         }
 
@@ -50,24 +58,79 @@ public class ActionHandler {
 
         ThinkingController.get().start(context);
         try {
-            long intentStart = System.currentTimeMillis();
-            Action intent = intentEngine.getIntent(input);
-            long intentEnd = System.currentTimeMillis();
-            Log.i("LATENCY", "getIntent took " + (intentEnd - intentStart) + "ms");
-            if (intent == null) {
-                Log.w(this.getClass().getSimpleName(), "No intent resolved for input: " + input);
-                SpeechManager.getInstance().systemSay(context, "Entschuldige, das habe ich gerade nicht verstanden.");
-                return;
+            if (!handleCombined(context, input)) {
+                handleLegacy(context, input);
             }
-            Log.i(this.getClass().getSimpleName(), "Found intent: " + intent.getClass().getSimpleName());
-
-            historyManager.addDeveloper("Action started: " + intent.getClass().getSimpleName(), intent);
-            intent.execute(context, input);
-            Log.i("LATENCY", "action " + intent.getClass().getSimpleName()
-                    + " took " + (System.currentTimeMillis() - intentEnd) + "ms");
         } finally {
             ThinkingController.get().stop();
         }
+    }
+
+    private boolean handleCombined(QiContext context, String input) {
+        final Action[] routed = new Action[1];
+        final boolean[] spokeAny = new boolean[1];
+        try {
+            routingService.setC(context);
+            String full = routingService.getResponseStreaming(historyManager, context, input,
+                    new OpenAIService.StreamListener() {
+                        @Override
+                        public boolean onAction(String actionName) {
+                            if (actionName == null || "SayAction".equals(actionName)) {
+                                return true;
+                            }
+                            Action match = actionsByName.get(actionName);
+                            if (match == null) {
+                                return true;
+                            }
+                            routed[0] = match;
+                            return false;
+                        }
+
+                        @Override
+                        public void onSentence(String sentence, String languageTag) {
+                            spokeAny[0] = true;
+                            SpeechManager.getInstance().say(context, sentence, languageTag);
+                        }
+                    });
+
+            Action target = routed[0];
+            if (target != null) {
+                Log.i(this.getClass().getSimpleName(),
+                        "Routed intent: " + target.getClass().getSimpleName());
+                historyManager.addDeveloper(
+                        "Action started: " + target.getClass().getSimpleName(), target);
+                target.execute(context, input);
+                return true;
+            }
+            if (full != null && !full.trim().isEmpty()) {
+                historyManager.addUser(input);
+                historyManager.addAssistant(full.trim(), actionsByName.get("SayAction"));
+                return true;
+            }
+            return spokeAny[0];
+        } catch (Exception e) {
+            Log.w(this.getClass().getSimpleName(),
+                    "Combined turn failed, falling back to intent engine: " + e.getMessage());
+            return spokeAny[0];
+        }
+    }
+
+    private void handleLegacy(QiContext context, String input) {
+        long intentStart = System.currentTimeMillis();
+        Action intent = intentEngine.getIntent(input);
+        long intentEnd = System.currentTimeMillis();
+        Log.i("LATENCY", "getIntent took " + (intentEnd - intentStart) + "ms");
+        if (intent == null) {
+            Log.w(this.getClass().getSimpleName(), "No intent resolved for input: " + input);
+            SpeechManager.getInstance().systemSay(context, "Entschuldige, das habe ich gerade nicht verstanden.");
+            return;
+        }
+        Log.i(this.getClass().getSimpleName(), "Found intent: " + intent.getClass().getSimpleName());
+
+        historyManager.addDeveloper("Action started: " + intent.getClass().getSimpleName(), intent);
+        intent.execute(context, input);
+        Log.i("LATENCY", "action " + intent.getClass().getSimpleName()
+                + " took " + (System.currentTimeMillis() - intentEnd) + "ms");
     }
 
     private void initActions(LanguageManager languageManager) {

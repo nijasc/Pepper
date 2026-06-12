@@ -51,7 +51,17 @@ public class OpenAIService {
 
     private static final Pattern LANG_TAG =
             Pattern.compile("\\[\\[\\s*lang\\s*:\\s*([A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?)\\s*\\]\\]");
+    private static final Pattern ACTION_TAG =
+            Pattern.compile("\\[\\[\\s*action\\s*:\\s*([A-Za-z0-9_]+)\\s*\\]\\]");
+    private static final Pattern LEADING_MARKER =
+            Pattern.compile("^\\s*\\[\\[\\s*(lang|action)\\s*:\\s*([^\\]\\s]+)\\s*\\]\\]");
     private String lastLanguageTag;
+
+    public interface StreamListener {
+        boolean onAction(String actionName);
+
+        void onSentence(String sentence, String languageTag);
+    }
 
     public OpenAIService(List<Action> actions) {
         this.actions = actions;
@@ -87,11 +97,176 @@ public class OpenAIService {
         }
         Matcher matcher = LANG_TAG.matcher(text);
         lastLanguageTag = matcher.find() ? matcher.group(1) : null;
-        return LANG_TAG.matcher(text).replaceAll("").trim();
+        String cleaned = LANG_TAG.matcher(text).replaceAll("");
+        return ACTION_TAG.matcher(cleaned).replaceAll("").trim();
     }
 
     public String lastLanguageTag() {
         return lastLanguageTag;
+    }
+
+    public String getResponseStreaming(HistoryManager historyManager, QiContext context,
+                                       String userMessage, StreamListener listener) throws IOException {
+        List<Map<String, String>> input = new java.util.ArrayList<>(historyManager.toInput());
+        Map<String, String> userEntry = new HashMap<>();
+        userEntry.put("role", "user");
+        userEntry.put("content", userMessage);
+        input.add(userEntry);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", DEFAULT_MODEL);
+        body.put("input", input);
+        body.put("instructions", formRoutingSystemPrompt(context));
+        body.put("max_output_tokens", MAX_OUTPUT_TOKENS);
+        body.put("stream", true);
+        Map<String, Object> reasoning = new HashMap<>();
+        reasoning.put("effort", "low");
+        body.put("reasoning", reasoning);
+
+        long started = System.currentTimeMillis();
+        lastLanguageTag = null;
+
+        HttpURLConnection con = (HttpURLConnection) new URL(URL + "/responses").openConnection();
+        con.setConnectTimeout(8000);
+        con.setReadTimeout(30000);
+        con.setRequestMethod("POST");
+        con.setDoOutput(true);
+        con.setRequestProperty("Authorization", "Bearer " + getAuthToken(c));
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Accept", "text/event-stream");
+
+        try {
+            try (OutputStream os = con.getOutputStream()) {
+                os.write(objectMapper.writeValueAsString(body).getBytes(StandardCharsets.UTF_8));
+            }
+
+            int code = con.getResponseCode();
+            if (code >= 400) {
+                throw new IOException("Streaming request failed with HTTP " + code);
+            }
+
+            StringBuilder pending = new StringBuilder();
+            StringBuilder full = new StringBuilder();
+            boolean markerPhase = true;
+            boolean firstSentence = true;
+
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.startsWith("data:")) {
+                    continue;
+                }
+                String data = line.substring(5).trim();
+                if (data.isEmpty() || "[DONE]".equals(data)) {
+                    break;
+                }
+                org.json.JSONObject event;
+                try {
+                    event = new org.json.JSONObject(data);
+                } catch (org.json.JSONException e) {
+                    continue;
+                }
+                String type = event.optString("type", "");
+                if (type.endsWith("output_text.delta")) {
+                    pending.append(event.optString("delta", ""));
+                    if (markerPhase) {
+                        int state = consumeMarkers(pending, listener);
+                        if (state < 0) {
+                            return null;
+                        }
+                        if (state == 0) {
+                            continue;
+                        }
+                        markerPhase = false;
+                    }
+                    String sentence;
+                    while ((sentence = extractSentence(pending, false)) != null) {
+                        if (firstSentence) {
+                            Log.i("LATENCY", "first streamed sentence after "
+                                    + (System.currentTimeMillis() - started) + "ms");
+                            firstSentence = false;
+                        }
+                        listener.onSentence(sentence, lastLanguageTag);
+                        full.append(sentence).append(' ');
+                    }
+                } else if ("response.completed".equals(type)) {
+                    break;
+                } else if ("response.failed".equals(type) || "error".equals(type)) {
+                    throw new IOException("Streaming response failed: " + data);
+                }
+            }
+
+            if (markerPhase && consumeMarkers(pending, listener) < 0) {
+                return null;
+            }
+            String tail;
+            while ((tail = extractSentence(pending, true)) != null) {
+                listener.onSentence(tail, lastLanguageTag);
+                full.append(tail).append(' ');
+            }
+            Log.i("LATENCY", "streamed response complete after "
+                    + (System.currentTimeMillis() - started) + "ms");
+            return ACTION_TAG.matcher(full.toString()).replaceAll("").trim();
+        } finally {
+            con.disconnect();
+        }
+    }
+
+    private int consumeMarkers(StringBuilder pending, StreamListener listener) {
+        while (true) {
+            Matcher matcher = LEADING_MARKER.matcher(pending);
+            if (matcher.find()) {
+                String kind = matcher.group(1);
+                String value = matcher.group(2);
+                pending.delete(0, matcher.end());
+                if ("lang".equals(kind)) {
+                    lastLanguageTag = value;
+                } else if (!listener.onAction(value)) {
+                    return -1;
+                }
+                continue;
+            }
+            String current = pending.toString();
+            String trimmed = current.trim();
+            if (trimmed.isEmpty()) {
+                return 0;
+            }
+            if (trimmed.startsWith("[") && current.length() < 80) {
+                return 0;
+            }
+            return 1;
+        }
+    }
+
+    private String extractSentence(StringBuilder pending, boolean flush) {
+        int length = pending.length();
+        for (int i = 0; i < length; i++) {
+            char ch = pending.charAt(i);
+            if (ch == '.' || ch == '!' || ch == '?' || ch == '…') {
+                boolean boundary = i == length - 1
+                        ? flush
+                        : Character.isWhitespace(pending.charAt(i + 1));
+                if (boundary && i >= 2) {
+                    String sentence = pending.substring(0, i + 1).trim();
+                    pending.delete(0, i + 1);
+                    if (!sentence.isEmpty()) {
+                        return sentence;
+                    }
+                }
+            }
+        }
+        if (flush) {
+            String rest = pending.toString().trim();
+            pending.setLength(0);
+            return rest.isEmpty() ? null : rest;
+        }
+        if (length > 300) {
+            String chunk = pending.substring(0, length).trim();
+            pending.setLength(0);
+            return chunk.isEmpty() ? null : chunk;
+        }
+        return null;
     }
 
     private String parseOutput(String responseJson) throws JsonProcessingException {
@@ -110,6 +285,14 @@ public class OpenAIService {
     }
 
     public String formDefaultSystemPrompt(QiContext context) {
+        return buildSystemPrompt(context, false);
+    }
+
+    public String formRoutingSystemPrompt(QiContext context) {
+        return buildSystemPrompt(context, true);
+    }
+
+    private String buildSystemPrompt(QiContext context, boolean withRouting) {
         String instructions = IOUtils.fromRaw(context, R.raw.instructions);
         StringBuilder prompt = new StringBuilder(instructions);
         for (Action action : actions) {
@@ -122,6 +305,20 @@ public class OpenAIService {
                 .append("[[lang:ja]]). Write the marker exactly once at the very start with nothing before it, then ")
                 .append("your normal spoken reply. The marker is removed automatically before your reply is spoken ")
                 .append("and must never appear inside the reply or influence its wording.\n");
+
+        if (withRouting) {
+            prompt.append("\n## Action Routing\n")
+                    .append("Immediately after the language marker, decide which of these actions handles the ")
+                    .append("user's message and write a second machine marker of the exact form [[action:NAME]]:\n");
+            for (Action action : actions) {
+                prompt.append("- ").append(action.getClass().getSimpleName()).append(": ")
+                        .append(action.getDescription()).append('\n');
+            }
+            prompt.append("If you answer the user yourself with a normal spoken reply, use [[action:SayAction]] ")
+                    .append("and then write the reply. For ANY other action output ONLY the two markers and ")
+                    .append("nothing else - no reply text. Both markers are removed automatically and must ")
+                    .append("never appear inside the spoken reply.\n");
+        }
 
         String moodHint = emotionReader.moodHintForPrompt(context);
         if (moodHint != null) {
