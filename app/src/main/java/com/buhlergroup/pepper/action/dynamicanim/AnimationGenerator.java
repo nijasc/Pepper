@@ -15,17 +15,24 @@ import java.util.Map;
 public final class AnimationGenerator {
 
     private static final String TAG = "DynAnim";
-    private static final String MODEL = "gpt-4o";
+    private static final String MODEL = OpenAIService.DEFAULT_MODEL;
     private static final int MAX_ATTEMPTS = 3;
+    private static final int MAX_SECONDS = 30;
 
     private final OpenAIService openAi = new OpenAIService(new ArrayList<>());
 
     public String generateValidated(Context context, String command) {
-        return generate(context, gestureSystemPrompt(), "Movement request: " + command);
+        return generateValidated(context, command, 0);
+    }
+
+    public String generateValidated(Context context, String command, int targetSeconds) {
+        int seconds = Math.min(MAX_SECONDS, Math.max(0, targetSeconds));
+        return generate(context, gestureSystemPrompt(seconds), "Movement request: " + command);
     }
 
     public String generateValidatedDance(Context context, String songName, int seconds) {
-        return generate(context, danceSystemPrompt(seconds),
+        int target = Math.min(MAX_SECONDS, Math.max(8, seconds));
+        return generate(context, danceSystemPrompt(target),
                 "Choreograph a full-body dance for this song: " + songName);
     }
 
@@ -37,7 +44,7 @@ public final class AnimationGenerator {
                 String qianim = stripFences(requestAnimation(systemPrompt, userBase, lastError));
                 String error = QianimValidator.validate(qianim);
                 if (error == null) {
-                    return QianimPostProcessor.ensureTangents(qianim);
+                    return QianimLooper.expand(QianimPostProcessor.ensureTangents(qianim));
                 }
                 Log.w(TAG, "Attempt " + attempt + " invalid: " + error);
                 lastError = error;
@@ -73,61 +80,65 @@ public final class AnimationGenerator {
     }
 
     private String danceSystemPrompt(int seconds) {
-        int lastFrame = Math.min(750, Math.max(125, seconds * 25));
         return "You generate a single rhythmic full-body Pepper robot DANCE in qianim 2.0 XML and output "
                 + "ONLY the raw XML (no Markdown, no code fences, no explanation).\n\n"
                 + jointRulesHeader()
-                + "- fps is always 25. Frames are integers starting at 0. Make the dance about " + seconds
-                + " seconds long, so the last frame is around " + lastFrame + ".\n"
-                + "- This is a DANCE: move several joints together (arms, head, hips) in a lively, repeating "
-                + "rhythm with regularly spaced beats (a keyframe roughly every 8-15 frames).\n"
-                + "- Keep a steady beat: reuse a short motif and repeat/vary it across the whole duration.\n"
-                + "- Start and end near a neutral standing pose so the transition in and out is smooth.\n"
+                + repeatRules()
+                + "- Target total duration: about " + seconds + " seconds (" + (seconds * 25) + " frames).\n"
+                + "- Author ONE musical motif of 4-8 seconds (100-200 frames) and set repeatCycles so that "
+                + "motif length times repeatCycles is close to the target duration.\n"
+                + "- This is a DANCE: move several joints together (arms, head, hips) in a lively rhythm with "
+                + "regularly spaced beats (a keyframe roughly every 8-15 frames).\n"
+                + "- The motif must start and end on exactly the same pose (every moving joint has identical "
+                + "values at frame 0 and at the last frame), so repetitions chain seamlessly.\n"
+                + "- Keep that shared start/end pose close to a neutral stand so entering and leaving the dance "
+                + "is smooth.\n"
                 + jointRangesFooter();
     }
 
-    private String gestureSystemPrompt() {
+    private String gestureSystemPrompt(int targetSeconds) {
+        String duration = targetSeconds > 0
+                ? "- Target total duration: about " + targetSeconds + " seconds ("
+                + (targetSeconds * 25) + " frames). Honour it exactly using one of the two modes above.\n"
+                : "- No duration was requested: pick a natural duration of 1-4 seconds with repeatCycles=\"1\".\n";
         return "You generate a single Pepper robot animation in qianim 2.0 XML and output ONLY the raw XML "
                 + "(no Markdown, no code fences, no explanation).\n\n"
-                + "Structure (the first line must be exactly the XML declaration shown):\n"
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<Animation typeVersion=\"2.0\" xmlns:editor=\"http://www.aldebaran.com/animation/editor\">\n"
-                + "  <ActuatorCurve fps=\"25\" actuator=\"JOINT\" mute=\"false\" unit=\"radian\">\n"
-                + "    <Key value=\"FLOAT\" frame=\"INT\"/>\n"
-                + "    ... more keys ...\n"
-                + "  </ActuatorCurve>\n"
-                + "  ... more curves ...\n"
-                + "</Animation>\n\n"
-                + "Rules:\n"
-                + "- Start the output with the exact line <?xml version=\"1.0\" encoding=\"utf-8\"?> and nothing before it.\n"
-                + "- fps is always 25. Frames are integers starting at 0. Keep it short: last frame <= 125 (5 seconds).\n"
+                + jointRulesHeader()
+                + repeatRules()
+                + duration
                 + "- Only include curves for the joints that must move for the requested gesture.\n"
-                + "- Every moving joint needs at least a start key at frame 0 and a key returning near the start "
-                + "pose at the end, so the motion is smooth and Pepper does not stay frozen in an extreme pose.\n"
-                + "- Space keyframes a few frames apart for smooth motion; do not jump large angles between adjacent frames.\n"
-                + "- unit is \"radian\" for all joints except LHand and RHand which use unit \"dimensionless\".\n"
-                + "- Values MUST stay within these safe ranges (radians, hands dimensionless):\n"
-                + "  HeadYaw [-2.08,2.08], HeadPitch [-0.70,0.63],\n"
-                + "  LShoulderPitch [-2.08,2.08], RShoulderPitch [-2.08,2.08],\n"
-                + "  LShoulderRoll [0.01,1.56], RShoulderRoll [-1.56,-0.01],\n"
-                + "  LElbowYaw [-2.08,2.08], RElbowYaw [-2.08,2.08],\n"
-                + "  LElbowRoll [-1.56,-0.01], RElbowRoll [0.01,1.56],\n"
-                + "  LWristYaw [-1.82,1.82], RWristYaw [-1.82,1.82],\n"
-                + "  LHand [0,1], RHand [0,1],\n"
-                + "  HipRoll [-0.51,0.51], HipPitch [-1.03,1.03], KneePitch [-0.51,0.51].\n"
-                + "- Use only those joint names. No other actuators.";
+                + "- Space keyframes a few frames apart for smooth motion; do not jump large angles between "
+                + "adjacent frames.\n"
+                + jointRangesFooter();
+    }
+
+    private String repeatRules() {
+        return "- The root <Animation> element may carry repeatCycles=\"K\" (default 1). The runtime tiles "
+                + "your keyframes K times back to back before playing, so K cycles cost you no extra output.\n"
+                + "- MODE A, repetitive motion (waving, nodding, dance moves, 'do X for N seconds'): author "
+                + "exactly ONE cycle of 1-5 seconds where every moving joint has identical values at frame 0 "
+                + "and at the last frame, and set repeatCycles so cycle length times K matches the target "
+                + "duration.\n"
+                + "- MODE B, held pose ('lift your arm and hold it for N seconds'): set repeatCycles=\"1\" and "
+                + "author the full duration yourself: move into the pose quickly (about 1 second), then HOLD it "
+                + "with two identical keys spanning the hold time, then return to neutral in the final second. "
+                + "The last frame must be at the target duration.\n"
+                + "- Total played frames (cycle length times repeatCycles) must not exceed 750 (30 seconds).\n"
+                + "- Every animation must end at (or very near) a neutral standing pose after the final cycle.\n";
     }
 
     private String jointRulesHeader() {
         return "Structure (the first line must be exactly the XML declaration shown):\n"
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<Animation typeVersion=\"2.0\" xmlns:editor=\"http://www.aldebaran.com/animation/editor\">\n"
+                + "<Animation typeVersion=\"2.0\" xmlns:editor=\"http://www.aldebaran.com/animation/editor\" "
+                + "repeatCycles=\"K\">\n"
                 + "  <ActuatorCurve fps=\"25\" actuator=\"JOINT\" mute=\"false\" unit=\"radian\">\n"
                 + "    <Key value=\"FLOAT\" frame=\"INT\"/>\n"
                 + "  </ActuatorCurve>\n"
                 + "</Animation>\n\n"
                 + "Rules:\n"
-                + "- Start the output with the exact line <?xml version=\"1.0\" encoding=\"utf-8\"?> and nothing before it.\n";
+                + "- Start the output with the exact line <?xml version=\"1.0\" encoding=\"utf-8\"?> and nothing before it.\n"
+                + "- fps is always 25. Frames are integers starting at 0.\n";
     }
 
     private String jointRangesFooter() {
