@@ -30,6 +30,9 @@ import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
 import com.buhlergroup.pepper.action.dialogue.DialogueController;
 import com.buhlergroup.pepper.action.dialogue.DialogueView;
+import com.buhlergroup.pepper.action.navigation.NavigationController;
+import com.buhlergroup.pepper.action.navigation.NavigationManager;
+import com.buhlergroup.pepper.action.navigation.NavigationView;
 import com.buhlergroup.pepper.action.memory.MemoryGameController;
 import com.buhlergroup.pepper.action.memory.MemoryGameView;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
@@ -86,9 +89,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         adminButton = findViewById(R.id.adminButton);
         adminButton.setOnClickListener(v -> AdminController.get().open());
 
+        NavigationView navigationView = findViewById(R.id.navigationView);
+        NavigationController.get().attachView(navigationView);
+
         AdminController.get().setAdminStateListener(open -> updateHomeControls());
         SelfieController.get().setStateListener(active -> updateHomeControls());
         RaffleJoinController.get().setStateListener(active -> updateHomeControls());
+        NavigationController.get().setStateListener(open -> updateHomeControls());
 
         initSpeech();
     }
@@ -107,6 +114,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         AdminController.get().setAdminStateListener(null);
         AdminController.get().detachView();
         DialogueController.get().detachView();
+        NavigationController.get().setStateListener(null);
+        NavigationController.get().detachView();
+        NavigationManager.get().onFocusLost();
         QiSDK.unregister(this);
         recognizer.cancel();
         recognizer.destroy();
@@ -121,6 +131,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         s.getAuthToken(qiContext);
         Log.e("Mainactivity", "AFocus Gained");
         holdBackgroundMovement(qiContext);
+        NavigationManager.get().setQiContext(qiContext);
         FollowController.get().onFocusGained(qiContext);
         FollowController.get().setFollowStateListener(following ->
                 runOnUiThread(() ->
@@ -156,6 +167,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         MemoryGameController.get().abort();
         FollowController.get().setFollowStateListener(null);
         FollowController.get().onFocusLost();
+        NavigationManager.get().onFocusLost();
         releaseBackgroundMovement();
         Log.e("Mainactivity", "AFocus Lost");
     }
@@ -203,7 +215,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private void updateHomeControls() {
         boolean overlayOpen = AdminController.get().isOpen()
                 || SelfieController.get().isRunning()
-                || RaffleJoinController.get().isBusy();
+                || RaffleJoinController.get().isBusy()
+                || NavigationController.get().isOpen();
         DialogueController.get().setSuppressed(overlayOpen);
         runOnUiThread(() -> {
             int visibility = overlayOpen ? View.GONE : View.VISIBLE;

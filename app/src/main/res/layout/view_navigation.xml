@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    tools:parentTag="android.widget.FrameLayout"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="32dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/nav_title"
+                android:textColor="@color/white"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/navStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/buhler_teal"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/nav_section_scan"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/navScanName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/nav_scan_name_hint"
+                android:inputType="text"
+                android:textColor="@color/white"
+                android:textColorHint="#88FFFFFF" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/navScanStart"
+                    style="@style/NavPill"
+                    android:layout_marginEnd="12dp"
+                    android:text="@string/nav_scan_start" />
+
+                <TextView
+                    android:id="@+id/navScanStop"
+                    style="@style/NavPill"
+                    android:text="@string/nav_scan_stop" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/navScanList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/nav_section_waypoints"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/navWpName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="@string/nav_wp_name_hint"
+                android:inputType="text"
+                android:textColor="@color/white"
+                android:textColorHint="#88FFFFFF" />
+
+            <CheckBox
+                android:id="@+id/navWpFotostand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/nav_wp_fotostand"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/navWpSave"
+                style="@style/NavPill"
+                android:layout_marginTop="10dp"
+                android:text="@string/nav_wp_save" />
+
+            <LinearLayout
+                android:id="@+id/navWpList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/navClose"
+                style="@style/NavPill"
+                android:layout_marginTop="28dp"
+                android:text="@string/nav_close" />
+        </LinearLayout>
+    </ScrollView>
+</merge>

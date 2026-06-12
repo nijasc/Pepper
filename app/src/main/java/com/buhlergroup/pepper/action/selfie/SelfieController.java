@@ -21,6 +21,7 @@ import com.aldebaran.qi.sdk.object.image.TimestampedImageHandle;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.camera.CameraSettings;
 import com.buhlergroup.pepper.action.camera.WifiCameraManager;
+import com.buhlergroup.pepper.action.navigation.NavigationManager;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
@@ -113,6 +114,10 @@ public final class SelfieController {
         running = true;
         notifyState(true);
         try {
+            if (NavigationManager.get().hasFotostand(context)) {
+                say(context, "Komm mit, ich fahre uns kurz zum Fotostand.");
+                NavigationManager.get().driveToFotostandIfPossible(context);
+            }
             if (CameraSettings.isActive(context)) {
                 say(context, "Klar, machen wir ein Selfie! Stell dich bitte vor die Kamera.");
                 say(context, "Sag «Start», wenn du bereit bist.");
