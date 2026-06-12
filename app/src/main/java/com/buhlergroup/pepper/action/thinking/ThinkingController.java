@@ -1,5 +1,7 @@
 package com.buhlergroup.pepper.action.thinking;
 
+import android.content.Context;
+import android.media.MediaPlayer;
 import android.util.Log;
 
 import com.aldebaran.qi.Future;
@@ -15,28 +17,37 @@ import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class ThinkingController {
 
     private static final String TAG = "Thinking";
 
+    private static final String[] HMM_CLIPS = {
+            "hmm_1", "hmm_2", "hmm_3", "mhm_1", "mhm_2"
+    };
+
     private static final String[] FILLERS_DE = {
-            "Hmm, lass mich kurz überlegen.",
-            "Mhm, einen kleinen Moment.",
-            "Hmm, gute Frage."
+            "Lass mich kurz überlegen.",
+            "Einen kleinen Moment.",
+            "Gute Frage, einen Augenblick."
     };
 
     private static final String[] FILLERS_EN = {
-            "Hmm, let me think for a moment.",
-            "Mhm, just a second.",
-            "Hmm, good question."
+            "Let me think for a moment.",
+            "Just a second.",
+            "Good question, one moment."
     };
 
     private static final ThinkingController INSTANCE = new ThinkingController();
 
     private volatile Future<Void> animationFuture;
     private volatile Future<Void> fillerFuture;
+    private volatile MediaPlayer fillerPlayer;
     private volatile boolean active;
     private int lastFiller = -1;
+    private int lastClip = -1;
 
     private ThinkingController() {
     }
@@ -61,6 +72,7 @@ public final class ThinkingController {
         active = false;
         cancel(animationFuture);
         cancel(fillerFuture);
+        releaseFillerPlayer();
         animationFuture = null;
         fillerFuture = null;
     }
@@ -80,13 +92,61 @@ public final class ThinkingController {
     }
 
     private void startFiller(QiContext context) {
+        if (playHmmClip(context)) {
+            return;
+        }
+        speakFiller(context);
+    }
+
+    private boolean playHmmClip(Context context) {
+        List<Integer> clips = resolveClips(context);
+        if (clips.isEmpty()) {
+            Log.i(TAG, "No hmm clips in res/raw, using spoken filler");
+            return false;
+        }
+        try {
+            releaseFillerPlayer();
+            int index = pickIndex(clips.size(), lastClip);
+            lastClip = index;
+            MediaPlayer player = MediaPlayer.create(context, clips.get(index));
+            if (player == null) {
+                return false;
+            }
+            player.setOnCompletionListener(p -> {
+                p.release();
+                if (fillerPlayer == p) {
+                    fillerPlayer = null;
+                }
+            });
+            fillerPlayer = player;
+            player.start();
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "Hmm clip playback failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    private List<Integer> resolveClips(Context context) {
+        List<Integer> ids = new ArrayList<>();
+        for (String name : HMM_CLIPS) {
+            int id = context.getResources().getIdentifier(name, "raw", context.getPackageName());
+            if (id != 0) {
+                ids.add(id);
+            }
+        }
+        return ids;
+    }
+
+    private void speakFiller(QiContext context) {
         try {
             SupportedLanguage lang = SpeechManager.getInstance().currentLanguage();
             String[] fillers = lang == SupportedLanguage.ENGLISH ? FILLERS_EN : FILLERS_DE;
-            String text = fillers[pickIndex(fillers.length)];
+            int index = pickIndex(fillers.length, lastFiller);
+            lastFiller = index;
             Locale locale = new Locale(lang.getQiLang(), lang.getRegion());
             Say say = SayBuilder.with(context)
-                    .withText(text)
+                    .withText(fillers[index])
                     .withLocale(locale)
                     .build();
             fillerFuture = say.async().run();
@@ -95,13 +155,29 @@ public final class ThinkingController {
         }
     }
 
-    private int pickIndex(int length) {
+    private int pickIndex(int length, int last) {
         int index;
         do {
             index = (int) (Math.random() * length);
-        } while (length > 1 && index == lastFiller);
-        lastFiller = index;
+        } while (length > 1 && index == last);
         return index;
+    }
+
+    private void releaseFillerPlayer() {
+        MediaPlayer player = fillerPlayer;
+        fillerPlayer = null;
+        if (player != null) {
+            try {
+                if (player.isPlaying()) {
+                    player.stop();
+                }
+            } catch (Exception ignored) {
+            }
+            try {
+                player.release();
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private void cancel(Future<Void> future) {
