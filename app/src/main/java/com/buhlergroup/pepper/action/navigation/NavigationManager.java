@@ -68,6 +68,7 @@ public final class NavigationManager {
     private volatile boolean scanning;
     private volatile MapUpdateListener mapUpdateListener;
     private volatile int pollGeneration;
+    private volatile Future<Void> rotateFuture;
 
     private NavigationManager() {
     }
@@ -81,12 +82,13 @@ public final class NavigationManager {
     }
 
     public void onFocusLost() {
+        scanning = false;
         stopMapPolling();
+        cancelRotation();
         cancelLocalize();
         cancelMapping();
         releaseAbilities();
         localized = false;
-        scanning = false;
         qiContext = null;
     }
 
@@ -131,6 +133,8 @@ public final class NavigationManager {
     }
 
     public void stopAndSaveScan(String name, Callback<RoomScanEntity> cb) {
+        scanning = false;
+        cancelRotation();
         executor.execute(() -> {
             QiContext c = qiContext;
             LocalizeAndMap lam = currentMapping;
@@ -440,19 +444,38 @@ public final class NavigationManager {
     }
 
     private void autoScanRotate(QiContext c) {
-        int steps = 6;
-        double angle = Math.toRadians(60);
-        for (int i = 0; i < steps && scanning; i++) {
-            try {
-                Frame robotFrame = c.getActuation().robotFrame();
-                Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, angle);
-                FreeFrame target = c.getMapping().makeFreeFrame();
-                target.update(robotFrame, t, 0L);
-                GoToBuilder.with(c).withFrame(target.frame()).build().run();
-            } catch (Exception e) {
-                Log.w(TAG, "autoScanRotate step failed: " + e.getMessage());
-                break;
+        Thread rotator = new Thread(() -> {
+            int steps = 6;
+            double angle = Math.toRadians(60);
+            for (int i = 0; i < steps && scanning; i++) {
+                try {
+                    Frame robotFrame = c.getActuation().robotFrame();
+                    Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, angle);
+                    FreeFrame target = c.getMapping().makeFreeFrame();
+                    target.update(robotFrame, t, 0L);
+                    Future<Void> goToFuture = GoToBuilder.with(c)
+                            .withFrame(target.frame()).build().async().run();
+                    rotateFuture = goToFuture;
+                    if (!scanning) {
+                        goToFuture.requestCancellation();
+                    }
+                    goToFuture.get();
+                } catch (Exception e) {
+                    Log.w(TAG, "autoScanRotate step failed: " + e.getMessage());
+                    break;
+                }
             }
+            rotateFuture = null;
+        }, "scan-rotator");
+        rotator.setDaemon(true);
+        rotator.start();
+    }
+
+    private void cancelRotation() {
+        Future<Void> f = rotateFuture;
+        rotateFuture = null;
+        if (f != null && !f.isDone()) {
+            f.requestCancellation();
         }
     }
 
