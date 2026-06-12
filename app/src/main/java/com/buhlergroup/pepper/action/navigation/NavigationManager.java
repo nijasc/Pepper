@@ -340,6 +340,22 @@ public final class NavigationManager {
         }
     }
 
+    public void getRobotPose(Callback<double[]> cb) {
+        executor.execute(() -> {
+            QiContext c = qiContext;
+            if (c == null || !localized) {
+                cb.onError("Pepper ist noch nicht lokalisiert.");
+                return;
+            }
+            try {
+                cb.onResult(pose2d(robotInMap(c)));
+            } catch (Exception e) {
+                Log.w(TAG, "getRobotPose failed: " + e.getMessage());
+                cb.onError("Position konnte nicht ermittelt werden.");
+            }
+        });
+    }
+
     public void getMapBitmap(Callback<Bitmap> cb) {
         executor.execute(() -> {
             ExplorationMap map = activeMap;

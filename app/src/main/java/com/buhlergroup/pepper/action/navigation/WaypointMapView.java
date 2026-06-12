@@ -17,10 +17,12 @@ import java.util.List;
 public class WaypointMapView extends View {
 
     private final List<WaypointEntity> waypoints = new ArrayList<>();
+    private double[] robotPose;
     private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint originPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint waypointPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint fotostandPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint robotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     public WaypointMapView(Context context) {
@@ -44,6 +46,8 @@ public class WaypointMapView extends View {
         originPaint.setColor(Color.WHITE);
         waypointPaint.setColor(0xFF1FB5AD);
         fotostandPaint.setColor(0xFFE5534B);
+        robotPaint.setColor(0xFFFFB020);
+        robotPaint.setStrokeWidth(6f);
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(28f);
     }
@@ -53,6 +57,11 @@ public class WaypointMapView extends View {
         if (newWaypoints != null) {
             waypoints.addAll(newWaypoints);
         }
+        postInvalidate();
+    }
+
+    public void setRobotPose(double[] pose) {
+        this.robotPose = pose;
         postInvalidate();
     }
 
@@ -75,6 +84,13 @@ public class WaypointMapView extends View {
             minY = Math.min(minY, (float) wp.y);
             maxY = Math.max(maxY, (float) wp.y);
         }
+        double[] pose = robotPose;
+        if (pose != null) {
+            minX = Math.min(minX, (float) pose[0]);
+            maxX = Math.max(maxX, (float) pose[0]);
+            minY = Math.min(minY, (float) pose[1]);
+            maxY = Math.max(maxY, (float) pose[1]);
+        }
         float rangeX = Math.max(1f, maxX - minX);
         float rangeY = Math.max(1f, maxY - minY);
         float scale = Math.min((w - 2 * pad) / rangeX, (h - 2 * pad) / rangeY);
@@ -88,7 +104,18 @@ public class WaypointMapView extends View {
             drawMarker(canvas, paint, px, py, wp.name);
         }
 
-        if (waypoints.isEmpty()) {
+        if (pose != null) {
+            float px = toX((float) pose[0], minX, scale, pad);
+            float py = toY((float) pose[1], minY, scale, h, pad);
+            canvas.drawCircle(px, py, 16f, robotPaint);
+            float headingLen = 34f;
+            float hx = px + (float) Math.cos(pose[2]) * headingLen;
+            float hy = py - (float) Math.sin(pose[2]) * headingLen;
+            canvas.drawLine(px, py, hx, hy, robotPaint);
+            canvas.drawText("Pepper", px + 20f, py - 16f, textPaint);
+        }
+
+        if (waypoints.isEmpty() && pose == null) {
             canvas.drawText("Noch keine Wegpunkte", pad, h / 2f, textPaint);
         }
     }

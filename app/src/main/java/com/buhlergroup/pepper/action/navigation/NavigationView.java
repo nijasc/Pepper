@@ -87,6 +87,21 @@ public class NavigationView extends FrameLayout {
         updateStatus();
         loadScans();
         loadWaypoints();
+        loadRobotPose();
+    }
+
+    private void loadRobotPose() {
+        NavigationManager.get().getRobotPose(new NavigationManager.Callback<double[]>() {
+            @Override
+            public void onResult(double[] value) {
+                post(() -> waypointMap.setRobotPose(value));
+            }
+
+            @Override
+            public void onError(String error) {
+                post(() -> waypointMap.setRobotPose(null));
+            }
+        });
     }
 
     private void updateStatus() {
@@ -259,6 +274,7 @@ public class NavigationView extends FrameLayout {
                     toast(R.string.nav_localized);
                     updateStatus();
                     loadWaypoints();
+                    loadRobotPose();
                 });
             }
 
@@ -291,7 +307,10 @@ public class NavigationView extends FrameLayout {
         NavigationManager.get().goToWaypoint(wp, new NavigationManager.Callback<Void>() {
             @Override
             public void onResult(Void value) {
-                post(() -> toast(R.string.nav_arrived));
+                post(() -> {
+                    toast(R.string.nav_arrived);
+                    loadRobotPose();
+                });
             }
 
             @Override
