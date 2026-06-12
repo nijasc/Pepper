@@ -86,9 +86,21 @@ public final class ThinkingController {
                     .withAnimation(animation)
                     .build();
             animationFuture = animate.async().run();
+            consume(animationFuture, "thinking pose");
         } catch (Exception e) {
             Log.w(TAG, "Thinking pose failed: " + e.getMessage());
         }
+    }
+
+    private void consume(Future<Void> future, String label) {
+        if (future == null) {
+            return;
+        }
+        future.thenConsume(done -> {
+            if (done.hasError()) {
+                Log.w(TAG, label + " did not finish: " + done.getError().getMessage());
+            }
+        });
     }
 
     private void startFiller(QiContext context) {
@@ -150,6 +162,7 @@ public final class ThinkingController {
                     .withLocale(locale)
                     .build();
             fillerFuture = say.async().run();
+            consume(fillerFuture, "thinking filler");
         } catch (Exception e) {
             Log.w(TAG, "Thinking filler failed: " + e.getMessage());
         }

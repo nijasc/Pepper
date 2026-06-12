@@ -216,7 +216,11 @@ public final class MemoryGameController {
             Animate animate = AnimateBuilder.with(context)
                     .withAnimation(animation)
                     .build();
-            animate.async().run();
+            animate.async().run().thenConsume(f -> {
+                if (f.hasError()) {
+                    Log.w(TAG, "Animation did not finish: " + f.getError().getMessage());
+                }
+            });
         } catch (Exception e) {
             Log.w(TAG, "Animation fehlgeschlagen: " + e.getMessage());
         }

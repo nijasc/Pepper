@@ -62,6 +62,7 @@ public class DanceAction extends Action {
 
             DancePlayerController.get().play(dance.youtubeId);
             Future<Void> animationFuture = animate.async().run();
+            consume(animationFuture, "dance animation");
 
             long playMs = Math.max(MIN_PLAY_MS, Math.min(MAX_PLAY_MS, dance.durationMs));
             sleep(playMs);
@@ -82,7 +83,7 @@ public class DanceAction extends Action {
             Animation animation = AnimationBuilder.with(context)
                     .withResources(R.raw.wyoming_dance).build();
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
-            animate.async().run();
+            consume(animate.async().run(), "fallback dance animation");
             startAudioResource(context, R.raw.wyoming);
             sleep(15000);
             stopAudio();
@@ -114,6 +115,17 @@ public class DanceAction extends Action {
             } catch (Exception ignored) {
             }
         }
+    }
+
+    private void consume(Future<Void> future, String label) {
+        if (future == null) {
+            return;
+        }
+        future.thenConsume(done -> {
+            if (done.hasError()) {
+                Log.w(TAG, label + " did not finish: " + done.getError().getMessage());
+            }
+        });
     }
 
     private void sleep(long ms) {
