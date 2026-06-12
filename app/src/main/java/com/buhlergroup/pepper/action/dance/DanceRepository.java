@@ -25,7 +25,17 @@ public final class DanceRepository {
         DanceDao dao = DanceDatabase.get(context).danceDao();
         File danceDir = danceDir(context);
 
-        YoutubeSearch.Result result = new YoutubeSearch().search(query);
+        String songName = normalizeSongName(query);
+        DanceEntity bySong = dao.findBySongName(songName);
+        if (bySong != null) {
+            if (bySong.qianimPath != null && new File(bySong.qianimPath).exists()) {
+                Log.i(TAG, "Reusing dance for " + songName);
+                return bySong;
+            }
+            dao.deleteById(bySong.youtubeId);
+        }
+
+        YoutubeSearch.Result result = new YoutubeSearch().search(songName);
 
         DanceEntity existing = dao.findById(result.videoId);
         if (existing != null && existing.qianimPath != null
@@ -35,7 +45,7 @@ public final class DanceRepository {
 
         long durationMs = result.durationMs > 0 ? result.durationMs : 25000L;
         int seconds = (int) Math.max(8, Math.min(30, durationMs / 1000));
-        String qianim = generator.generateValidatedDance(context, result.title, seconds);
+        String qianim = generator.generateValidatedDance(context, songName, seconds);
         if (qianim == null) {
             throw new Exception("Tanz-Choreografie konnte nicht erzeugt werden.");
         }
@@ -44,11 +54,15 @@ public final class DanceRepository {
         writeFile(qianimFile, qianim);
 
         DanceEntity entity = new DanceEntity(
-                result.videoId, result.title, qianimFile.getAbsolutePath(),
+                result.videoId, songName, qianimFile.getAbsolutePath(),
                 durationMs, false, System.currentTimeMillis());
         dao.insert(entity);
-        Log.i(TAG, "Created dance for " + result.title);
+        Log.i(TAG, "Created dance for " + songName);
         return entity;
+    }
+
+    private String normalizeSongName(String query) {
+        return query == null ? "" : query.trim().replaceAll("\\s+", " ");
     }
 
     public List<DanceEntity> all(Context context) {
