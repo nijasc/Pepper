@@ -41,6 +41,7 @@ public class OpenAIService {
 
     public static final String DEFAULT_MODEL = ModelSelector.STRONG;
     private static final int MAX_OUTPUT_TOKENS = 600;
+    private static final int RESPONSE_TIMEOUT_MS = 60000;
     private static final String URL = "https://api.openai.com/v1";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final EmotionReader emotionReader = new EmotionReader();
@@ -80,7 +81,7 @@ public class OpenAIService {
 
         long started = System.currentTimeMillis();
         try {
-            String res = sendOpenAiRequest("/responses", body);
+            String res = sendOpenAiRequest("/responses", body, RESPONSE_TIMEOUT_MS);
             res = parseOutput(res);
             res = extractLanguageTag(res);
             Log.i("LATENCY", "getResponse took " + (System.currentTimeMillis() - started) + "ms");

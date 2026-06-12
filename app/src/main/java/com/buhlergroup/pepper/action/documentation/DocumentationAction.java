@@ -36,6 +36,7 @@ import javax.net.ssl.TrustManagerFactory;
 public class DocumentationAction extends Action {
     private static final String DOCUMENTATION_URL =
             "https://raw.githubusercontent.com/nijasc/Pepper/main/README.md";
+    private static final int ANSWER_TIMEOUT_MS = 120000;
 
     private final OpenAIService service;
     private String fallbackDocumentation;
@@ -74,7 +75,7 @@ public class DocumentationAction extends Action {
         body.put("input", conversation);
 
         try {
-            String response = service.sendOpenAiRequest("/responses", body);
+            String response = service.sendOpenAiRequest("/responses", body, ANSWER_TIMEOUT_MS);
             String answer = service.extractLanguageTag(parseAnswer(response));
             getHistoryManager().addUser(input);
             getHistoryManager().addAssistant(answer, this);
