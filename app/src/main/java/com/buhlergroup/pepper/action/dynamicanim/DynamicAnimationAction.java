@@ -37,7 +37,7 @@ public class DynamicAnimationAction extends Action {
                     .build();
             animate.run();
         } catch (Exception e) {
-            Log.w(TAG, "Animation playback failed: " + e.getMessage());
+            Log.e(TAG, "Animation playback failed: " + e.getMessage() + "\nGenerated qianim:\n" + qianim, e);
             SpeechManager.getInstance().systemSay(context,
                     "Hoppla, diese Bewegung konnte ich nicht ausführen.");
         }

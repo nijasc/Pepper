@@ -247,8 +247,15 @@ public class OpenAIService {
         } catch (IOException e) {
             Log.e("TOKENAUTH", "Failed to read env asset", e);
         }
-        Log.i("TOKENAUTH", cachedToken);
+        Log.i("TOKENAUTH", cachedToken == null ? "no token" : "token loaded (" + mask(cachedToken) + ")");
         return cachedToken;
+    }
+
+    private String mask(String token) {
+        if (token == null || token.length() <= 4) {
+            return "****";
+        }
+        return "****" + token.substring(token.length() - 4);
     }
 
     public void setC(Context c) {

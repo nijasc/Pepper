@@ -67,7 +67,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         super.onCreate(savedInstanceState);
         setSpeechBarDisplayStrategy(SpeechBarDisplayStrategy.IMMERSIVE);
         QiSDK.register(this, this);
-        Log.e("Mainactivity", "ACreate");
+        Log.d("Mainactivity", "ACreate");
 
         setContentView(R.layout.activity_main);
         stopFollowButton = findViewById(R.id.stopFollowButton);
@@ -108,7 +108,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     @Override
     protected void onDestroy() {
-        Log.e("Mainactivity", "ADestroyed");
+        Log.d("Mainactivity", "ADestroyed");
 
         MemoryGameController.get().abort();
         MemoryGameController.get().detachView();
@@ -137,7 +137,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         OpenAIService s = new OpenAIService(new ArrayList<>());
         s.setC(qiContext);
         s.getAuthToken(qiContext);
-        Log.e("Mainactivity", "AFocus Gained");
+        Log.d("Mainactivity", "AFocus Gained");
         holdBackgroundMovement(qiContext);
         NavigationManager.get().setQiContext(qiContext);
         FollowController.get().onFocusGained(qiContext);
@@ -177,7 +177,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         FollowController.get().onFocusLost();
         NavigationManager.get().onFocusLost();
         releaseBackgroundMovement();
-        Log.e("Mainactivity", "AFocus Lost");
+        Log.d("Mainactivity", "AFocus Lost");
     }
 
     private void holdBackgroundMovement(QiContext qiContext) {
@@ -204,14 +204,14 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     @Override
     public void onRobotFocusRefused(String reason) {
-        Log.e("Mainactivity", "AFocus Refused");
+        Log.d("Mainactivity", "AFocus Refused");
 
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Log.e("Mainactivity", "APermission Result");
+        Log.d("Mainactivity", "APermission Result");
 
         if (requestCode == 1 && grantResults.length > 0) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
@@ -274,7 +274,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.e("Mainactivity", "AActivity result");
+        Log.d("Mainactivity", "AActivity result");
 
         if (requestCode == SPEECH_EVENT) {
             if (resultCode == RESULT_OK && data != null) {
