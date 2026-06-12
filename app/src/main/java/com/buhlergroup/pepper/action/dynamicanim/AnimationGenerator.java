@@ -18,6 +18,7 @@ public final class AnimationGenerator {
     private static final String MODEL = "gpt-5.5";
     private static final int MAX_ATTEMPTS = 3;
     private static final int MAX_SECONDS = 30;
+    private static final int GENERATION_TIMEOUT_MS = 120000;
 
     private final OpenAIService openAi = new OpenAIService(new ArrayList<>());
 
@@ -70,8 +71,9 @@ public final class AnimationGenerator {
         Map<String, Object> body = new HashMap<>();
         body.put("model", MODEL);
         body.put("messages", messages);
+        body.put("reasoning_effort", "low");
 
-        String response = openAi.sendOpenAiRequest("/chat/completions", body);
+        String response = openAi.sendOpenAiRequest("/chat/completions", body, GENERATION_TIMEOUT_MS);
         return new JSONObject(response)
                 .getJSONArray("choices")
                 .getJSONObject(0)

@@ -368,11 +368,16 @@ public class OpenAIService {
     }
 
     public String sendOpenAiRequest(String path, @Nullable Map<String, Object> body) throws IOException {
+        return sendOpenAiRequest(path, body, 20000);
+    }
+
+    public String sendOpenAiRequest(String path, @Nullable Map<String, Object> body, int readTimeoutMs)
+            throws IOException {
         URL url = new URL(URL + path);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
         con.setConnectTimeout(8000);
-        con.setReadTimeout(20000);
+        con.setReadTimeout(readTimeoutMs);
         con.setRequestProperty("Authorization", "Bearer " + getAuthToken(c));
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("Accept-Encoding", "gzip");
