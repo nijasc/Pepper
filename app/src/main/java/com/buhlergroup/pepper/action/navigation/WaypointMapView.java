@@ -18,7 +18,6 @@ public class WaypointMapView extends View {
 
     private final List<WaypointEntity> waypoints = new ArrayList<>();
     private double[] robotPose;
-    private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint originPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint waypointPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint fotostandPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -41,8 +40,6 @@ public class WaypointMapView extends View {
     }
 
     private void init() {
-        gridPaint.setColor(0x33FFFFFF);
-        gridPaint.setStrokeWidth(2f);
         originPaint.setColor(Color.WHITE);
         waypointPaint.setColor(0xFF1FB5AD);
         fotostandPaint.setColor(0xFFE5534B);

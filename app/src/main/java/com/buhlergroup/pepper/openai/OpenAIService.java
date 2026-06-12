@@ -39,7 +39,6 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 public class OpenAIService {
 
-    public static final String DEFAULT_MODEL = ModelSelector.STRONG;
     private static final int MAX_OUTPUT_TOKENS = 600;
     private static final int RESPONSE_TIMEOUT_MS = 60000;
     private static final String URL = "https://api.openai.com/v1";
