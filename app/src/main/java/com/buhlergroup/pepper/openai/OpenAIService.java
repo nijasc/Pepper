@@ -20,8 +20,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +41,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 public class OpenAIService {
 
     public static final String DEFAULT_MODEL = "gpt-5.4";
+    private static final int MAX_OUTPUT_TOKENS = 600;
     private static final String URL = "https://api.openai.com/v1";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final EmotionReader emotionReader = new EmotionReader();
@@ -59,11 +62,17 @@ public class OpenAIService {
         body.put("model", DEFAULT_MODEL);
         body.put("input", historyManager.toInput());
         body.put("instructions", formDefaultSystemPrompt(context));
+        body.put("max_output_tokens", MAX_OUTPUT_TOKENS);
+        Map<String, Object> reasoning = new HashMap<>();
+        reasoning.put("effort", "low");
+        body.put("reasoning", reasoning);
 
+        long started = System.currentTimeMillis();
         try {
             String res = sendOpenAiRequest("/responses", body);
             res = parseOutput(res);
             res = extractLanguageTag(res);
+            Log.i("LATENCY", "getResponse took " + (System.currentTimeMillis() - started) + "ms");
             return sanitizeResponse(res);
         } catch (IOException e) {
             e.printStackTrace();
@@ -107,6 +116,13 @@ public class OpenAIService {
             prompt.append("- ").append(action.getDescription()).append("\n");
         }
 
+        prompt.append("\n## Internal Language Marker\n")
+                .append("Begin every reply with a machine marker of the exact form [[lang:CODE]] where CODE is the ")
+                .append("ISO 639-1 code of the language you are replying in (for example [[lang:de]], [[lang:en]], ")
+                .append("[[lang:ja]]). Write the marker exactly once at the very start with nothing before it, then ")
+                .append("your normal spoken reply. The marker is removed automatically before your reply is spoken ")
+                .append("and must never appear inside the reply or influence its wording.\n");
+
         String moodHint = emotionReader.moodHintForPrompt(context);
         if (moodHint != null) {
             prompt.append("\n## Visitor Emotion\n")
@@ -116,13 +132,6 @@ public class OpenAIService {
         }
 
         appendRaffleHint(context, prompt);
-
-        prompt.append("\n## Internal Language Marker\n")
-                .append("Begin every reply with a machine marker of the exact form [[lang:CODE]] where CODE is the ")
-                .append("ISO 639-1 code of the language you are replying in (for example [[lang:de]], [[lang:en]], ")
-                .append("[[lang:ja]]). Write the marker exactly once at the very start with nothing before it, then ")
-                .append("your normal spoken reply. The marker is removed automatically before your reply is spoken ")
-                .append("and must never appear inside the reply or influence its wording.\n");
 
         return prompt.toString();
     }
@@ -165,8 +174,11 @@ public class OpenAIService {
         URL url = new URL(URL + path);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
+        con.setConnectTimeout(8000);
+        con.setReadTimeout(20000);
         con.setRequestProperty("Authorization", "Bearer " + getAuthToken(c));
         con.setRequestProperty("Content-Type", "application/json");
+        con.setRequestProperty("Accept-Encoding", "gzip");
 
         if (body != null) {
             con.setRequestMethod("POST");
@@ -187,8 +199,12 @@ public class OpenAIService {
         }
 
         int code = con.getResponseCode();
+        InputStream rawStream = code >= 400 ? con.getErrorStream() : con.getInputStream();
+        if ("gzip".equalsIgnoreCase(con.getContentEncoding()) && rawStream != null) {
+            rawStream = new GZIPInputStream(rawStream);
+        }
         BufferedReader in = new BufferedReader(
-                new InputStreamReader(code >= 400 ? con.getErrorStream() : con.getInputStream())
+                new InputStreamReader(rawStream, StandardCharsets.UTF_8)
         );
 
         StringBuilder content = new StringBuilder();

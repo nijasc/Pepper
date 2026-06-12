@@ -50,7 +50,10 @@ public class ActionHandler {
 
         ThinkingController.get().start(context);
         try {
+            long intentStart = System.currentTimeMillis();
             Action intent = intentEngine.getIntent(input);
+            long intentEnd = System.currentTimeMillis();
+            Log.i("LATENCY", "getIntent took " + (intentEnd - intentStart) + "ms");
             if (intent == null) {
                 Log.w(this.getClass().getSimpleName(), "No intent resolved for input: " + input);
                 SpeechManager.getInstance().systemSay(context, "Entschuldige, das habe ich gerade nicht verstanden.");
@@ -60,6 +63,8 @@ public class ActionHandler {
 
             historyManager.addDeveloper("Action started: " + intent.getClass().getSimpleName(), intent);
             intent.execute(context, input);
+            Log.i("LATENCY", "action " + intent.getClass().getSimpleName()
+                    + " took " + (System.currentTimeMillis() - intentEnd) + "ms");
         } finally {
             ThinkingController.get().stop();
         }
