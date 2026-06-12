@@ -180,17 +180,18 @@ public final class ThinkingController {
             if (player == null) {
                 return false;
             }
+            fillerPlayer = player;
             player.setOnCompletionListener(p -> {
                 p.release();
                 if (fillerPlayer == p) {
                     fillerPlayer = null;
                 }
             });
-            fillerPlayer = player;
             player.start();
             return true;
         } catch (Exception e) {
             Log.w(TAG, "Hmm clip playback failed: " + e.getMessage());
+            releaseFillerPlayer();
             return false;
         }
     }
