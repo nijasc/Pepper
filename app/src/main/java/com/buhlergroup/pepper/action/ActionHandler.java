@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.admin.OpenAdminAction;
+import com.buhlergroup.pepper.action.career.CareerAction;
 import com.buhlergroup.pepper.action.dance.DanceAction;
 import com.buhlergroup.pepper.action.documentation.DocumentationAction;
 import com.buhlergroup.pepper.action.dynamicanim.DynamicAnimationAction;
@@ -247,6 +248,7 @@ public class ActionHandler {
         actions.add(new GuideAction());
         actions.add(new MemoryGameAction());
         actions.add(new QuizAction());
+        actions.add(new CareerAction());
         actions.add(new SelfieAction());
         actions.add(new OpenAdminAction());
         actions.add(new RaffleInfoAction(actions));
