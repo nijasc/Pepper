@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public final class RaffleJoinController {
 
     private static final String TAG = "RaffleJoin";
-    private static final long JOIN_TIMEOUT_MS = 180000;
+    private static final long JOIN_TIMEOUT_MS = 60000;
 
     private static final RaffleJoinController INSTANCE = new RaffleJoinController();
 
@@ -101,7 +101,11 @@ public final class RaffleJoinController {
                     done.countDown();
                 }
             });
-            done.await(JOIN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            boolean completed = done.await(JOIN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (!completed) {
+                say(context, "Kein Problem, ich breche das Eintragen jetzt ab. "
+                        + "Du kannst jederzeit noch einmal mitmachen.");
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
