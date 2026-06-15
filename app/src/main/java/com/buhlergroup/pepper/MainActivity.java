@@ -65,6 +65,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private Button adminButton;
     private Holder backgroundMovementHolder;
     private TextView languageLabel;
+    private volatile boolean listening;
+    private volatile boolean listenPending;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -158,9 +160,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         holdBackgroundMovement(qiContext);
         NavigationManager.get().setQiContext(qiContext);
         FollowController.get().onFocusGained(qiContext);
-        FollowController.get().setFollowStateListener(following ->
-                runOnUiThread(() ->
-                        stopFollowButton.setVisibility(following ? View.VISIBLE : View.GONE)));
+        FollowController.get().setFollowStateListener(following -> {
+            runOnUiThread(() ->
+                    stopFollowButton.setVisibility(following ? View.VISIBLE : View.GONE));
+            if (!following) {
+                maybeResumeListening();
+            }
+        });
 
         if (languageManager == null) {
             languageManager = new LanguageManager(intent);
@@ -252,6 +258,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             adminButton.setVisibility(visibility);
             languageLabel.setVisibility(visibility);
         });
+        maybeResumeListening();
     }
 
     private void updateLanguageLabel(SupportedLanguage lang) {
@@ -261,19 +268,37 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void listenToSpeech() {
-        while (FollowController.get().isFollowing()
+        if (isOverlayOpen()) {
+            listenPending = true;
+            return;
+        }
+        listenPending = false;
+        startSpeechRecognition();
+    }
+
+    private boolean isOverlayOpen() {
+        return FollowController.get().isFollowing()
                 || HoldController.get().isActive()
                 || AdminController.get().isOpen()
                 || NavigationController.get().isOpen()
-                || DanceLibraryController.get().isOpen()) {
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                || DanceLibraryController.get().isOpen();
+    }
+
+    private void startSpeechRecognition() {
+        runOnUiThread(() -> {
+            if (listening) {
+                return;
             }
-        }
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(intent, SPEECH_EVENT);
+            if (intent != null && intent.resolveActivity(getPackageManager()) != null) {
+                listening = true;
+                startActivityForResult(intent, SPEECH_EVENT);
+            }
+        });
+    }
+
+    private void maybeResumeListening() {
+        if (listenPending && !listening && !isOverlayOpen()) {
+            listenToSpeech();
         }
     }
 
@@ -307,6 +332,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         Log.d("Mainactivity", "AActivity result");
 
         if (requestCode == SPEECH_EVENT) {
+            listening = false;
             if (resultCode == RESULT_OK && data != null) {
                 ArrayList<String> results =
                         data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
