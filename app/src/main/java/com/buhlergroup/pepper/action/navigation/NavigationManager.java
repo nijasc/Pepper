@@ -45,6 +45,8 @@ public final class NavigationManager {
     private static final String TAG = "Navigation";
     private static final long MAP_POLL_BASE_MS = 1000;
     private static final long MAP_POLL_MAX_MS = 8000;
+    private static final double SCAN_RADIUS_M = 1.0;
+    private static final int SCAN_ROTATION_STEPS = 4;
 
     public interface Callback<T> {
         void onResult(T value);
@@ -73,6 +75,7 @@ public final class NavigationManager {
     private volatile int pollGeneration;
     private volatile Future<Void> rotateFuture;
     private volatile Future<Void> activeGoTo;
+    private volatile FreeFrame scanOrigin;
 
     private interface Condition {
         boolean shouldContinue();
@@ -130,6 +133,7 @@ public final class NavigationManager {
                 currentMapping = lam;
                 mappingFuture = lam.async().run();
                 scanning = true;
+                captureScanOrigin(c);
                 cb.onResult(null);
                 startMapPolling();
                 autoScanRotate(c);
@@ -495,6 +499,18 @@ public final class NavigationManager {
 
     private void stopMapPolling() {
         pollGeneration++;
+    }
+
+    private void captureScanOrigin(QiContext c) {
+        try {
+            Frame robotFrame = c.getActuation().robotFrame();
+            FreeFrame origin = c.getMapping().makeFreeFrame();
+            origin.update(robotFrame, TransformBuilder.create().from2DTransform(0.0, 0.0, 0.0), 0L);
+            scanOrigin = origin;
+        } catch (Exception e) {
+            Log.w(TAG, "captureScanOrigin failed: " + e.getMessage());
+            scanOrigin = null;
+        }
     }
 
     private void autoScanRotate(QiContext c) {
