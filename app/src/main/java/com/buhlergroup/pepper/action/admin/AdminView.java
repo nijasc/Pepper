@@ -6,8 +6,10 @@ import android.app.TimePickerDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.BatteryManager;
 import android.os.SystemClock;
 import android.text.InputType;
 import android.util.AttributeSet;
@@ -32,6 +34,7 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.buhlergroup.pepper.PepperApplication;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.camera.CameraSettings;
 import com.buhlergroup.pepper.action.camera.WifiCameraManager;
@@ -49,10 +52,13 @@ import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.action.selfie.SelfieSettings;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
+import com.buhlergroup.pepper.net.Connectivity;
 import com.buhlergroup.pepper.openai.history.HistoryEntry;
 import com.buhlergroup.pepper.openai.history.HistoryRole;
 
 import java.io.File;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -83,6 +89,7 @@ public class AdminView extends FrameLayout {
     private static final int PANEL_RAFFLE_CREATE = 7;
     private static final int PANEL_RAFFLE = 8;
     private static final int PANEL_CAMERA = 9;
+    private static final int PANEL_STATUS = 10;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final StringBuilder entered = new StringBuilder();
@@ -99,6 +106,11 @@ public class AdminView extends FrameLayout {
     private View raffleCreatePanel;
     private View rafflePanel;
     private View cameraPanel;
+    private View statusPanel;
+    private TextView statusWifi;
+    private TextView statusOpenAi;
+    private TextView statusBattery;
+    private TextView statusUptime;
     private ScrollView devLogScroll;
     private ScrollView historyScroll;
     private LinearLayout historyContainer;
@@ -180,6 +192,11 @@ public class AdminView extends FrameLayout {
         raffleCreatePanel = findViewById(R.id.adminRaffleCreatePanel);
         rafflePanel = findViewById(R.id.adminRafflePanel);
         cameraPanel = findViewById(R.id.adminCameraPanel);
+        statusPanel = findViewById(R.id.adminStatusPanel);
+        statusWifi = findViewById(R.id.statusWifi);
+        statusOpenAi = findViewById(R.id.statusOpenAi);
+        statusBattery = findViewById(R.id.statusBattery);
+        statusUptime = findViewById(R.id.statusUptime);
         devLogScroll = findViewById(R.id.adminDevLogScroll);
         historyScroll = findViewById(R.id.adminHistoryScroll);
         historyContainer = findViewById(R.id.adminHistoryContainer);
@@ -252,6 +269,9 @@ public class AdminView extends FrameLayout {
         raffleEmailButton.setOnClickListener(v -> sendWinnerEmail());
         findViewById(R.id.adminRaffleBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminCamera).setOnClickListener(v -> showCamera());
+        findViewById(R.id.adminStatus).setOnClickListener(v -> showStatus());
+        findViewById(R.id.statusRefresh).setOnClickListener(v -> showStatus());
+        findViewById(R.id.adminStatusBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.cameraTest).setOnClickListener(v -> testCamera());
         findViewById(R.id.cameraSave).setOnClickListener(v -> saveCamera());
         findViewById(R.id.adminCameraBack).setOnClickListener(v -> showPanel(PANEL_MENU));
@@ -389,6 +409,7 @@ public class AdminView extends FrameLayout {
         raffleCreatePanel.setVisibility(which == PANEL_RAFFLE_CREATE ? VISIBLE : GONE);
         rafflePanel.setVisibility(which == PANEL_RAFFLE ? VISIBLE : GONE);
         cameraPanel.setVisibility(which == PANEL_CAMERA ? VISIBLE : GONE);
+        statusPanel.setVisibility(which == PANEL_STATUS ? VISIBLE : GONE);
     }
 
     private void showLanguage() {
@@ -926,6 +947,54 @@ public class AdminView extends FrameLayout {
             getContext().startActivity(chooser);
         } catch (Exception e) {
             Toast.makeText(getContext(), R.string.raffle_email_chooser, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showStatus() {
+        showPanel(PANEL_STATUS);
+        String ip = NetworkUtils.localIp(getContext());
+        boolean online = Connectivity.isOnline(getContext());
+        statusWifi.setText(online && ip != null
+                ? getContext().getString(R.string.status_wifi_connected, ip)
+                : getContext().getString(R.string.status_wifi_disconnected));
+        statusBattery.setText(batteryStatusText());
+        statusUptime.setText(getContext().getString(R.string.status_uptime, uptimeText()));
+        statusOpenAi.setText(R.string.status_openai_checking);
+        dbExecutor.submit(() -> {
+            boolean reachable = isOpenAiReachable();
+            post(() -> statusOpenAi.setText(
+                    reachable ? R.string.status_openai_ok : R.string.status_openai_fail));
+        });
+    }
+
+    private String batteryStatusText() {
+        Intent battery = getContext().registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (battery == null) {
+            return getContext().getString(R.string.status_battery_unknown);
+        }
+        int level = battery.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = battery.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        if (level < 0 || scale <= 0) {
+            return getContext().getString(R.string.status_battery_unknown);
+        }
+        return getContext().getString(R.string.status_battery, Math.round(level * 100f / scale));
+    }
+
+    private String uptimeText() {
+        long elapsedMs = SystemClock.elapsedRealtime() - PepperApplication.startElapsedMs();
+        long totalMinutes = Math.max(0, elapsedMs / 60000);
+        long hours = totalMinutes / 60;
+        long minutes = totalMinutes % 60;
+        return hours + " h " + minutes + " min";
+    }
+
+    private boolean isOpenAiReachable() {
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress("api.openai.com", 443), 4000);
+            return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 

@@ -166,4 +166,14 @@
     <string name="winner_title">🏆 Die Gewinnerin oder der Gewinner</string>
     <string name="winner_suspense">Und der Gewinner ist…</string>
     <string name="raffle_no_replacement">Kein weiterer Teilnehmer zum Nachrücken.</string>
+    <string name="admin_status">Status</string>
+    <string name="status_refresh">Aktualisieren</string>
+    <string name="status_wifi_connected">WLAN: verbunden (%1$s)</string>
+    <string name="status_wifi_disconnected">WLAN: getrennt</string>
+    <string name="status_openai_checking">OpenAI: wird geprüft…</string>
+    <string name="status_openai_ok">OpenAI: erreichbar</string>
+    <string name="status_openai_fail">OpenAI: nicht erreichbar</string>
+    <string name="status_battery">Akku: %1$d %%</string>
+    <string name="status_battery_unknown">Akku: unbekannt</string>
+    <string name="status_uptime">Laufzeit: %1$s</string>
 </resources>
