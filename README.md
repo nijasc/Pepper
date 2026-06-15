@@ -16,6 +16,8 @@
 - [Funktionsweise](#funktionsweise)
   - [Intent Engine](#intent-engine)
   - [Ablauf einer Anfrage](#ablauf-einer-anfrage)
+  - [Sprachmodelle](#sprachmodelle)
+  - [Denkpause](#denkpause)
   - [Historie](#historie)
   - [Antwortlänge](#antwortlänge)
   - [FollowMe-Mechanik](#followme-mechanik)
@@ -24,6 +26,7 @@
 - [Funktionen (Actions)](#funktionen-actions)
   - [Sprechen (Standard)](#sprechen-standard)
   - [Tanzen](#tanzen)
+  - [Bewegung & Gesten](#bewegung--gesten)
   - [Saxofon](#saxofon)
   - [High Five](#high-five)
   - [Hold my beer](#hold-my-beer)
@@ -41,6 +44,8 @@
   - [Zugang & PIN](#zugang--pin)
   - [Selfie-Galerie](#selfie-galerie)
   - [Verlosung verwalten](#verlosung-verwalten)
+  - [Tanz-Bibliothek](#tanz-bibliothek)
+  - [Navigation & Wegpunkte](#navigation--wegpunkte)
 - [Pepper für Entwickler](#pepper-für-entwickler)
   - [Einrichtung](#einrichtung)
     - [Systemspezifikationen](#systemspezifikationen)
@@ -69,13 +74,13 @@ Pepper ist ein intelligenter Roboter mit physischen Fähigkeiten. Er beherrscht 
 
 Darüber hinaus verfügt Pepper über Wissen zur Bühler Group und ihren Tätigkeiten: Er weiss, welche Stellen es gibt und was Bühler macht, und kann Informationen über verschiedene Berufsbilder und Ausbildungsmöglichkeiten bereitstellen. Damit eignet er sich besonders gut als Ansprechpartner an Messen, Informationsanlässen oder im Empfangsbereich.
 
-Sein Charakter lässt sich als hilfreich, intelligent und humorvoll beschreiben. Pepper spricht **Deutsch** und **Englisch** und weiss zu jedem Zeitpunkt, welche Fähigkeiten ihm aktuell zur Verfügung stehen – die verfügbaren Funktionen werden ihm dynamisch mitgeteilt (siehe [Intent Engine](#intent-engine)).
+Sein Charakter lässt sich als hilfreich, intelligent und humorvoll beschreiben. Pepper **versteht** Sprachbefehle auf **Deutsch** und **Englisch** und **antwortet automatisch in der Sprache des Benutzers** – erkennt das Sprachmodell etwa eine französische oder italienische Frage, gibt Pepper die Antwort in dieser Sprache aus (siehe [Sprache](#sprache)). Er weiss zu jedem Zeitpunkt, welche Fähigkeiten ihm aktuell zur Verfügung stehen – die verfügbaren Funktionen werden ihm dynamisch mitgeteilt (siehe [Intent Engine](#intent-engine)).
 
 ### Wie bediene ich Pepper?
 
-Pepper hört auf Sprachbefehle. Man spricht ihn also einfach an, und er reagiert auf das Gesagte. Standardmässig wird die Antwort über die OpenAI-API (Modell **GPT-5.4**) generiert und anschliessend gesprochen ausgegeben. Erkennt Pepper im Gesagten hingegen einen Befehl, der zu einer seiner Funktionen passt (z. B. «Tanze für mich»), führt er stattdessen die entsprechende Aktion aus.
+Pepper hört auf Sprachbefehle. Man spricht ihn also einfach an, und er reagiert auf das Gesagte. Im Hintergrund entscheidet derselbe OpenAI-Aufruf in einem Zug, **ob** eine spezialisierte Funktion gemeint ist und **was** Pepper sagt: Erkennt Pepper im Gesagten einen Befehl, der zu einer seiner Funktionen passt (z. B. «Tanze für mich»), führt er die entsprechende Aktion aus; andernfalls antwortet er frei (siehe [Intent Engine](#intent-engine)). Die Antwort wird **satzweise gestreamt** und gesprochen, sodass Pepper früh zu reden beginnt, statt die ganze Antwort abzuwarten.
 
-> **Wichtig:** Die erste Anfrage muss auf Deutsch erfolgen. Grund dafür ist die Konfiguration der Spracherkennung – sie ist standardmässig auf Deutsch eingestellt und bleibt es, bis die Sprache aktiv gewechselt wird (siehe Funktion [Sprache](#sprache)).
+> **Wichtig:** Die erste Anfrage muss auf Deutsch erfolgen. Grund dafür ist die Konfiguration der **Spracherkennung** – sie ist standardmässig auf Deutsch eingestellt und versteht nur Deutsch oder Englisch, bis die Erkennungssprache aktiv gewechselt wird (siehe Funktion [Sprache](#sprache)). Die *gesprochene Antwort* hingegen passt sich automatisch der erkannten Sprache an.
 
 ---
 
@@ -83,21 +88,30 @@ Pepper hört auf Sprachbefehle. Man spricht ihn also einfach an, und er reagiert
 
 ### Intent Engine
 
-Die Intent Engine ist das Herzstück von Pepper. Sie entscheidet anhand der Benutzereingabe, welche Funktion ausgeführt werden soll.
+Die Intent Engine ist das Herzstück von Pepper. Sie entscheidet anhand der Benutzereingabe, welche Funktion ausgeführt werden soll – und zwar im selben OpenAI-Aufruf, der auch die gesprochene Antwort erzeugt («kombinierter Turn»).
 
-Im Hintergrund wird OpenAI bei jeder Anfrage zusammen mit der Liste aller verfügbaren Fähigkeiten aufgerufen. Jede Fähigkeit ist mit einer kurzen Beschreibung versehen, die umreisst, wofür sie zuständig ist. Das Modell vergleicht die Eingabe des Benutzers mit diesen Beschreibungen und wählt die am besten passende Funktion aus. Passt keine der spezialisierten Funktionen, fällt die Auswahl auf die Standardfunktion [Sprechen](#sprechen-standard), und Pepper antwortet mit einer frei generierten Antwort.
+Bei jeder Anfrage wird OpenAI im **Streaming-Modus** zusammen mit der Liste aller verfügbaren Fähigkeiten aufgerufen. Jede Fähigkeit ist mit einer kurzen Beschreibung versehen, die umreisst, wofür sie zuständig ist. Das Modell schreibt zu Beginn seiner Antwort zwei maschinenlesbare **Marker**:
 
-Dieses Vorgehen stellt sicher, dass Pepper dynamisch und zuverlässig die richtige Funktion wählt, ohne dass starre Schlüsselwörter oder fest verdrahtete Regeln nötig sind. Neue Funktionen werden dadurch automatisch berücksichtigt, sobald sie mit einer Beschreibung registriert sind (siehe [Eine Funktion erstellen](#eine-funktion-erstellen)).
+- `[[lang:CODE]]` – die ISO-639-1-Sprache, in der Pepper antwortet (z. B. `[[lang:de]]`, `[[lang:en]]`, `[[lang:fr]]`). Daraus wird die Stimme/Locale für die Sprachausgabe bestimmt.
+- `[[action:NAME]]` – die gewählte Funktion (Klassenname der Action). Wählt das Modell `SayAction`, folgt direkt der frei formulierte Antworttext, der **satzweise** gesprochen wird. Für jede andere Funktion gibt das Modell **nur** die Marker aus, und Pepper führt die entsprechende Action aus.
+
+Die Marker werden automatisch aus der Antwort entfernt und nie mitgesprochen. Passt keine spezialisierte Funktion, fällt die Auswahl auf die Standardfunktion [Sprechen](#sprechen-standard).
+
+Dieses Vorgehen stellt sicher, dass Pepper dynamisch und zuverlässig die richtige Funktion wählt, ohne dass starre Schlüsselwörter oder fest verdrahtete Regeln nötig sind. Neue Funktionen werden automatisch berücksichtigt, sobald sie mit einer Beschreibung registriert sind (siehe [Eine Funktion erstellen](#eine-funktion-erstellen)).
+
+> **Fallback:** Scheitert der kombinierte Turn (z. B. Netzwerkfehler beim Streaming), greift als Rückfall die klassische, eigenständige `IntentEngine` – ein separater, günstiger Klassifizierungs-Aufruf (siehe [Sprachmodelle](#sprachmodelle)), der die Eingabe einer Funktion zuordnet.
 
 ```mermaid
 flowchart TD
-    A[Benutzereingabe] --> B[IntentEngine]
-    B --> C{"OpenAI vergleicht die Eingabe<br/>mit den Funktionsbeschreibungen"}
-    C -->|Passende Funktion| D[Spezialisierte Action]
-    C -->|Keine Übereinstimmung| E["SayAction (Standard)"]
-    D --> F[execute]
-    E --> F
-    F --> G[Pepper reagiert]
+    A[Benutzereingabe] --> B["Kombinierter OpenAI-Turn (Streaming)"]
+    B --> C["lang-Marker bestimmt Antwortsprache"]
+    C --> D{"action-Marker"}
+    D -->|SayAction| E["Antwort wird satzweise gesprochen"]
+    D -->|Spezialisierte Funktion| F["Action.execute()"]
+    E --> G[Pepper reagiert]
+    F --> G
+    B -. Fehler .-> H["IntentEngine (Fallback-Klassifizierung)"]
+    H --> F
 ```
 
 ### Ablauf einer Anfrage
@@ -109,19 +123,40 @@ sequenceDiagram
     participant U as Benutzer
     participant M as MainActivity
     participant AH as ActionHandler
-    participant IE as IntentEngine
     participant AI as OpenAIService
+    participant SM as SpeechManager
     participant AC as Action
     U->>M: Spricht Pepper an
     M->>M: Spracherkennung (Google)
     M->>AH: handleInput(text)
-    AH->>IE: getIntent(text)
-    IE->>AI: Anfrage + Liste der Fähigkeiten
-    AI-->>IE: Gewählte Funktion
-    IE-->>AH: Action
-    AH->>AC: execute(context, text)
-    AC-->>U: Pepper reagiert
+    AH->>AI: getResponseStreaming(text + Fähigkeiten)
+    AI-->>AH: lang- und action-Marker (Streaming)
+    alt SayAction
+        AI-->>SM: Antwortsätze (Streaming)
+        SM-->>U: Pepper spricht satzweise
+    else Spezialisierte Funktion
+        AH->>AC: execute(context, text)
+        AC-->>U: Pepper reagiert
+    end
 ```
+
+### Sprachmodelle
+
+Nicht jede Aufgabe braucht das stärkste Modell. Welches OpenAI-Modell verwendet wird, entscheidet zentral die Klasse `ModelSelector` anhand der Aufgabenart:
+
+| Aufgabe (`ModelTask`) | Modell | Verwendet für |
+| --------------------- | ------ | ------------- |
+| `CONVERSATION` | `gpt-5.4` (STRONG) | Kombinierter Turn, Standard-Antworten |
+| `DOCUMENTATION` | `gpt-5.4` (STRONG) | Fragen aus der [Dokumentation](#dokumentation) |
+| `GENERATION` | `gpt-5.5` (STRONG_GENERATION) | Generierte [Choreografien](#tanzen) und [Bewegungen](#bewegung--gesten) |
+| `CLASSIFICATION` | `gpt-4o-mini` (FAST) | Fallback-Routing der `IntentEngine` |
+| `REWRITE` | `gpt-4o-mini` (FAST) | Natürlicheres Umformulieren der System-Ansagen |
+
+Möchtest du ein Modell wechseln, passe die Konstanten `FAST` / `STRONG` / `STRONG_GENERATION` bzw. die Zuordnung in `ModelSelector` an – nicht die einzelnen Actions.
+
+### Denkpause
+
+Sobald Pepper eine Eingabe verarbeitet (insbesondere bei langsameren Aufrufen wie der Choreografie- oder Bewegungsgenerierung), überbrückt der `ThinkingController` die Wartezeit, damit Pepper nicht regungslos wirkt: Er nimmt eine «überlegende» Pose ein (`searching_a001`) und gibt ab und zu Füll-Laute («hmm», «mhm») bzw. kurze Sätze («Gleich hab' ich's …») in der aktuellen Sprache von sich. Beginnt Pepper zu sprechen oder ist die Aktion fertig, wird die Denkpause automatisch beendet.
 
 ### Historie
 
@@ -132,6 +167,8 @@ Wird ein elfter Eintrag hinzugefügt, wird automatisch der älteste entfernt. Di
 Bei jeder Anfrage wird die gesamte Historie an OpenAI mitgeschickt. Dadurch kann Pepper auf bereits Gesagtes Bezug nehmen – etwa den Namen einer Person, eine zuvor gestellte Frage oder den allgemeinen Kontext der Unterhaltung. Ohne diese Historie würde Pepper jede Eingabe isoliert betrachten und sich an nichts erinnern.
 
 Die Historie wird ausschliesslich im Arbeitsspeicher gehalten und nicht dauerhaft gespeichert. Wird die Applikation neu gestartet, beginnt Pepper wieder mit einer leeren Historie. Das bedeutet auch: Inhalte aus früheren Sitzungen lassen sich nach einem Neustart nicht mehr abrufen.
+
+Neben den zehn Gesprächseinträgen führt der `HistoryManager` zusätzlich eine getrennte Liste technischer **Developer-Einträge** (bis zu 200), z. B. «welche Eingabe erkannt wurde» oder «welche Action gestartet wurde». Diese sind nur für Entwickler gedacht und werden im Admin-Bereich unter [Dev-Logs](#admin-bereich) angezeigt, fliessen aber nicht in die gesprochene Antwort ein.
 
 ### Antwortlänge
 
@@ -176,6 +213,8 @@ Auf Peppers Display sind dauerhaft zwei Elemente eingeblendet: oben links das **
 
 Die Sprachanzeige wird live aktualisiert: Wechselt der Benutzer die Sprache (siehe Funktion [Sprache](#sprache)), passt sich die Anzeige sofort an, ohne dass die Applikation neu gestartet werden muss.
 
+Während Pepper spricht, blendet die `DialogueView` seine Antwort zusätzlich als **Untertitel** ein – Wort für Wort, synchron zum Sprechen. Nach dem Satz bleibt der Text kurz stehen und wird dann automatisch ausgeblendet. Solange ein Overlay (Admin, Selfie, Memory, Verlosung, Navigation, Tanz-Bibliothek, Hold) offen ist, wird der Untertitel unterdrückt.
+
 Die Oberfläche ist im Bühler-Stil gehalten: Die Akzentfarbe der App (Theme-Farbe) entspricht dem Türkis des Bühler-Logos, und der Titelbalken oben zeigt den Schriftzug «Bühler Pepper». Das Layout wird als reguläres Android-Layout (`res/layout/activity_main.xml`) geladen.
 
 ### Emotionswahrnehmung
@@ -195,11 +234,11 @@ Wann und wie Pepper die Stimmung einbindet, formuliert das Sprachmodell selbst �
 
 ### Sprechen (Standard)
 
-Pepper hört zu und generiert eine Antwort. Diese wird in der aktuell eingestellten Sprache ausgegeben; währenddessen bewegt sich sein Körper automatisch minimal, um einen echten Menschen widerzuspiegeln und die Antwort natürlicher wirken zu lassen.
+Pepper hört zu und generiert eine Antwort; währenddessen bewegt sich sein Körper automatisch minimal, um einen echten Menschen widerzuspiegeln und die Antwort natürlicher wirken zu lassen.
 
-Pepper antwortet immer in der Sprache, die auf der Google-Sprachanzeige angezeigt wird. Wird keine der unten gelisteten Funktionen ausgelöst, antwortet Pepper auf die hier beschriebene Standardart. Diese Funktion ist somit der Rückfall, wenn die Intent Engine keine spezialisierte Aktion zuordnen kann.
+Pepper antwortet in der **Sprache der Benutzereingabe** (automatisch erkannt, siehe [Sprache](#sprache) und [Intent Engine](#intent-engine)). Wird keine der unten gelisteten Funktionen ausgelöst, antwortet Pepper auf die hier beschriebene Standardart. Diese Funktion ist somit der Rückfall, wenn keine spezialisierte Aktion zugeordnet werden kann.
 
-Zur Generierung der Antworten wird das Modell **GPT-5.4** von OpenAI verwendet.
+Zur Generierung der Antworten wird das Modell **GPT-5.4** von OpenAI verwendet (siehe [Sprachmodelle](#sprachmodelle)).
 
 ```text
 Beispiel (en): Hello, how are you?
@@ -208,11 +247,36 @@ Beispiel (de): Hallo, wie geht es dir?
 
 ### Tanzen
 
-Pepper spielt ein Lied und bewegt seinen Körper rhythmisch dazu.
+Pepper tanzt zu einem Lied – und zwar zu **(fast) jedem gewünschten Song**. Der Ablauf:
+
+1. Der Benutzer nennt einen Song oder Künstler («Tanz zu Billie Jean»). Aus der Äusserung wird zunächst eine saubere Suchanfrage extrahiert.
+2. Pepper sucht das Lied über die **iTunes-Search-API** und nimmt die 30-sekündige Vorschau (`previewUrl`); diese wird **gestreamt**, nicht heruntergeladen.
+3. Eine passende **Choreografie wird von einem Sprachmodell generiert** (`ModelSelector`-Aufgabe `GENERATION`, siehe [Sprachmodelle](#sprachmodelle)). Das Modell liefert kompaktes JSON mit Gelenk-Kurven, das in eine Pepper-Animationsdatei (`.qianim`) umgewandelt, validiert und geglättet wird.
+4. Pepper spielt die Vorschau ab und bewegt sich rhythmisch dazu. Endet die Animation, wird die Musik gestoppt, damit beides synchron bleibt.
+
+Generierte Tänze werden lokal in einer Room-Datenbank (`dances.db`) samt `.qianim`-Datei **gespeichert und wiederverwendet** – derselbe Song muss also nicht erneut einstudiert werden. Verwalten lässt sich die Sammlung im Admin-Bereich (siehe [Tanz-Bibliothek](#tanz-bibliothek)).
+
+**Zu beachten:**
+
+- Findet Pepper den Song nicht oder schlägt die Generierung fehl, tanzt er ersatzweise eine vorbereitete Choreografie.
+- Es wird nur die kurze iTunes-Vorschau gespielt, nicht das komplette Lied.
 
 ```text
-Beispiel (en): Please perform a dance for me.
-Beispiel (de): Tanze bitte für mich.
+Beispiel (en): Dance to Uptown Funk.
+Beispiel (de): Tanze bitte für mich. / Tanz zu Billie Jean.
+```
+
+### Bewegung & Gesten
+
+Pepper führt auf Zuruf eine **einzelne, frei beschriebene Bewegung oder Geste** aus – etwa «heb den rechten Arm», «dreh den Kopf nach links», «nicke» oder «mach eine Geste». Anders als beim [Tanzen](#tanzen) gehört keine Musik dazu.
+
+Die Bewegung wird **zur Laufzeit generiert**: Ein Sprachmodell (`ModelSelector`-Aufgabe `GENERATION`) erzeugt direkt eine `.qianim`-Animation, die anschliessend hart geprüft wird – jeder Gelenkname, jede Bildrate und jeder Winkel muss innerhalb der zulässigen, sicheren Grenzen liegen (`QianimValidator`), sonst wird die Generierung bis zu dreimal wiederholt. Danach werden die Werte zusätzlich mit Sicherheitsmarge geklammert und für weiche Übergänge nachbearbeitet (`QianimPostProcessor` / `QianimLooper`), bevor Pepper die Bewegung ausführt.
+
+Optional kann eine **Dauer** genannt werden («heb den Arm für 5 Sekunden»); die Animation wird auf höchstens 30 Sekunden begrenzt.
+
+```text
+Beispiel (en): Raise your right arm. / Nod your head for five seconds.
+Beispiel (de): Heb den rechten Arm. / Dreh den Kopf nach links.
 ```
 
 ### Saxofon
@@ -319,13 +383,16 @@ Beispiel (de): Setze die Lautstärke auf 80%.
 
 ### Sprache
 
-Erlaubt es, die Sprache zu wechseln. Nach dem Wechsel gibt Pepper alle weiteren Antworten in der neu gewählten Sprache aus, bis erneut gewechselt wird.
+Wechselt die Sprache der **Spracherkennung** (Google) sowie die Anzeige rechts oben. Damit bestimmt diese Funktion, welche Sprache Pepper *versteht*.
 
-**Unterstützte Sprachen:** Deutsch, Englisch
+**Unterstützte Erkennungssprachen:** Deutsch (`de-CH`), Englisch (`en-US`)
+
+Davon zu unterscheiden ist die *gesprochene Antwort*: Diese richtet sich automatisch nach der Sprache der Benutzereingabe (über den `[[lang:…]]`-Marker, siehe [Intent Engine](#intent-engine)). Erkennt Pepper z. B. eine englische Frage, antwortet er auf Englisch, ohne dass die Erkennungssprache umgestellt werden muss. Die App kann eine ganze Reihe von Sprachcodes auf passende Pepper-Stimmen abbilden (`LocaleResolver`).
 
 **Zu beachten:**
 
 - Die gewünschte Sprache muss in der Eingabe enthalten sein, damit Pepper sie erkennen und setzen kann.
+- Manuell lässt sich die Erkennungssprache auch im [Admin-Bereich](#admin-bereich) (Kachel «Sprache») umschalten.
 
 ```text
 Beispiel (en): Set the language to German.
@@ -398,9 +465,12 @@ Das Menü bündelt:
 | Verlauf löschen | Leert das Gesprächsgedächtnis (`HistoryManager`). |
 | Dev-Logs | Zeigt die Entwickler-Logs chronologisch (neueste unten, Auto-Scroll). |
 | Selfies | Öffnet die [Selfie-Galerie](#selfie-galerie). |
-| Sprache | Wechselt manuell zwischen Deutsch und Englisch. |
+| Sprache | Wechselt die Erkennungssprache manuell zwischen Deutsch und Englisch. |
 | Verlauf ansehen | Zeigt das aktuelle Gespräch als Chat-Blasen. |
 | Verlosung | Legt eine [Verlosung](#verlosung-verwalten) an bzw. verwaltet sie. |
+| Tänze | Öffnet die [Tanz-Bibliothek](#tanz-bibliothek). |
+| Navigation | Öffnet die [Raumkartierung & Wegpunkte](#navigation--wegpunkte). |
+| Kamera | Konfiguriert die [externe DSLR-Kamera](#externe-kamera) (IP, Port, Verbindungstest). |
 | Schließen | Schliesst den Admin-Bereich. |
 
 ### Selfie-Galerie
@@ -410,6 +480,27 @@ Die Galerie zeigt alle lokal gespeicherten Selfies als Raster, **Favoriten zuers
 ### Verlosung verwalten
 
 Hier wird eine [Verlosung](#verlosung) angelegt (Titel, Beschreibung, Enddatum, Optionen «Selfie erforderlich» / «Telefon erforderlich») – nur möglich, wenn keine andere aktiv ist. Läuft bereits eine Verlosung, zeigt das Panel stattdessen die **Übersicht** mit Status, Teilnehmerzahl und Teilnehmerliste (Name, E-Mail, Telefon, Selfie-Thumbnail). Verknüpfte Selfie-Thumbnails sind anklickbar und öffnen die Selfie-Detailansicht. Über **«Verlosung beenden»** wird die Verlosung manuell auf `FINISHED` gesetzt.
+
+**Gewinner ziehen:** Sobald eine Verlosung abgelaufen ist (`ENDED`), erscheint **«Gewinner ziehen»** – Pepper zieht zufällig einen Teilnehmer und speichert ihn als Gewinner. Anschliessend lassen sich der Gewinner **neu auslosen** oder per **«E-Mail»** benachrichtigen: Dabei wird eine vorausgefüllte E-Mail (Betreff, Text, ggf. das Selfie des Gewinners als Anhang) geöffnet, die nur noch versendet werden muss.
+
+### Tanz-Bibliothek
+
+Die Tanz-Bibliothek listet alle bereits einstudierten [Tänze](#tanzen) (aus `dances.db`). Pro Eintrag kann der Tanz als **Favorit** markiert (Favoriten erscheinen zuoberst), **umbenannt** oder **gelöscht** werden (entfernt auch die zugehörige `.qianim`-Datei). So lässt sich vorab eine kuratierte Auswahl bewährter Choreografien für einen Messeauftritt zusammenstellen.
+
+### Navigation & Wegpunkte
+
+Über die Kachel **«Navigation»** kann Pepper einen Raum **kartieren** und benannte **Wegpunkte** speichern, die er später autonom anfährt. Die Funktion nutzt die QiSDK-Fähigkeiten zum Kartieren und Lokalisieren (`LocalizeAndMap`, `ExplorationMap`, `Localize`, `GoTo`).
+
+Typischer Ablauf:
+
+1. **Scan starten:** Pepper dreht sich für eine 360°-Rundumsicht und baut dabei eine Karte des Raums auf. Der Scan wird benannt und gespeichert.
+2. **Lokalisieren:** Auf Basis eines gespeicherten Scans bestimmt Pepper seine Position in der Karte.
+3. **Wegpunkte setzen:** An der aktuellen Position lässt sich ein benannter Wegpunkt ablegen, optional vom Typ **«Fotostand»**.
+4. **Hinfahren:** Pepper navigiert auf Wunsch zu einem gespeicherten Wegpunkt.
+
+Die `NavigationView` zeigt dazu eine **Live-Karte** (`WaypointMapView`) mit Start-Punkt, Wegpunkten (Fotostand-Punkte hervorgehoben) und Peppers aktueller Position samt Blickrichtung. Scans und Wegpunkte werden lokal in einer eigenen Room-Datenbank (`navigation.db`) gespeichert, die Karten als `.map`-Dateien im App-Verzeichnis.
+
+> **Hinweis:** Die Navigation ist als Operator-Werkzeug ausschliesslich über den Admin-Bereich erreichbar und **nicht** per Sprachbefehl auslösbar.
 
 ---
 
@@ -438,9 +529,12 @@ Hier wird eine [Verlosung](#verlosung) angelegt (Titel, Beschreibung, Enddatum, 
 | `androidx.test.ext:junit`                     | 1.1.3    |
 | `androidx.test.espresso:espresso-core`        | 3.4.0    |
 | `com.aldebaran:qisdk`                         | 1.7.5    |
-| `qisdk-design`                                | 1.7.5    |
+| `com.aldebaran:qisdk-design`                  | 1.7.5    |
 | `com.fasterxml.jackson.core:jackson-databind` | 2.12.7.2 |
 | `io.github.cdimascio:java-dotenv`              | 5.2.2    |
+| `com.google.zxing:core`                       | 3.5.3    |
+| `androidx.room:room-runtime` / `room-compiler` | 2.5.2    |
+| `androidx.recyclerview`                       | 1.2.1    |
 
 #### Anforderungen
 
@@ -486,7 +580,7 @@ OPENAI_API_TOKEN=<YOUR_TOKEN>
 
 1. Öffne das Projekt in Android Studio und warte, bis alles geladen und indexiert ist. Dieser Schritt kann beim ersten Öffnen einige Minuten dauern.
 2. **OpenAI-Token konfigurieren:** Lege die Datei `app/src/main/assets/env` an und trage darin deinen OpenAI-API-Token ein. Wie das genau funktioniert, ist im Abschnitt [Env-Setup](#env-setup) beschrieben.
-   - *Optional:* Wähle ein OpenAI-Modell über die `DEFAULT_MODEL`-Variable in der Klasse `OpenAIService` aus.
+   - *Optional:* Die verwendeten OpenAI-Modelle sind zentral in der Klasse `ModelSelector` (`FAST` / `STRONG` / `STRONG_GENERATION`) definiert und lassen sich dort anpassen (siehe [Sprachmodelle](#sprachmodelle)).
 3. **Verbindung zu Pepper aufbauen:**
    1. Klicke in der Menüleiste von Android Studio auf **Tools** und wähle im Dropdown **Pepper SDK**.
    2. Klicke auf **Connect** und gib die IP-Adresse deines Pepper-Roboters ein.
@@ -561,21 +655,31 @@ Die folgende Übersicht zeigt die wichtigsten Klassen und ihre Verantwortung –
 
 | Klasse | Verantwortung |
 | ------ | ------------- |
-| `MainActivity` | Einstiegspunkt der App (erbt von `RobotActivity`). Registriert das QiSDK, verwaltet den Roboter-Lifecycle (`onRobotFocusGained` …), startet die Google-Spracherkennung und verdrahtet die Oberfläche (Sprachlabel, Stopp-Button, Memory-Spielfeld). |
-| `ActionHandler` | Registriert alle Actions (`initActions`) und leitet jede Benutzereingabe über die `IntentEngine` an die passende Action weiter. |
-| `IntentEngine` | Klassifiziert die Eingabe per OpenAI (`gpt-4o-mini`, strukturierte JSON-Antwort) und gibt die passende `Action` zurück (siehe [Intent Engine](#intent-engine)). |
+| `MainActivity` | Einstiegspunkt der App (erbt von `RobotActivity`). Registriert das QiSDK, verwaltet den Roboter-Lifecycle (`onRobotFocusGained` …), startet die Google-Spracherkennung und verdrahtet die Oberfläche (Sprachlabel, Stopp-Button, Untertitel und die Overlays für Memory, Selfie, Admin, Verlosung, Navigation, Tanz-Bibliothek, Hold). |
+| `ActionHandler` | Registriert alle Actions (`initActions`) und verarbeitet jede Eingabe als **kombinierten Turn** über den `OpenAIService` (Routing + Antwort in einem Streaming-Aufruf). Scheitert dieser, greift die `IntentEngine` als Fallback (siehe [Intent Engine](#intent-engine)). |
+| `OpenAIService` | Kapselt sämtliche OpenAI-HTTP-Aufrufe. `getResponseStreaming()` fährt den kombinierten Turn (Marker `[[lang:…]]` / `[[action:…]]`, satzweises Streaming), baut den Systemprompt inkl. Fähigkeitsliste, Stimmungs- und Verlosungs-Kontext und liest den Token aus `assets/env`. |
+| `IntentEngine` | **Fallback-Routing:** klassifiziert die Eingabe per OpenAI (`CLASSIFICATION` → `gpt-4o-mini`, strukturierte JSON-Antwort) und gibt die passende `Action` zurück. |
+| `ModelSelector` | Zentrale Modellauswahl je Aufgabe (`FAST`/`STRONG`/`STRONG_GENERATION`, siehe [Sprachmodelle](#sprachmodelle)). |
 | `Action` (abstrakt) | Basisklasse jeder Funktion. Gibt `execute()` und `getDescription()` vor und hält den `HistoryManager`. |
-| `OpenAIService` | Kapselt sämtliche OpenAI-HTTP-Aufrufe, baut den Systemprompt inklusive Fähigkeitsliste sowie – falls erkannt – dem aktuellen Stimmungskontext und liest den API-Token aus `assets/env`. |
-| `SpeechManager` (Singleton) | Lässt Pepper sprechen: `say()` in der aktiven Sprache, `systemSay()` hartkodiert auf Deutsch. |
-| `LanguageManager` | Hält die aktuell gewählte Sprache, meldet Wechsel an Listener und übergibt sie an die Spracherkennung. |
-| `HistoryManager` | Verwaltet das gleitende Fenster der letzten 10 Gesprächseinträge (siehe [Historie](#historie)). |
+| `ThinkingController` (Singleton) | Überbrückt Wartezeiten mit «Denk»-Pose und Füll-Lauten (siehe [Denkpause](#denkpause)). |
+| `SpeechManager` (Singleton) | Lässt Pepper sprechen: `say()` in der via `[[lang:…]]`-Marker erkannten Sprache (Locale über `LocaleResolver`), `systemSay()` auf Deutsch (vorab via `SystemSpeechRewriter` natürlicher umformuliert). Treibt zugleich den Untertitel (`DialogueController`). |
+| `SystemSpeechRewriter` | Formuliert fixe System-Ansagen per OpenAI (`REWRITE` → `gpt-4o-mini`) natürlicher um (mit Cache und kurzem Timeout, sonst Originaltext). |
+| `LocaleResolver` | Bildet einen Sprachcode (`de`, `en`, `fr`, …) auf eine QiSDK-`Locale` ab. |
+| `DialogueController` / `DialogueView` | Blendet Peppers Antwort Wort für Wort als Untertitel ein (siehe [Bildschirmanzeige](#bildschirmanzeige)). |
+| `LanguageManager` | Hält die aktuell gewählte Erkennungssprache (Standard Deutsch), meldet Wechsel an Listener und übergibt sie an die Spracherkennung. |
+| `HistoryManager` | Verwaltet das gleitende Fenster der letzten 10 Gesprächseinträge plus eine getrennte Developer-Log-Liste (siehe [Historie](#historie)). |
+| `DanceAction` / `DanceRepository` / `AnimationGenerator` | [Tanzen](#tanzen): iTunes-Suche (`ITunesSearch`), KI-Choreografie (`.qianim`), Persistenz in `dances.db`. |
+| `DanceLibraryController` / `DanceLibraryView` | Verwaltung der gespeicherten Tänze (siehe [Tanz-Bibliothek](#tanz-bibliothek)). |
+| `DynamicAnimationAction` / `AnimationGenerator` | [Bewegung & Gesten](#bewegung--gesten): generiert und prüft eine `.qianim`-Animation zur Laufzeit. |
+| `QianimValidator` / `QianimPostProcessor` / `QianimLooper` | Validieren generierter Animationen (Gelenke, Winkel, Bildrate), Klammern mit Sicherheitsmarge, Tangenten und Schleifen-Expansion. |
 | `FollowController` (Singleton) | Hintergrundschleife der FollowMe-Mechanik (siehe [FollowMe-Mechanik](#followme-mechanik)). |
 | `MemoryGameController` / `MemoryGameView` | Steuerung und Tablet-Darstellung des [Memory-Minispiels](#memory-minispiel). |
 | `EmotionReader` / `BasicEmotion` | Liest über die QiSDK-Wahrnehmung die Stimmung der Person, mappt `PleasureState` × `ExcitementState` auf eine Grundstimmung und speist sie als Kontext in den Systemprompt (siehe [Emotionswahrnehmung](#emotionswahrnehmung)). |
 | `SelfieController` / `SelfieRepository` | Nimmt das [Selfie](#selfie) auf, legt das Bild ab (Room + Datei), serviert es über `LocalImageServer` und bietet nach der Aufnahme ggf. den Verlosungs-Beitritt an. |
 | `NetworkUtils` | Ermittelt die lokale WLAN-IP von Pepper (für die Download-URLs der QR-Codes). |
-| `AdminController` / `AdminView` | Steuerung und Tablet-Oberfläche des [Admin-Bereichs](#admin-bereich) (PIN, Kachelmenü, Dev-Logs, Galerie, Verlosungs-Verwaltung). Meldet den Offen-Zustand an `MainActivity`. |
-| `RaffleRepository` / `RaffleDatabase` | Persistenz der [Verlosung](#verlosung) in einer eigenen `raffle.db` (Verlosungen + Teilnehmer-Einträge), erzwingt max. eine aktive Verlosung und den automatischen `ACTIVE`→`ENDED`-Übergang. |
+| `NavigationManager` / `NavigationController` / `NavigationView` | Raumkartierung, Wegpunkte und Navigation (siehe [Navigation & Wegpunkte](#navigation--wegpunkte)); Persistenz in `navigation.db` plus `.map`-Dateien. |
+| `AdminController` / `AdminView` | Steuerung und Tablet-Oberfläche des [Admin-Bereichs](#admin-bereich) (PIN, Kachelmenü, Dev-Logs, Galerie, Verlosung inkl. Gewinnerziehung, Kamera, Navigation, Tänze). Meldet den Offen-Zustand an `MainActivity`. |
+| `RaffleRepository` / `RaffleDatabase` | Persistenz der [Verlosung](#verlosung) in einer eigenen `raffle.db` (Verlosungen + Teilnehmer-Einträge), erzwingt max. eine aktive Verlosung, den automatischen `ACTIVE`→`ENDED`-Übergang und die Gewinnerziehung. |
 | `RaffleJoinController` / `RaffleJoinView` | Schritt-für-Schritt-Beitrittsformular mit Pepper-Sprachbegleitung, Validierung, Duplikat-Prüfung und Abschlussscreen. |
 | `RaffleInfoAction` / `JoinRaffleAction` | Actions für Verlosungs-Auskunft bzw. -Beitritt per Sprachbefehl. |
 | `CameraSettings` / `WifiCameraManager` | Persistente Konfiguration und minimaler PTP/IP-Client für eine [externe DSLR-Kamera](#externe-kamera) (Pairing, Auslösen, Bildabruf). |
@@ -590,8 +694,8 @@ Android erzeugt für jede Datei in `res/raw/` automatisch eine Konstante `R.raw.
 
 | Typ | Beispiele | Verwendung im Code |
 | --- | --------- | ------------------ |
-| Audio (`.mp3`) | `wyoming`, `summer`, `saxophone_song` | `MediaPlayer.create(context, R.raw.wyoming).start()` |
-| Animationen (`.qianim`) | `six_seven`, `pepper_highfive`, `tanz_001` | `AnimationBuilder.with(context).withResources(R.raw.pepper_highfive)` → `AnimateBuilder` → `animate.async().run()` |
+| Audio (`.mp3` / `.wav`) | `wyoming`, `summer`, `saxophone_song`, `hmm_1`–`hmm_3`, `mhm_1`/`mhm_2` (Füll-Laute) | `MediaPlayer.create(context, R.raw.wyoming).start()` |
+| Animationen (`.qianim`) | `six_seven`, `pepper_highfive`, `searching_a001` (Denk-Pose), `hold_arm_raise`/`hold_hand_close`/`hold_pose_loop`/`hold_release` | `AnimationBuilder.with(context).withResources(R.raw.pepper_highfive)` → `AnimateBuilder` → `animate.async().run()` |
 | Text / Markdown | `instructions` (Systemprompt) | `IOUtils.fromRaw(context, R.raw.instructions)` |
 | Zertifikat (`.pem`) | `gh_root` | `getResources().openRawResource(R.raw.gh_root)` |
 
@@ -631,6 +735,13 @@ Das System ist so aufgebaut, dass sich neue Funktionen einfach ergänzen lassen.
 Um die Instruktionen von Peppers LLM anzupassen, bearbeite die Datei `instructions.md`. Achte darauf, dass am Ende des Systemprompts der Abschnitt **Available Skills** stehen bleibt – dort werden Peppers Fähigkeiten dynamisch eingefügt. Entfernst du diesen Abschnitt, weiss Pepper nicht mehr, welche Funktionen ihm zur Verfügung stehen.
 
 Die `instructions.md`-Datei findest du im Projekt unter `app/src/main/res/raw/instructions.md`.
+
+Beim Aufbau des Systemprompts hängt der `OpenAIService` zur Laufzeit weitere Abschnitte **hinter** `instructions.md` an – diese stehen also nicht in der Datei selbst:
+
+- die Liste der verfügbaren Fähigkeiten (eine Zeile je Action),
+- die Anweisung zu den Markern `[[lang:…]]` und – beim kombinierten Turn – `[[action:…]]` (siehe [Intent Engine](#intent-engine)),
+- bei erkannter Stimmung den Hinweis zur [Emotionswahrnehmung](#emotionswahrnehmung),
+- bei laufender [Verlosung](#verlosung) den entsprechenden Kontext.
 
 ### Externe Kamera
 
@@ -695,7 +806,10 @@ Kurze Erklärung der wichtigsten Begriffe – vor allem der Pepper- bzw. QiSDK-s
 | `RobotActivity` | Basis-Activity des QiSDK, von der `MainActivity` erbt. |
 | Robot Focus | Zustand, in dem die App die Kontrolle über den Roboter hat. Die Callbacks `onRobotFocusGained` / `…Lost` / `…Refused` signalisieren Wechsel. |
 | Action | Eine Fähigkeit von Pepper (z. B. Tanzen). Erbt von der abstrakten Klasse `Action`. |
-| Intent | Die von der [Intent Engine](#intent-engine) ermittelte Absicht hinter einer Eingabe; wird auf genau eine `Action` abgebildet. |
+| Intent | Die ermittelte Absicht hinter einer Eingabe; wird auf genau eine `Action` abgebildet (siehe [Intent Engine](#intent-engine)). |
+| Marker `[[lang:…]]` / `[[action:…]]` | Maschinenlesbare Markierungen am Anfang der Modellantwort für Antwortsprache bzw. gewählte Funktion. Werden vor dem Sprechen entfernt (siehe [Intent Engine](#intent-engine)). |
+| Kombinierter Turn | Ein einziger OpenAI-Streaming-Aufruf, der Routing und gesprochene Antwort zusammen erledigt. |
+| `ModelSelector` | Zentrale Zuordnung von Aufgabe zu OpenAI-Modell (siehe [Sprachmodelle](#sprachmodelle)). |
 | Animation / `.qianim` | Bewegungsdatei für Pepper. Wird über `AnimationBuilder` / `AnimateBuilder` abgespielt. |
 | `Say` / `SayBuilder` / `Locale` | QiSDK-Bausteine für die gesprochene Ausgabe inklusive Sprache und Region. |
 | Systemprompt (`instructions.md`) | Grundinstruktion für Peppers LLM, an die die Liste der Fähigkeiten angehängt wird (siehe [OpenAI-Systemprompt anpassen](#openai-systemprompt-anpassen)). |
