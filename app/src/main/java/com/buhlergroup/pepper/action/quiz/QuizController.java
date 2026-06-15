@@ -3,6 +3,10 @@ package com.buhlergroup.pepper.action.quiz;
 import android.util.Log;
 
 import com.aldebaran.qi.sdk.QiContext;
+import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
+import com.buhlergroup.pepper.action.raffle.RaffleRepository;
+import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
+import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 
@@ -107,6 +111,9 @@ public final class QuizController {
             }
 
             announceFinal(context, lang, score, questions.size());
+            board.setOnOptionListener(null);
+            board.hide();
+            maybeOfferRaffle(context, lang, score, questions.size());
         } catch (RuntimeException e) {
             Log.w(TAG, "Quiz ended: " + e.getMessage());
         } finally {
@@ -114,6 +121,27 @@ public final class QuizController {
             board.hide();
             running = false;
             notifyState(false);
+        }
+    }
+
+    private void maybeOfferRaffle(QiContext context, SupportedLanguage lang, int score, int total) {
+        if (score * 2 < total) {
+            return;
+        }
+        try {
+            RaffleEntity raffle = RaffleRepository.get(context).getCurrentRaffle();
+            if (raffle == null || raffle.status != RaffleStatus.ACTIVE) {
+                return;
+            }
+            say(context, lang == SupportedLanguage.ENGLISH
+                    ? "Great result! Since you did so well, would you like to enter our raffle? "
+                            + "You can sign up right here on my tablet, or tap cancel."
+                    : "Tolles Ergebnis! Weil du so gut warst – möchtest du an unserer Verlosung "
+                            + "teilnehmen? Du kannst dich direkt auf meinem Tablet eintragen, "
+                            + "oder tippe auf Abbrechen.");
+            RaffleJoinController.get().join(context, raffle);
+        } catch (Exception e) {
+            Log.w(TAG, "Raffle offer after quiz failed: " + e.getMessage());
         }
     }
 
