@@ -45,6 +45,8 @@ import com.buhlergroup.pepper.action.navigation.NavigationManager;
 import com.buhlergroup.pepper.action.navigation.NavigationView;
 import com.buhlergroup.pepper.action.memory.MemoryGameController;
 import com.buhlergroup.pepper.action.memory.MemoryGameView;
+import com.buhlergroup.pepper.action.quiz.QuizController;
+import com.buhlergroup.pepper.action.quiz.QuizView;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinView;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
@@ -109,6 +111,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         MemoryGameView memoryGame = findViewById(R.id.memoryGame);
         MemoryGameController.get().attachView(memoryGame);
 
+        QuizView quizView = findViewById(R.id.quizView);
+        QuizController.get().attachView(quizView);
+
         SelfieView selfieView = findViewById(R.id.selfieView);
         SelfieController.get().attachView(selfieView);
 
@@ -165,6 +170,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         MemoryGameController.get().abort();
         MemoryGameController.get().detachView();
+        QuizController.get().detachView();
         SelfieController.get().setStateListener(null);
         SelfieController.get().detachView();
         SelfieController.get().stopServer();

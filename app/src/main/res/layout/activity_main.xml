@@ -112,6 +112,12 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
+    <com.buhlergroup.pepper.action.quiz.QuizView
+        android:id="@+id/quizView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
     <com.buhlergroup.pepper.action.selfie.SelfieView
         android:id="@+id/selfieView"
         android:layout_width="match_parent"
