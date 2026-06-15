@@ -5,6 +5,8 @@
     <string name="stop_follow">STOPP</string>
     <string name="lang_german">Deutsch</string>
     <string name="lang_english">English</string>
+    <string name="lang_button_de">DE</string>
+    <string name="lang_button_en">EN</string>
     <string name="mem_title">Memory mit Bewegung</string>
     <string name="mem_status_idle">Bereit?</string>
     <string name="mem_score_idle">Punkte: 0</string>
