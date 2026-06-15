@@ -153,6 +153,10 @@ public final class RaffleRepository {
                     System.currentTimeMillis()));
             result[0] = JoinResult.SUCCESS;
         });
+        if (result[0] == JoinResult.SUCCESS) {
+            com.buhlergroup.pepper.stats.Stats.increment(appContext,
+                    com.buhlergroup.pepper.stats.Stats.RAFFLE_JOINS);
+        }
         return result[0];
     }
 

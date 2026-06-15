@@ -165,6 +165,8 @@ public final class SelfieController {
 
             Bitmap composed = addOverlay(context, photo);
             SelfieEntity entity = SelfieRepository.get(context).save(toJpeg(composed));
+            com.buhlergroup.pepper.stats.Stats.increment(context,
+                    com.buhlergroup.pepper.stats.Stats.SELFIES);
 
             String ip = NetworkUtils.localIp(context);
             if (ip == null) {

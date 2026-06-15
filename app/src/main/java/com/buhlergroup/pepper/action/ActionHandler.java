@@ -30,6 +30,7 @@ import com.buhlergroup.pepper.lang.SystemMessages;
 import com.buhlergroup.pepper.net.Connectivity;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
+import com.buhlergroup.pepper.stats.Stats;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -71,9 +72,11 @@ public class ActionHandler {
         }
 
         historyManager.addDeveloper("User input captured: \"" + input + "\"");
+        Stats.increment(context, Stats.INTERACTIONS);
 
         if (!Connectivity.isOnline(context)) {
             Log.w(this.getClass().getSimpleName(), "No connectivity, skipping OpenAI call");
+            Stats.increment(context, Stats.ERRORS);
             announceOffline(context);
             return;
         }
@@ -85,6 +88,7 @@ public class ActionHandler {
                 return;
             }
             if (result == CombinedResult.NETWORK_ERROR) {
+                Stats.increment(context, Stats.ERRORS);
                 announceOffline(context);
                 return;
             }
@@ -155,6 +159,7 @@ public class ActionHandler {
                         "Routed intent: " + target.getClass().getSimpleName());
                 historyManager.addDeveloper(
                         "Action started: " + target.getClass().getSimpleName(), target);
+                Stats.increment(context, Stats.ACTION_PREFIX + target.getClass().getSimpleName());
                 target.execute(context, input);
                 return CombinedResult.HANDLED;
             }
@@ -183,6 +188,7 @@ public class ActionHandler {
         }
         Log.i(this.getClass().getSimpleName(), "Tile action: " + actionName);
         historyManager.addDeveloper("Action started (tile): " + actionName, action);
+        Stats.increment(context, Stats.ACTION_PREFIX + actionName);
         action.execute(context, input == null ? "" : input);
     }
 
@@ -200,6 +206,7 @@ public class ActionHandler {
         Log.i(this.getClass().getSimpleName(), "Found intent: " + intent.getClass().getSimpleName());
 
         historyManager.addDeveloper("Action started: " + intent.getClass().getSimpleName(), intent);
+        Stats.increment(context, Stats.ACTION_PREFIX + intent.getClass().getSimpleName());
         intent.execute(context, input);
         Log.i("LATENCY", "action " + intent.getClass().getSimpleName()
                 + " took " + (System.currentTimeMillis() - intentEnd) + "ms");
