@@ -40,13 +40,16 @@ public class ChangeVolumeAction extends Action {
     }
 
     private Integer extractPercentage(String text) {
+        if (text == null) {
+            return null;
+        }
         Matcher matcher = Pattern.compile("(\\d+)").matcher(text);
 
         if (matcher.find()) {
             return Integer.parseInt(matcher.group(1));
         }
 
-        return null;
+        return NumberWords.parse(text);
     }
 
     private void setSystemVolume(int percent, Context context) {
