@@ -27,12 +27,21 @@ public final class AttractController {
     private volatile long lastGreetMs;
     private volatile boolean active;
     private volatile boolean greeting;
+    private volatile AttractView view;
 
     private AttractController() {
     }
 
     public static AttractController get() {
         return INSTANCE;
+    }
+
+    public void attachView(AttractView view) {
+        this.view = view;
+    }
+
+    public void detachView() {
+        this.view = null;
     }
 
     public boolean isActive() {
@@ -119,10 +128,18 @@ public final class AttractController {
     private void startAttract() {
         active = true;
         Log.i(TAG, "Attract mode activated after idle period");
+        AttractView v = view;
+        if (v != null) {
+            v.show();
+        }
     }
 
     private void stopAttract() {
         active = false;
         Log.i(TAG, "Attract mode deactivated");
+        AttractView v = view;
+        if (v != null) {
+            v.hide();
+        }
     }
 }

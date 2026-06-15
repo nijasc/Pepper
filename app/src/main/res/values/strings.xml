@@ -176,4 +176,11 @@
     <string name="status_battery">Akku: %1$d %%</string>
     <string name="status_battery_unknown">Akku: unbekannt</string>
     <string name="status_uptime">Laufzeit: %1$s</string>
+    <string-array name="attract_suggestions">
+        <item>Frag mich nach einem Tanz! 💃</item>
+        <item>Lust auf ein Selfie? 📸</item>
+        <item>Mach bei der Verlosung mit! 🎁</item>
+        <item>Sag „High Five"! 🙌</item>
+        <item>Ask me anything — I speak English too!</item>
+    </string-array>
 </resources>
