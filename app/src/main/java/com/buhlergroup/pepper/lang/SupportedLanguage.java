@@ -10,14 +10,16 @@ public enum SupportedLanguage {
             "Deutsch",
             Language.GERMAN,
             new String[]{"deutsch", "german", "germany"},
-            Region.GERMANY
+            Region.GERMANY,
+            "Alles klar, ich spreche jetzt Deutsch. Wie kann ich dir helfen?"
     ),
     ENGLISH(
             "en-US",
             "English",
             Language.ENGLISH,
             new String[]{"englisch", "english"},
-            Region.UNITED_STATES
+            Region.UNITED_STATES,
+            "Okay, I will speak English now. How can I help you?"
     );
 
     private final String abbreviation;
@@ -25,13 +27,15 @@ public enum SupportedLanguage {
     private final Language qiLang;
     private final String[] triggerNames;
     private final Region region;
+    private final String switchConfirmation;
 
-    SupportedLanguage(String abbreviation, String displayName, Language qiLang, String[] triggerNames, Region region) {
+    SupportedLanguage(String abbreviation, String displayName, Language qiLang, String[] triggerNames, Region region, String switchConfirmation) {
         this.abbreviation = abbreviation;
         this.displayName = displayName;
         this.qiLang = qiLang;
         this.triggerNames = triggerNames;
         this.region = region;
+        this.switchConfirmation = switchConfirmation;
     }
 
     public String getAbbreviation() {
@@ -52,5 +56,9 @@ public enum SupportedLanguage {
 
     public Region getRegion() {
         return region;
+    }
+
+    public String getSwitchConfirmation() {
+        return switchConfirmation;
     }
 }

@@ -76,6 +76,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private Button adminButton;
     private Holder backgroundMovementHolder;
     private TextView languageLabel;
+    private View languageSwitcher;
     private volatile boolean listening;
     private volatile boolean listenPending;
     private volatile boolean processing;
@@ -101,6 +102,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         stopFollowButton = findViewById(R.id.stopFollowButton);
         stopFollowButton.setOnClickListener(v -> FollowController.get().stop());
         languageLabel = findViewById(R.id.languageLabel);
+        languageSwitcher = findViewById(R.id.languageSwitcher);
+        findViewById(R.id.langButtonDe).setOnClickListener(v -> switchLanguage(SupportedLanguage.GERMAN));
+        findViewById(R.id.langButtonEn).setOnClickListener(v -> switchLanguage(SupportedLanguage.ENGLISH));
 
         MemoryGameView memoryGame = findViewById(R.id.memoryGame);
         MemoryGameController.get().attachView(memoryGame);
@@ -312,6 +316,24 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private void updateLanguageLabel(SupportedLanguage lang) {
         if (languageLabel != null) {
             runOnUiThread(() -> languageLabel.setText(lang.getDisplayName()));
+        }
+    }
+
+    private void switchLanguage(SupportedLanguage lang) {
+        if (languageManager == null || lang == languageManager.getCurrent()) {
+            return;
+        }
+        languageManager.applyLanguage(lang);
+        AttractController.get().notifyInteraction();
+        QiContext qiContext = RobotContext.get();
+        if (qiContext != null) {
+            new Thread(() -> {
+                try {
+                    SpeechManager.getInstance().say(qiContext, lang.getSwitchConfirmation());
+                } catch (Exception e) {
+                    Log.w("Mainactivity", "Language switch confirmation failed: " + e.getMessage());
+                }
+            }).start();
         }
     }
 
