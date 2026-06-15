@@ -77,7 +77,9 @@ public class ActionHandler {
         if (!Connectivity.isOnline(context)) {
             Log.w(this.getClass().getSimpleName(), "No connectivity, skipping OpenAI call");
             Stats.increment(context, Stats.ERRORS);
-            announceOffline(context);
+            if (!tryKeywordFallback(context, input)) {
+                announceOffline(context);
+            }
             return;
         }
 
@@ -89,7 +91,9 @@ public class ActionHandler {
             }
             if (result == CombinedResult.NETWORK_ERROR) {
                 Stats.increment(context, Stats.ERRORS);
-                announceOffline(context);
+                if (!tryKeywordFallback(context, input)) {
+                    announceOffline(context);
+                }
                 return;
             }
             handleLegacy(context, input);
@@ -101,6 +105,16 @@ public class ActionHandler {
     private void announceOffline(QiContext context) {
         SupportedLanguage lang = languageManager.getCurrent();
         SpeechManager.getInstance().say(context, SystemMessages.offline(lang));
+    }
+
+    private boolean tryKeywordFallback(QiContext context, String input) {
+        String actionName = KeywordFallback.match(input);
+        if (actionName == null) {
+            return false;
+        }
+        Log.i(this.getClass().getSimpleName(), "Keyword fallback matched: " + actionName);
+        runAction(context, actionName, input);
+        return true;
     }
 
     private CombinedResult handleCombined(QiContext context, String input) {
@@ -199,8 +213,10 @@ public class ActionHandler {
         Log.i("LATENCY", "getIntent took " + (intentEnd - intentStart) + "ms");
         if (intent == null) {
             Log.w(this.getClass().getSimpleName(), "No intent resolved for input: " + input);
-            SpeechManager.getInstance().say(context,
-                    SystemMessages.notUnderstood(languageManager.getCurrent()));
+            if (!tryKeywordFallback(context, input)) {
+                SpeechManager.getInstance().say(context,
+                        SystemMessages.notUnderstood(languageManager.getCurrent()));
+            }
             return;
         }
         Log.i(this.getClass().getSimpleName(), "Found intent: " + intent.getClass().getSimpleName());
