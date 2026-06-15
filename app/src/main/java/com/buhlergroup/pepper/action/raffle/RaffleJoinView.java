@@ -7,6 +7,7 @@ import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -34,6 +35,10 @@ public class RaffleJoinView extends FrameLayout {
 
     private View card;
     private View stepContainer;
+    private View consentContainer;
+    private TextView consentText;
+    private CheckBox consentCheck;
+    private boolean consentPhase;
     private TextView titleView;
     private TextView progressView;
     private TextView promptView;
@@ -73,6 +78,9 @@ public class RaffleJoinView extends FrameLayout {
 
         card = findViewById(R.id.raffleJoinCard);
         stepContainer = findViewById(R.id.raffleJoinStep);
+        consentContainer = findViewById(R.id.raffleJoinConsent);
+        consentText = findViewById(R.id.raffleJoinConsentText);
+        consentCheck = findViewById(R.id.raffleJoinConsentCheck);
         titleView = findViewById(R.id.raffleJoinTitle);
         progressView = findViewById(R.id.raffleJoinProgress);
         promptView = findViewById(R.id.raffleJoinStepPrompt);
@@ -84,6 +92,12 @@ public class RaffleJoinView extends FrameLayout {
 
         backButton.setOnClickListener(v -> onBack());
         nextButton.setOnClickListener(v -> onNext());
+        consentCheck.setOnCheckedChangeListener((button, checked) -> {
+            if (consentPhase) {
+                nextButton.setEnabled(checked);
+                nextButton.setAlpha(checked ? 1f : 0.4f);
+            }
+        });
     }
 
     public void show(String title, boolean requirePhone, Listener l) {
@@ -101,14 +115,36 @@ public class RaffleJoinView extends FrameLayout {
             card.setVisibility(VISIBLE);
             stepContainer.setTranslationX(0f);
             stepContainer.setAlpha(1f);
-            applyStepUI();
+            showConsentPhase();
             setVisibility(VISIBLE);
             bringToFront();
-            Listener current = listener;
-            if (current != null) {
-                current.onStepShown(steps[0]);
-            }
         });
+    }
+
+    private void showConsentPhase() {
+        consentPhase = true;
+        stepContainer.setVisibility(GONE);
+        consentContainer.setVisibility(VISIBLE);
+        progressView.setText(R.string.raffle_consent_title);
+        consentText.setText(R.string.raffle_consent_notice);
+        consentCheck.setText(R.string.raffle_consent_checkbox);
+        consentCheck.setChecked(false);
+        backButton.setText(R.string.raffle_join_cancel);
+        nextButton.setText(R.string.raffle_consent_continue);
+        nextButton.setEnabled(false);
+        nextButton.setAlpha(0.4f);
+    }
+
+    private void leaveConsentPhase() {
+        consentPhase = false;
+        consentContainer.setVisibility(GONE);
+        stepContainer.setVisibility(VISIBLE);
+        index = 0;
+        applyStepUI();
+        Listener current = listener;
+        if (current != null) {
+            current.onStepShown(steps[0]);
+        }
     }
 
     public void goToStep(int stepType, int errorRes) {
@@ -152,6 +188,12 @@ public class RaffleJoinView extends FrameLayout {
     }
 
     private void onNext() {
+        if (consentPhase) {
+            if (consentCheck.isChecked()) {
+                leaveConsentPhase();
+            }
+            return;
+        }
         int type = steps[index];
         String value = input.getText().toString().trim();
         Integer error = validate(type, value);
@@ -180,6 +222,13 @@ public class RaffleJoinView extends FrameLayout {
     }
 
     private void onBack() {
+        if (consentPhase) {
+            Listener l = listener;
+            if (l != null) {
+                l.onCancel();
+            }
+            return;
+        }
         store(steps[index], input.getText().toString().trim());
         if (index == 0) {
             Listener l = listener;
