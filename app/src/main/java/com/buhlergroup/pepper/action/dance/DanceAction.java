@@ -19,6 +19,12 @@ import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 public class DanceAction extends Action {
 
@@ -26,19 +32,35 @@ public class DanceAction extends Action {
     private static final long MAX_PLAY_MS = 35000;
     private static final long MIN_PLAY_MS = 5000;
 
+    private static final Set<String> GENERIC_TERMS = new HashSet<>(Arrays.asList(
+            "tanz", "tanze", "tanzen", "dance", "bitte", "los", "mal", "etwas", "ein", "eine",
+            "einen", "mir", "uns", "jetzt", "für", "mich", "for", "me", "please", "song", "lied",
+            "music", "musik", "doch", "kurz", "zu", "the", "a", "mach", "leg"));
+
     private final DanceRepository repository = new DanceRepository();
     private final Object audioLock = new Object();
     private MediaPlayer mediaPlayer;
 
     @Override
     public void execute(QiContext context, String input) {
+        String request = input == null ? "" : input.trim();
+        if (!hasConcreteSong(request)) {
+            DanceEntity fromLibrary = pickFromLibrary(context);
+            if (fromLibrary != null) {
+                SpeechManager.getInstance().systemSay(context,
+                        "Ich tanze einen Tanz aus meiner Sammlung für dich.");
+                playDance(context, fromLibrary);
+                return;
+            }
+        }
+
         SpeechManager.getInstance().systemSay(context,
                 "Lass mich kurz einen passenden Tanz für dich einstudieren.");
 
         ThinkingController.get().start(context);
         DanceEntity dance;
         try {
-            dance = repository.getOrCreate(context, query(input));
+            dance = repository.getOrCreate(context, query(request));
         } catch (Exception e) {
             ThinkingController.get().stop();
             Log.w(TAG, "Dance preparation failed: " + e.getMessage());
@@ -56,6 +78,36 @@ public class DanceAction extends Action {
             return "dance music";
         }
         return input.trim();
+    }
+
+    private boolean hasConcreteSong(String request) {
+        if (request.isEmpty()) {
+            return false;
+        }
+        for (String token : request.toLowerCase(Locale.ROOT).split("[^a-zA-Z0-9äöüÄÖÜ]+")) {
+            if (!token.isEmpty() && !GENERIC_TERMS.contains(token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private DanceEntity pickFromLibrary(QiContext context) {
+        List<DanceEntity> playable = new ArrayList<>();
+        List<DanceEntity> favorites = new ArrayList<>();
+        for (DanceEntity dance : repository.all(context)) {
+            if (dance.qianimPath != null && new File(dance.qianimPath).exists()) {
+                playable.add(dance);
+                if (dance.favorite) {
+                    favorites.add(dance);
+                }
+            }
+        }
+        List<DanceEntity> pool = !favorites.isEmpty() ? favorites : playable;
+        if (pool.isEmpty()) {
+            return null;
+        }
+        return pool.get((int) (Math.random() * pool.size()));
     }
 
     private void playDance(QiContext context, DanceEntity dance) {
