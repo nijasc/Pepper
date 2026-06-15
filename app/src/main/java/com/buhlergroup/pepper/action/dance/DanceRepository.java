@@ -56,7 +56,7 @@ public final class DanceRepository {
 
         long durationMs = source.durationMs > 0 ? source.durationMs : 25000L;
         int seconds = (int) Math.max(8, Math.min(30, durationMs / 1000));
-        String qianim = generator.generateValidatedDance(context, songName, seconds);
+        String qianim = generator.generateValidatedDance(context, songName, seconds, null, plan.mood);
         if (qianim == null) {
             throw new Exception("Tanz-Choreografie konnte nicht erzeugt werden.");
         }

@@ -39,10 +39,15 @@ public final class AnimationGenerator {
     }
 
     public String generateValidatedDance(Context context, String songName, int seconds) {
-        return generateValidatedDance(context, songName, seconds, null);
+        return generateValidatedDance(context, songName, seconds, null, null);
     }
 
     public String generateValidatedDance(Context context, String songName, int seconds, String editNote) {
+        return generateValidatedDance(context, songName, seconds, editNote, null);
+    }
+
+    public String generateValidatedDance(Context context, String songName, int seconds,
+                                         String editNote, String mood) {
         int target = Math.min(MAX_SECONDS, Math.max(8, seconds));
         openAi.setC(context);
         String userMessage = "Song: " + songName;
@@ -52,7 +57,7 @@ public final class AnimationGenerator {
         for (int attempt = 1; attempt <= 2; attempt++) {
             try {
                 List<Map<String, String>> messages = new ArrayList<>();
-                messages.add(message("system", danceCompactPrompt()));
+                messages.add(message("system", danceCompactPrompt() + moodGuidance(mood)));
                 messages.add(message("user", userMessage));
 
                 Map<String, Object> body = new HashMap<>();
@@ -80,10 +85,12 @@ public final class AnimationGenerator {
     public static final class SongPlan {
         public final String query;
         public final int startSeconds;
+        public final String mood;
 
-        public SongPlan(String query, int startSeconds) {
+        public SongPlan(String query, int startSeconds, String mood) {
             this.query = query;
             this.startSeconds = startSeconds;
+            this.mood = mood;
         }
     }
 
@@ -94,7 +101,8 @@ public final class AnimationGenerator {
             List<Map<String, String>> messages = new ArrayList<>();
             messages.add(message("system",
                     "The user asked a Pepper robot to dance. From their utterance work out which song to "
-                            + "play and reply with ONLY a JSON object {\"query\":\"...\",\"startSeconds\":N}. "
+                            + "play and reply with ONLY a JSON object "
+                            + "{\"query\":\"...\",\"startSeconds\":N,\"mood\":\"calm|lively\"}. "
                             + "\"query\" is a clean music-search string of artist and title (for example "
                             + "\"Los del Rio Macarena\" or \"Silento Watch Me Whip Nae Nae\") for the song they "
                             + "want - strip greetings, filler words and commands, and translate a described song "
@@ -102,7 +110,8 @@ public final class AnimationGenerator {
                             + "danceable song yourself. The audio will be the roughly 30-second iTunes preview of "
                             + "that song (which usually starts near the chorus); \"startSeconds\" is an integer "
                             + "from 0 to 15 for how many seconds into that preview the song's signature danceable "
-                            + "hook lands, or 0 if unsure. No prose, only the JSON."));
+                            + "hook lands, or 0 if unsure. \"mood\" is \"calm\" for slow, gentle or romantic "
+                            + "songs and \"lively\" for upbeat or energetic songs. No prose, only the JSON."));
             messages.add(message("user", fallbackQuery));
 
             Map<String, Object> body = new HashMap<>();
@@ -120,7 +129,7 @@ public final class AnimationGenerator {
             return plan;
         } catch (Exception e) {
             Log.w(TAG, "Song planning failed, using raw query: " + e.getMessage());
-            return new SongPlan(fallbackQuery, 0);
+            return new SongPlan(fallbackQuery, 0, "lively");
         }
     }
 
@@ -177,6 +186,7 @@ public final class AnimationGenerator {
     private SongPlan parseSongPlan(String content, String fallbackQuery) {
         String query = fallbackQuery;
         int startSeconds = 0;
+        String mood = "lively";
         try {
             String json = content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1);
             JSONObject obj = new JSONObject(json);
@@ -185,6 +195,10 @@ public final class AnimationGenerator {
                 query = parsed;
             }
             startSeconds = obj.optInt("startSeconds", 0);
+            String parsedMood = obj.optString("mood", "").trim().toLowerCase(Locale.ROOT);
+            if (parsedMood.equals("calm") || parsedMood.equals("lively")) {
+                mood = parsedMood;
+            }
         } catch (Exception e) {
             Matcher matcher = Pattern.compile("startSeconds\"?\\s*[:=]\\s*(\\d{1,3})").matcher(content);
             if (matcher.find()) {
@@ -194,7 +208,7 @@ public final class AnimationGenerator {
         if (query == null || query.trim().isEmpty()) {
             query = fallbackQuery;
         }
-        return new SongPlan(query, Math.max(0, Math.min(15, startSeconds)));
+        return new SongPlan(query, Math.max(0, Math.min(15, startSeconds)), mood);
     }
 
     private String generate(Context context, String systemPrompt, String userBase,
@@ -298,6 +312,18 @@ public final class AnimationGenerator {
                 + "RHand [0,1], HipRoll [-0.15,0.15], HipPitch [-0.20,0.20], KneePitch [-0.10,0.10].\n"
                 + "- Include 8 to 12 joints (always both shoulders and elbows; add head, wrists, hands and a "
                 + "little hip). Use at most 2 decimals.";
+    }
+
+    private String moodGuidance(String mood) {
+        if ("calm".equalsIgnoreCase(mood)) {
+            return "\n- This song is calm and gentle: keep the dance slow, soft and flowing; use the "
+                    + "larger frameStep values (about 16 to 20) and graceful, minimal motion.";
+        }
+        if ("lively".equalsIgnoreCase(mood)) {
+            return "\n- This song is lively: keep the dance upbeat but still smooth and controlled; "
+                    + "use the middle of the frameStep range (about 12 to 16).";
+        }
+        return "";
     }
 
     private String extractJson(String content) {
