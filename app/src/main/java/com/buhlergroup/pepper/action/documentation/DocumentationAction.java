@@ -37,9 +37,11 @@ public class DocumentationAction extends Action {
     private static final String DOCUMENTATION_URL =
             "https://raw.githubusercontent.com/nijasc/Pepper/main/README.md";
     private static final int ANSWER_TIMEOUT_MS = 120000;
+    private static final long CACHE_TTL_MS = 6L * 60 * 60 * 1000;
 
     private final OpenAIService service;
-    private String fallbackDocumentation;
+    private String cachedDocumentation;
+    private long cachedAtMs;
 
     public DocumentationAction(List<Action> actions) {
         this.service = new OpenAIService(actions);
@@ -88,6 +90,10 @@ public class DocumentationAction extends Action {
     }
 
     private String getDocumentation(Context context) {
+        if (cachedDocumentation != null
+                && System.currentTimeMillis() - cachedAtMs < CACHE_TTL_MS) {
+            return cachedDocumentation;
+        }
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) new URL(DOCUMENTATION_URL).openConnection();
@@ -96,7 +102,7 @@ public class DocumentationAction extends Action {
             connection.setReadTimeout(10000);
 
             if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                return fallbackDocumentation;
+                return cachedDocumentation;
             }
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
@@ -105,12 +111,13 @@ public class DocumentationAction extends Action {
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append('\n');
                 }
-                fallbackDocumentation = sb.toString();
-                return sb.toString();
+                cachedDocumentation = sb.toString();
+                cachedAtMs = System.currentTimeMillis();
+                return cachedDocumentation;
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return fallbackDocumentation;
+            return cachedDocumentation;
         } finally {
             if (connection != null) {
                 connection.disconnect();
