@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class SelfieController {
 
@@ -43,10 +44,18 @@ public final class SelfieController {
     private static final int SERVER_PORT = 8080;
     private static final long DISPLAY_MS = 22000;
     private static final long START_TIMEOUT_MS = 15000;
+    private static final int MAX_CAPTURES = 3;
+    private static final long PREVIEW_TIMEOUT_MS = 20000;
     private static final SelfieController INSTANCE = new SelfieController();
 
     public interface StateListener {
         void onSelfieStateChanged(boolean active);
+    }
+
+    private enum PreviewDecision {
+        SAVE,
+        RETAKE,
+        TIMEOUT
     }
 
     private volatile SelfieView view;
@@ -143,27 +152,19 @@ public final class SelfieController {
                 say(context, "Komm mit, ich fahre uns kurz zum Fotostand.");
                 NavigationManager.get().driveToFotostandIfPossible(context);
             }
-            if (CameraSettings.isActive(context)) {
+            boolean externalCam = CameraSettings.isActive(context);
+            if (externalCam) {
                 say(context, "Klar, machen wir ein Selfie! Stell dich bitte vor die Kamera.");
-                say(context, "Sag «Start», wenn du bereit bist.");
-                waitForStart(context);
-                say(context, "Drei… Zwei… Eins!");
             } else {
                 say(context, "Klar, machen wir ein Selfie! Stell dich vor mich und schau in meine Augen.");
-                say(context, "Drei… zwei… eins… lächeln!");
             }
 
-            Bitmap photo = capture(context);
-            if (photo == null) {
-                if (CameraSettings.isActive(context)) {
-                    say(context, "Ich kann die externe Kamera nicht erreichen. Bitte deaktiviere sie im Admin-Dashboard, wenn du meine Kamera verwenden möchtest.");
-                } else {
-                    say(context, "Hoppla, das Foto hat nicht geklappt. Versuchen wir es später nochmal.");
-                }
+            Bitmap composed = captureConfirmed(context, board, externalCam);
+            if (composed == null) {
+                board.hide();
                 return null;
             }
 
-            Bitmap composed = addOverlay(context, photo);
             SelfieEntity entity = SelfieRepository.get(context).save(toJpeg(composed));
             com.buhlergroup.pepper.stats.Stats.increment(context,
                     com.buhlergroup.pepper.stats.Stats.SELFIES);
@@ -246,6 +247,78 @@ public final class SelfieController {
             started.start();
             server = started;
         }
+    }
+
+    private Bitmap captureConfirmed(QiContext context, SelfieView board, boolean externalCam) {
+        Bitmap composed = null;
+        for (int attempt = 1; attempt <= MAX_CAPTURES; attempt++) {
+            countdown(context, externalCam);
+            Bitmap photo = capture(context);
+            if (photo == null) {
+                announceCaptureFailure(context, externalCam);
+                return null;
+            }
+            composed = addOverlay(context, photo);
+            boolean canRetake = attempt < MAX_CAPTURES;
+            PreviewDecision decision = askPreview(context, board, composed, canRetake);
+            if (decision != PreviewDecision.RETAKE) {
+                break;
+            }
+            if (canRetake) {
+                say(context, "Kein Problem, wir machen es nochmal!");
+            }
+        }
+        return composed;
+    }
+
+    private void countdown(QiContext context, boolean externalCam) {
+        if (externalCam) {
+            say(context, "Sag «Start», wenn du bereit bist.");
+            waitForStart(context);
+            say(context, "Drei… Zwei… Eins!");
+        } else {
+            say(context, "Drei… zwei… eins… lächeln!");
+        }
+    }
+
+    private void announceCaptureFailure(QiContext context, boolean externalCam) {
+        if (externalCam) {
+            say(context, "Ich kann die externe Kamera nicht erreichen. Bitte deaktiviere sie im "
+                    + "Admin-Dashboard, wenn du meine Kamera verwenden möchtest.");
+        } else {
+            say(context, "Hoppla, das Foto hat nicht geklappt. Versuchen wir es später nochmal.");
+        }
+    }
+
+    private PreviewDecision askPreview(QiContext context, SelfieView board, Bitmap composed,
+                                       boolean canRetake) {
+        board.setStatus("Passt das Foto?");
+        AtomicReference<PreviewDecision> ref = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+        board.showPreview(composed, canRetake,
+                () -> {
+                    ref.compareAndSet(null, PreviewDecision.SAVE);
+                    latch.countDown();
+                },
+                () -> {
+                    ref.compareAndSet(null, PreviewDecision.RETAKE);
+                    latch.countDown();
+                });
+        if (canRetake) {
+            say(context, "Tippe auf Speichern, wenn es dir gefällt, oder auf Nochmal für ein neues Foto.");
+        } else {
+            say(context, "Das ist unser letzter Versuch, ich speichere dieses Foto.");
+        }
+        try {
+            if (!latch.await(PREVIEW_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                ref.compareAndSet(null, PreviewDecision.TIMEOUT);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            ref.compareAndSet(null, PreviewDecision.TIMEOUT);
+        }
+        PreviewDecision decision = ref.get();
+        return decision == null ? PreviewDecision.TIMEOUT : decision;
     }
 
     private Bitmap capture(QiContext context) {
