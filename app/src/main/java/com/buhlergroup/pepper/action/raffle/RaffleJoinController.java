@@ -10,6 +10,7 @@ import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -115,6 +116,7 @@ public final class RaffleJoinController {
                               String preCapturedSelfieId, CountDownLatch done) {
         board.setSubmitting(true);
         dbExecutor.submit(() -> {
+            String normalizedEmail = email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
             RaffleRepository repo = RaffleRepository.get(board.getContext());
             RaffleEntity current = repo.getCurrentRaffle();
             if (current == null || current.id != raffle.id || current.status != RaffleStatus.ACTIVE) {
@@ -122,7 +124,7 @@ public final class RaffleJoinController {
                 done.countDown();
                 return;
             }
-            if (repo.hasEntryWithEmail(raffle.id, email)) {
+            if (repo.hasEntryWithEmail(raffle.id, normalizedEmail)) {
                 say(context, "Mit dieser E-Mail bist du bereits eingetragen.");
                 board.goToStep(RaffleJoinView.STEP_EMAIL, R.string.raffle_join_duplicate);
                 return;
@@ -145,7 +147,7 @@ public final class RaffleJoinController {
                 selfieId = selfie.id;
             }
 
-            RaffleRepository.JoinResult result = repo.joinRaffle(raffle.id, name, email,
+            RaffleRepository.JoinResult result = repo.joinRaffle(raffle.id, name, normalizedEmail,
                     phone.isEmpty() ? null : phone, raffle.requiresPhone, selfieId);
             switch (result) {
                 case SUCCESS:
