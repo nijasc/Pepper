@@ -137,7 +137,7 @@ public final class ThinkingController {
     private void startPose(QiContext context) {
         try {
             Animation animation = AnimationBuilder.with(context)
-                    .withResources(R.raw.searching_a001)
+                    .withResources(R.raw.thinking_chin_a001)
                     .build();
             Animate animate = AnimateBuilder.with(context)
                     .withAnimation(animation)
