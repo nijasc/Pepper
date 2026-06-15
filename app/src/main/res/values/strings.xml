@@ -147,4 +147,11 @@
     <string name="raffle_delete_title">Verlosung löschen?</string>
     <string name="raffle_delete_message">Die Verlosung und ALLE Teilnehmerdaten (inkl. Selfies) endgültig löschen? Das kann nicht rückgängig gemacht werden.</string>
     <string name="raffle_retention_label">Teilnehmerdaten automatisch löschen nach Abschluss (Tage):</string>
+    <string name="admin_dsgvo">Auskunft</string>
+    <string name="dsgvo_access_title">DSGVO-Auskunft</string>
+    <string name="dsgvo_access_hint">E-Mail-Adresse</string>
+    <string name="dsgvo_access_search">Suchen</string>
+    <string name="dsgvo_access_none">Zu dieser E-Mail-Adresse sind keine Daten gespeichert.</string>
+    <string name="dsgvo_access_share">Auskunft teilen</string>
+    <string name="dsgvo_report_title">Gespeicherte Daten zu %1$s</string>
 </resources>

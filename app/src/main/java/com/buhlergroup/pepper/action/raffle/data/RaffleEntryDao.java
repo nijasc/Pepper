@@ -41,4 +41,7 @@ public interface RaffleEntryDao {
 
     @Query("SELECT * FROM raffle_entries WHERE id = :entryId LIMIT 1")
     RaffleEntryEntity findEntry(long entryId);
+
+    @Query("SELECT * FROM raffle_entries WHERE email = :email COLLATE NOCASE ORDER BY created_at DESC")
+    List<RaffleEntryEntity> getEntriesByEmail(String email);
 }

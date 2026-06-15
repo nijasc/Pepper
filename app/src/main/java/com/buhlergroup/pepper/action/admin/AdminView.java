@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Gravity;
@@ -249,6 +250,7 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminCameraBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminNavigation).setOnClickListener(v -> openNavigation());
         findViewById(R.id.adminDances).setOnClickListener(v -> openDanceLibrary());
+        findViewById(R.id.adminDsgvo).setOnClickListener(v -> showDsgvoAccessDialog());
 
         selfieAdapter = new SelfieAdapter(this::showDetail);
         selfieGrid.setLayoutManager(new GridLayoutManager(context, 3));
@@ -619,6 +621,60 @@ public class AdminView extends FrameLayout {
             });
         }
         return row;
+    }
+
+    private void showDsgvoAccessDialog() {
+        EditText input = new EditText(getContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        input.setHint(R.string.dsgvo_access_hint);
+        new AlertDialog.Builder(getContext())
+                .setTitle(R.string.dsgvo_access_title)
+                .setView(input)
+                .setNegativeButton(R.string.admin_back, null)
+                .setPositiveButton(R.string.dsgvo_access_search,
+                        (d, w) -> runDsgvoAccess(input.getText().toString().trim()))
+                .show();
+    }
+
+    private void runDsgvoAccess(String email) {
+        if (email.isEmpty()) {
+            return;
+        }
+        dbExecutor.submit(() -> {
+            String report = RaffleRepository.get(getContext()).buildAccessReport(email);
+            post(() -> showDsgvoResult(email, report));
+        });
+    }
+
+    private void showDsgvoResult(String email, String report) {
+        if (report == null) {
+            new AlertDialog.Builder(getContext())
+                    .setTitle(R.string.dsgvo_access_title)
+                    .setMessage(R.string.dsgvo_access_none)
+                    .setPositiveButton(R.string.admin_back, null)
+                    .show();
+            return;
+        }
+        new AlertDialog.Builder(getContext())
+                .setTitle(getContext().getString(R.string.dsgvo_report_title, email))
+                .setMessage(report)
+                .setNeutralButton(R.string.dsgvo_access_share, (d, w) -> shareDsgvoReport(email, report))
+                .setPositiveButton(R.string.admin_back, null)
+                .show();
+    }
+
+    private void shareDsgvoReport(String email, String report) {
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("text/plain");
+        share.putExtra(Intent.EXTRA_SUBJECT, getContext().getString(R.string.dsgvo_report_title, email));
+        share.putExtra(Intent.EXTRA_TEXT, report);
+        Intent chooser = Intent.createChooser(share, getContext().getString(R.string.dsgvo_access_share));
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            getContext().startActivity(chooser);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void confirmDeleteRaffle() {

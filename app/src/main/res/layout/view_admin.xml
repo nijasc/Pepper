@@ -276,6 +276,24 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
+            <LinearLayout android:id="@+id/adminDsgvo" style="@style/AdminMenuTile">
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@string/admin_dsgvo"
+                    android:src="@drawable/ic_admin_history" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:text="@string/admin_dsgvo"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
             <LinearLayout android:id="@+id/adminClose" style="@style/AdminMenuTile">
                 <ImageView
                     android:layout_width="48dp"

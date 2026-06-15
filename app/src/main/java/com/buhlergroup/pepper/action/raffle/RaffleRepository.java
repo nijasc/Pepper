@@ -11,7 +11,10 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -149,6 +152,29 @@ public final class RaffleRepository {
 
     public int countEntries(long raffleId) {
         return entryDao.countEntries(raffleId);
+    }
+
+    public String buildAccessReport(String email) {
+        List<RaffleEntryEntity> entries = entryDao.getEntriesByEmail(email);
+        if (entries.isEmpty()) {
+            return null;
+        }
+        SimpleDateFormat fmt = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY);
+        StringBuilder sb = new StringBuilder();
+        for (RaffleEntryEntity entry : entries) {
+            RaffleEntity raffle = raffleDao.findById(entry.raffleId);
+            sb.append("Verlosung: ")
+                    .append(raffle != null ? raffle.title : ("#" + entry.raffleId)).append('\n');
+            sb.append("Name: ").append(entry.name).append('\n');
+            sb.append("E-Mail: ").append(entry.email).append('\n');
+            sb.append("Telefon: ")
+                    .append(entry.phone != null && !entry.phone.isEmpty() ? entry.phone : "-").append('\n');
+            sb.append("Selfie: ")
+                    .append(entry.selfieId != null && !entry.selfieId.isEmpty() ? entry.selfieId : "-")
+                    .append('\n');
+            sb.append("Eingetragen: ").append(fmt.format(new Date(entry.createdAt))).append("\n\n");
+        }
+        return sb.toString().trim();
     }
 
     public boolean hasEntryWithEmail(long raffleId, String email) {
