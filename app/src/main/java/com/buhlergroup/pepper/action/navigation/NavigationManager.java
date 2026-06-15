@@ -43,6 +43,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class NavigationManager {
 
     private static final String TAG = "Navigation";
+    private static final long MAP_POLL_BASE_MS = 1000;
+    private static final long MAP_POLL_MAX_MS = 8000;
 
     public interface Callback<T> {
         void onResult(T value);
@@ -458,18 +460,29 @@ public final class NavigationManager {
     private void startMapPolling() {
         final int gen = ++pollGeneration;
         Thread poller = new Thread(() -> {
+            int failures = 0;
             while (gen == pollGeneration && scanning) {
+                boolean ok = false;
                 try {
                     LocalizeAndMap lam = currentMapping;
                     if (lam == null) {
                         break;
                     }
                     publishMap(lam.dumpMap());
+                    ok = true;
                 } catch (Exception e) {
                     Log.d(TAG, "Map snapshot not available yet: " + e.getMessage());
                 }
+                if (ok) {
+                    failures = 0;
+                } else if (failures < 3) {
+                    failures++;
+                }
+                long sleepMs = ok
+                        ? MAP_POLL_BASE_MS
+                        : Math.min(MAP_POLL_MAX_MS, MAP_POLL_BASE_MS * (1L << failures));
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(sleepMs);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return;
