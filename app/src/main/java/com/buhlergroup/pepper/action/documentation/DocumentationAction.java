@@ -35,7 +35,7 @@ import javax.net.ssl.TrustManagerFactory;
 
 public class DocumentationAction extends Action {
     private static final String DOCUMENTATION_URL =
-            "https://raw.githubusercontent.com/nijasc/Pepper/main/README.md";
+            "https://raw.githubusercontent.com/nijasc/Pepper/main/PEPPER.md";
     private static final int ANSWER_TIMEOUT_MS = 120000;
     private static final long CACHE_TTL_MS = 6L * 60 * 60 * 1000;
 
@@ -170,6 +170,6 @@ public class DocumentationAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Answers questions about Pepper itself from its developer documentation.";
+        return "Answers questions about Pepper itself and its features from its documentation.";
     }
 }
