@@ -13,6 +13,7 @@ import com.buhlergroup.pepper.action.highfive.HighFiveAction;
 import com.buhlergroup.pepper.action.hold.HoldMyBeerAction;
 import com.buhlergroup.pepper.action.lang.ChangeLanguageAction;
 import com.buhlergroup.pepper.action.memory.MemoryGameAction;
+import com.buhlergroup.pepper.action.navigation.GuideAction;
 import com.buhlergroup.pepper.action.names.SiriAction;
 import com.buhlergroup.pepper.action.raffle.JoinRaffleAction;
 import com.buhlergroup.pepper.action.raffle.RaffleInfoAction;
@@ -242,6 +243,7 @@ public class ActionHandler {
         actions.add(new TestAction());
         actions.add(new SystemInfoAction(languageManager, actions));
         actions.add(new FollowMeAction());
+        actions.add(new GuideAction());
         actions.add(new MemoryGameAction());
         actions.add(new SelfieAction());
         actions.add(new OpenAdminAction());
