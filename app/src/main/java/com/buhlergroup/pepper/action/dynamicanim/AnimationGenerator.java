@@ -6,12 +6,14 @@ import android.util.Log;
 import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.OpenAIService;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,8 +40,33 @@ public final class AnimationGenerator {
 
     public String generateValidatedDance(Context context, String songName, int seconds) {
         int target = Math.min(MAX_SECONDS, Math.max(8, seconds));
-        return generate(context, danceSystemPrompt(target),
-                "Choreograph a full-body dance for this song: " + songName, true);
+        openAi.setC(context);
+        for (int attempt = 1; attempt <= 2; attempt++) {
+            try {
+                List<Map<String, String>> messages = new ArrayList<>();
+                messages.add(message("system", danceCompactPrompt()));
+                messages.add(message("user", "Song: " + songName));
+
+                Map<String, Object> body = new HashMap<>();
+                body.put("model", ModelSelector.FAST);
+                body.put("messages", messages);
+                body.put("max_tokens", 900);
+
+                String response = openAi.sendOpenAiRequest("/chat/completions", body, 30000);
+                String content = new JSONObject(response)
+                        .getJSONArray("choices")
+                        .getJSONObject(0)
+                        .getJSONObject("message")
+                        .getString("content");
+                JSONObject plan = new JSONObject(extractJson(content));
+                String xml = buildDanceXml(plan, target);
+                Document doc = XmlUtils.parse(xml);
+                return postProcess(doc, xml, true);
+            } catch (Exception e) {
+                Log.w(TAG, "Compact dance attempt " + attempt + " failed: " + e.getMessage());
+            }
+        }
+        return null;
     }
 
     public static final class SongPlan {
@@ -180,38 +207,102 @@ public final class AnimationGenerator {
                 .getString("content");
     }
 
-    private String danceSystemPrompt(int seconds) {
-        return "You generate a single rhythmic full-body Pepper robot DANCE in qianim 2.0 XML and output "
-                + "ONLY the raw XML (no Markdown, no code fences, no explanation).\n\n"
-                + jointRulesHeader()
-                + repeatRules()
-                + "- Target total duration: about " + seconds + " seconds (" + (seconds * 25) + " frames).\n"
-                + "- SIGNATURE MOVES: If the named song has a famous, widely-recognised dance, recreate its "
-                + "characteristic moves in the correct order so a viewer recognises it, adapted to Pepper's "
-                + "joints (arms, wrists, hands, head, hips; Pepper has no legs, so translate footwork into hip "
-                + "sway and upper-body motion). Examples: 'Macarena' = the arm sequence (both arms out palms "
-                + "down, flip palms up, right hand to left shoulder then left hand to right shoulder, both hands "
-                + "behind the head, both hands to the hips) finished with a hip wiggle; 'Watch Me'/'Whip / Nae "
-                + "Nae' = the 'whip' (one arm punched straight out to the side) alternating with the 'nae nae' "
-                + "(one arm raised high while swaying side to side); 'Y.M.C.A.' = spell the letters Y, M, C, A "
-                + "with the arms; 'Gangnam Style' = the overhead lasso arm with a bouncing groove. If the song "
-                + "has no iconic dance, invent an original groove that fits its mood and tempo.\n"
-                + "- Author ONE musical motif of 4-8 seconds (100-200 frames) and set repeatCycles so that "
-                + "motif length times repeatCycles is close to the target duration. For a signature dance the "
-                + "motif IS one full pass of that dance's move sequence.\n"
-                + "- This is a DANCE: move several joints together in a lively rhythm with regularly "
-                + "spaced beats (a keyframe roughly every 8-15 frames).\n"
-                + "- BALANCE: Pepper must never lose balance. Put the energy in the upper body - the arms, "
-                + "wrists, hands and head may move fast, wide and sharply. Keep the lower body gentle and "
-                + "centred near neutral: HipRoll within [-0.15,0.15], HipPitch within [-0.20,0.20], KneePitch "
-                + "within [-0.10,0.10], and move those three smoothly with small steps. Never swing the hips "
-                + "or knees hard or far.\n"
-                + "- The motif must start and end on exactly the same pose (every moving joint has identical "
-                + "values at frame 0 and at the last frame), so repetitions chain seamlessly.\n"
-                + "- Make that shared start/end pose an engaged dance stance WITHIN the groove (arms in motion), "
-                + "NOT a neutral stand - the dance must keep flowing across repetitions. The runtime returns "
-                + "Pepper to neutral after the final cycle automatically.\n"
-                + jointRangesFooter();
+    private String danceCompactPrompt() {
+        return "You are a choreographer for the Pepper robot. Output ONLY a compact JSON object describing "
+                + "one looping dance motif - no Markdown, no prose.\n\n"
+                + "Schema: {\"frameStep\":F,\"curves\":{\"JOINT\":[v0,v1,...],...}}\n"
+                + "- The animation runs at 25 fps. Each number in a joint's array is a keyframe; consecutive "
+                + "keyframes are F frames apart (F between 6 and 14, smaller = faster beats). Frame 0 is the "
+                + "first value.\n"
+                + "- Give EVERY joint array the SAME length N (use 6 to 10). The first and last value of each "
+                + "array MUST be equal so the motif loops seamlessly. The motif is repeated automatically and "
+                + "returned to neutral - do NOT author the repeats or the return.\n"
+                + "- This is a DANCE: drive several joints together on the beat. Put the energy in the UPPER body "
+                + "(arms, wrists, hands, head) - they may move fast, wide and sharply. Keep the lower body gentle "
+                + "for balance and use small smooth steps there.\n"
+                + "- SIGNATURE MOVES: If the song has a famous dance (Macarena = arms out, palms up, hands to "
+                + "opposite shoulders, hands behind head, hands to hips; Watch Me = the whip and the nae-nae; "
+                + "Y.M.C.A. = spell Y M C A with the arms; Gangnam Style = overhead lasso arm), recreate its "
+                + "characteristic moves in order with the arms and head so it is recognisable. Otherwise invent "
+                + "a groove fitting the song.\n"
+                + "- Use ONLY these joints, keep every value inside the given range (radians; hands 0..1):\n"
+                + "  HeadYaw [-2.08,2.08], HeadPitch [-0.70,0.63], LShoulderPitch [-2.08,2.08], "
+                + "RShoulderPitch [-2.08,2.08], LShoulderRoll [0.01,1.56], RShoulderRoll [-1.56,-0.01], "
+                + "LElbowYaw [-2.08,2.08], RElbowYaw [-2.08,2.08], LElbowRoll [-1.56,-0.01], "
+                + "RElbowRoll [0.01,1.56], LWristYaw [-1.82,1.82], RWristYaw [-1.82,1.82], LHand [0,1], "
+                + "RHand [0,1], HipRoll [-0.15,0.15], HipPitch [-0.20,0.20], KneePitch [-0.10,0.10].\n"
+                + "- Include 8 to 12 joints (always both shoulders and elbows; add head, wrists, hands and a "
+                + "little hip). Use at most 2 decimals.";
+    }
+
+    private String extractJson(String content) {
+        if (content == null) {
+            return "{}";
+        }
+        int start = content.indexOf('{');
+        int end = content.lastIndexOf('}');
+        if (start < 0 || end < start) {
+            return "{}";
+        }
+        return content.substring(start, end + 1);
+    }
+
+    private String buildDanceXml(JSONObject plan, int targetSeconds) throws Exception {
+        int frameStep = Math.max(4, Math.min(25, plan.optInt("frameStep", 10)));
+        JSONObject curves = plan.getJSONObject("curves");
+        JSONArray names = curves.names();
+
+        List<String> joints = new ArrayList<>();
+        int n = 0;
+        for (int i = 0; names != null && i < names.length(); i++) {
+            String joint = names.getString(i);
+            if (QianimValidator.limitsFor(joint) == null) {
+                continue;
+            }
+            JSONArray arr = curves.optJSONArray(joint);
+            if (arr == null || arr.length() < 2) {
+                continue;
+            }
+            joints.add(joint);
+            n = Math.max(n, arr.length());
+        }
+        if (joints.isEmpty()) {
+            throw new Exception("no usable curves");
+        }
+        n = Math.max(2, Math.min(n, 16));
+
+        int motifFrames = (n - 1) * frameStep;
+        int maxCycles = Math.max(1, (MAX_SECONDS * 25 - 25) / motifFrames);
+        int repeatCycles = Math.max(1, Math.min(maxCycles,
+                Math.round((float) (targetSeconds * 25) / motifFrames)));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
+        sb.append("<Animation typeVersion=\"2.0\" xmlns:editor=\"")
+                .append("http://www.aldebaran.com/animation/editor\" repeatCycles=\"")
+                .append(repeatCycles).append("\">\n");
+        for (String joint : joints) {
+            JSONArray arr = curves.getJSONArray(joint);
+            String unit = "LHand".equals(joint) || "RHand".equals(joint) ? "dimensionless" : "radian";
+            sb.append("  <ActuatorCurve fps=\"25\" actuator=\"").append(joint)
+                    .append("\" mute=\"false\" unit=\"").append(unit).append("\">\n");
+            double first = arr.optDouble(0, 0);
+            for (int i = 0; i < n; i++) {
+                double value;
+                if (i == n - 1) {
+                    value = first;
+                } else if (i < arr.length()) {
+                    value = arr.optDouble(i, first);
+                } else {
+                    value = arr.optDouble(arr.length() - 1, first);
+                }
+                sb.append("    <Key value=\"").append(String.format(Locale.US, "%.4f", value))
+                        .append("\" frame=\"").append(i * frameStep).append("\"/>\n");
+            }
+            sb.append("  </ActuatorCurve>\n");
+        }
+        sb.append("</Animation>");
+        return sb.toString();
     }
 
     private String gestureSystemPrompt(int targetSeconds) {
