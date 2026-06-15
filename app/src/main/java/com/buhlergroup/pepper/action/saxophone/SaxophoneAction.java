@@ -10,6 +10,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.QiFutures;
+import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class SaxophoneAction extends Action {
@@ -34,6 +35,7 @@ public class SaxophoneAction extends Action {
         if (player == null) {
             return;
         }
+        AudioCoordinator.get().attachMusic(player);
         try {
             player.start();
             long duration = player.getDuration();
@@ -42,6 +44,7 @@ public class SaxophoneAction extends Action {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
+            AudioCoordinator.get().detachMusic(player);
             try {
                 if (player.isPlaying()) {
                     player.stop();

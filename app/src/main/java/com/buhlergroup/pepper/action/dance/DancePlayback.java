@@ -10,6 +10,7 @@ import com.aldebaran.qi.sdk.builder.AnimateBuilder;
 import com.aldebaran.qi.sdk.builder.AnimationBuilder;
 import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
+import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 
 import java.io.File;
@@ -59,6 +60,7 @@ public final class DancePlayback {
                 player.seekTo((int) startMs);
             }
             player.start();
+            AudioCoordinator.get().attachMusic(player);
             return player;
         } catch (Exception e) {
             Log.w(TAG, "Preview playback failed: " + e.getMessage());
@@ -70,6 +72,7 @@ public final class DancePlayback {
         if (player == null) {
             return;
         }
+        AudioCoordinator.get().detachMusic(player);
         try {
             if (player.isPlaying()) {
                 player.stop();

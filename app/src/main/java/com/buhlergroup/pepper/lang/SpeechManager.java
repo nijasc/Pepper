@@ -6,6 +6,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.SayBuilder;
 import com.aldebaran.qi.sdk.object.conversation.Say;
 import com.aldebaran.qi.sdk.object.locale.Locale;
+import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dialogue.DialogueController;
 import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.openai.SystemSpeechRewriter;
@@ -55,6 +56,7 @@ public class SpeechManager {
     private void speak(QiContext context, String toSay, Locale locale, SupportedLanguage fallback) {
         ThinkingController.get().stop();
         DialogueController.get().beginUtterance(toSay);
+        AudioCoordinator.get().onSpeechStart();
         try {
             Say answerSay = SayBuilder.with(context)
                     .withText(toSay)
@@ -74,6 +76,7 @@ public class SpeechManager {
                 Log.e("SAYING", "Fallback say failed: " + e2.getMessage());
             }
         } finally {
+            AudioCoordinator.get().onSpeechEnd();
             DialogueController.get().endUtterance();
         }
     }

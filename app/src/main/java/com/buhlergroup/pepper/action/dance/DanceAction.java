@@ -13,6 +13,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.QiFutures;
+import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.lang.SpeechManager;
@@ -116,6 +117,7 @@ public class DanceAction extends Action {
             synchronized (audioLock) {
                 mediaPlayer = player;
             }
+            AudioCoordinator.get().attachMusic(player);
             return player;
         } catch (Exception e) {
             Log.w(TAG, "Preview playback failed: " + e.getMessage());
@@ -163,6 +165,7 @@ public class DanceAction extends Action {
             mediaPlayer = player;
         }
         if (player != null) {
+            AudioCoordinator.get().attachMusic(player);
             player.start();
         }
         return player;
@@ -175,6 +178,7 @@ public class DanceAction extends Action {
             mediaPlayer = null;
         }
         if (player != null) {
+            AudioCoordinator.get().detachMusic(player);
             try {
                 if (player.isPlaying()) {
                     player.stop();
