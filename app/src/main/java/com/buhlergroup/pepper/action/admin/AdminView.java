@@ -131,6 +131,7 @@ public class AdminView extends FrameLayout {
 
     private ImageView detailImage;
     private ImageView detailQr;
+    private TextView detailQrHint;
     private TextView detailNumber;
     private TextView detailDate;
     private Button detailFavorite;
@@ -217,6 +218,7 @@ public class AdminView extends FrameLayout {
         selfieGrid = findViewById(R.id.adminSelfieGrid);
         detailImage = findViewById(R.id.adminDetailImage);
         detailQr = findViewById(R.id.adminDetailQr);
+        detailQrHint = findViewById(R.id.adminDetailQrHint);
         detailNumber = findViewById(R.id.adminDetailNumber);
         detailDate = findViewById(R.id.adminDetailDate);
         detailFavorite = findViewById(R.id.adminDetailFavorite);
@@ -1226,6 +1228,7 @@ public class AdminView extends FrameLayout {
         detailImage.setImageBitmap(null);
         detailQr.setImageBitmap(null);
         detailQr.setVisibility(GONE);
+        detailQrHint.setVisibility(GONE);
 
         File file = new File(SelfieRepository.get(getContext()).imagesDir(), selfie.filename);
         dbExecutor.submit(() -> {
@@ -1237,9 +1240,11 @@ public class AdminView extends FrameLayout {
                     if (qr != null) {
                         detailQr.setImageBitmap(qr);
                         detailQr.setVisibility(VISIBLE);
+                        detailQrHint.setVisibility(GONE);
                     } else {
                         detailQr.setImageBitmap(null);
                         detailQr.setVisibility(GONE);
+                        detailQrHint.setVisibility(VISIBLE);
                     }
                 }
             });
