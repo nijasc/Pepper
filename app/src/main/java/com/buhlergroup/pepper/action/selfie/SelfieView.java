@@ -20,8 +20,12 @@ public class SelfieView extends FrameLayout {
     private ImageView qrView;
     private ImageView wifiQrView;
     private View wifiBlock;
+    private View shareBlock;
+    private View previewBlock;
     private TextView statusView;
     private TextView okayButton;
+    private TextView saveButton;
+    private TextView retakeButton;
     private volatile Runnable closeListener;
 
     public SelfieView(Context context) {
@@ -49,8 +53,12 @@ public class SelfieView extends FrameLayout {
         qrView = findViewById(R.id.selfieQr);
         wifiQrView = findViewById(R.id.selfieWifiQr);
         wifiBlock = findViewById(R.id.selfieWifiBlock);
+        shareBlock = findViewById(R.id.selfieShareBlock);
+        previewBlock = findViewById(R.id.selfiePreviewBlock);
         statusView = findViewById(R.id.selfieStatus);
         okayButton = findViewById(R.id.selfieOkay);
+        saveButton = findViewById(R.id.selfieSave);
+        retakeButton = findViewById(R.id.selfieRetake);
         okayButton.setTextColor(ContextCompat.getColor(context, R.color.white));
         okayButton.setOnClickListener(v -> {
             Runnable listener = closeListener;
@@ -65,8 +73,31 @@ public class SelfieView extends FrameLayout {
         this.closeListener = listener;
     }
 
+    public void showPreview(Bitmap photo, boolean canRetake, Runnable onSave, Runnable onRetake) {
+        post(() -> {
+            photoView.setImageBitmap(photo);
+            previewBlock.setVisibility(View.VISIBLE);
+            shareBlock.setVisibility(View.GONE);
+            retakeButton.setVisibility(canRetake ? View.VISIBLE : View.GONE);
+            saveButton.setOnClickListener(v -> {
+                if (onSave != null) {
+                    onSave.run();
+                }
+            });
+            retakeButton.setOnClickListener(v -> {
+                if (onRetake != null) {
+                    onRetake.run();
+                }
+            });
+            setVisibility(View.VISIBLE);
+            bringToFront();
+        });
+    }
+
     public void show(Bitmap photo, Bitmap qr, Bitmap wifiQr) {
         post(() -> {
+            previewBlock.setVisibility(View.GONE);
+            shareBlock.setVisibility(View.VISIBLE);
             photoView.setImageBitmap(photo);
             qrView.setImageBitmap(qr);
             if (wifiQr != null) {
@@ -90,6 +121,10 @@ public class SelfieView extends FrameLayout {
             photoView.setImageBitmap(null);
             qrView.setImageBitmap(null);
             wifiQrView.setImageBitmap(null);
+            saveButton.setOnClickListener(null);
+            retakeButton.setOnClickListener(null);
+            previewBlock.setVisibility(View.GONE);
+            shareBlock.setVisibility(View.VISIBLE);
         });
     }
 }

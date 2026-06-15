@@ -15,6 +15,9 @@
     <string name="selfie_scan_hint">Scanne den QR-Code, um dein Bild herunterzuladen</string>
     <string name="selfie_wifi_hint">Scanne, um dich mit Peppers WLAN zu verbinden</string>
     <string name="selfie_okay">Okay</string>
+    <string name="selfie_preview_title">Passt das Foto?</string>
+    <string name="selfie_save">Speichern</string>
+    <string name="selfie_retake">Nochmal</string>
     <string name="admin_button">Admin</string>
     <string name="admin_pin_title">Admin – PIN eingeben</string>
     <string name="admin_pin_error">Falscher PIN</string>
