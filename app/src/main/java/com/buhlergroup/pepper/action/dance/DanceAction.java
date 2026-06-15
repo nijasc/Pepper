@@ -47,6 +47,7 @@ public class DanceAction extends Action {
         if (!hasConcreteSong(request)) {
             DanceEntity fromLibrary = pickFromLibrary(context);
             if (fromLibrary != null) {
+                repository.preparePlayback(context, fromLibrary);
                 SpeechManager.getInstance().systemSay(context,
                         "Ich tanze einen Tanz aus meiner Sammlung für dich.");
                 playDance(context, fromLibrary);

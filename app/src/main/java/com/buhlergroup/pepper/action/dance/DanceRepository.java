@@ -37,7 +37,9 @@ public final class DanceRepository {
         if (bySong != null) {
             if (bySong.qianimPath != null && new File(bySong.qianimPath).exists()) {
                 Log.i(TAG, "Reusing dance for " + songName);
-                bySong.previewUrl = source.previewUrl;
+                if (!applyLocalAudio(bySong)) {
+                    bySong.previewUrl = source.previewUrl;
+                }
                 return bySong;
             }
             dao.deleteById(bySong.youtubeId);
@@ -46,7 +48,9 @@ public final class DanceRepository {
         DanceEntity existing = dao.findById(source.sourceId);
         if (existing != null && existing.qianimPath != null
                 && new File(existing.qianimPath).exists()) {
-            existing.previewUrl = source.previewUrl;
+            if (!applyLocalAudio(existing)) {
+                existing.previewUrl = source.previewUrl;
+            }
             return existing;
         }
 
@@ -166,13 +170,42 @@ public final class DanceRepository {
         }
     }
 
-    public void preparePlayback(DanceEntity dance) {
+    public void preparePlayback(Context context, DanceEntity dance) {
+        if (applyLocalAudio(dance)) {
+            Log.i(TAG, "Playing '" + dance.songName + "' from local cache");
+            return;
+        }
         try {
             ITunesSearch.Result track = new ITunesSearch().search(dance.songName);
             dance.previewUrl = track.previewUrl;
+            backfillAudioCache(context, dance, track.previewUrl);
         } catch (Exception e) {
             Log.w(TAG, "Could not resolve preview for '" + dance.songName + "': " + e.getMessage());
             dance.previewUrl = null;
+        }
+    }
+
+    private boolean applyLocalAudio(DanceEntity dance) {
+        if (dance.audioPath != null && new File(dance.audioPath).exists()) {
+            dance.previewUrl = dance.audioPath;
+            return true;
+        }
+        return false;
+    }
+
+    private void backfillAudioCache(Context context, DanceEntity dance, String previewUrl) {
+        if (previewUrl == null || previewUrl.isEmpty() || dance.youtubeId == null) {
+            return;
+        }
+        try {
+            File audioFile = new File(danceDir(context), sanitizeFileName(dance.youtubeId) + ".m4a");
+            downloadToFile(previewUrl, audioFile);
+            dance.audioPath = audioFile.getAbsolutePath();
+            dance.previewUrl = audioFile.getAbsolutePath();
+            DanceDatabase.get(context).danceDao().setAudioPath(dance.youtubeId, dance.audioPath);
+            Log.i(TAG, "Backfilled local audio cache for " + dance.songName);
+        } catch (Exception e) {
+            Log.w(TAG, "Could not backfill audio cache for " + dance.songName + ": " + e.getMessage());
         }
     }
 

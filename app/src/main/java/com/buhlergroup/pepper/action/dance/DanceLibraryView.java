@@ -137,7 +137,7 @@ public class DanceLibraryView extends FrameLayout {
         toast("Spiele " + dance.songName);
         heavyExecutor.execute(() -> {
             try {
-                repository.preparePlayback(dance);
+                repository.preparePlayback(getContext(), dance);
                 DancePlayback.play(qiContext, dance);
             } catch (Exception e) {
                 post(() -> toast("Abspielen fehlgeschlagen: " + e.getMessage()));
@@ -192,7 +192,7 @@ public class DanceLibraryView extends FrameLayout {
         heavyExecutor.execute(() -> {
             MediaPlayer player = null;
             try {
-                repository.preparePlayback(dance);
+                repository.preparePlayback(getContext(), dance);
                 if (dance.previewUrl == null) {
                     post(() -> toast("Keine Vorschau verfügbar."));
                     return;
