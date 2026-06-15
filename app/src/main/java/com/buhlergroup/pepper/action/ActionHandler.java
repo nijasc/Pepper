@@ -25,6 +25,7 @@ import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.action.volume.ChangeVolumeAction;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.net.Connectivity;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
@@ -57,6 +58,12 @@ public class ActionHandler {
 
         historyManager.addDeveloper("User input captured: \"" + input + "\"");
 
+        if (!Connectivity.isOnline(context)) {
+            Log.w(this.getClass().getSimpleName(), "No connectivity, skipping OpenAI call");
+            announceOffline(context);
+            return;
+        }
+
         ThinkingController.get().start(context);
         try {
             if (!handleCombined(context, input)) {
@@ -65,6 +72,11 @@ public class ActionHandler {
         } finally {
             ThinkingController.get().stop();
         }
+    }
+
+    private void announceOffline(QiContext context) {
+        SpeechManager.getInstance().say(context,
+                "Ich habe gerade keine Verbindung. Bitte versuche es gleich noch einmal.");
     }
 
     private boolean handleCombined(QiContext context, String input) {
