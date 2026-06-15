@@ -25,8 +25,8 @@ public final class DanceRepository {
         DanceDao dao = DanceDatabase.get(context).danceDao();
         File danceDir = danceDir(context);
 
-        String songName = normalizeSongName(query);
-        SongSource source = resolveSource(songName);
+        SongSource source = resolveSource(normalizeSongName(query));
+        String songName = normalizeSongName(source.title);
 
         DanceEntity bySong = dao.findBySongName(songName);
         if (bySong != null) {
@@ -66,20 +66,22 @@ public final class DanceRepository {
 
     private static final class SongSource {
         final String sourceId;
+        final String title;
         final String previewUrl;
         final long durationMs;
 
-        SongSource(String sourceId, String previewUrl, long durationMs) {
+        SongSource(String sourceId, String title, String previewUrl, long durationMs) {
             this.sourceId = sourceId;
+            this.title = title;
             this.previewUrl = previewUrl;
             this.durationMs = durationMs;
         }
     }
 
-    private SongSource resolveSource(String songName) throws Exception {
-        ITunesSearch.Result track = new ITunesSearch().search(songName);
+    private SongSource resolveSource(String query) throws Exception {
+        ITunesSearch.Result track = new ITunesSearch().search(query);
         Log.i(TAG, "Selected '" + track.title + "' (" + track.trackId + ")");
-        return new SongSource(track.trackId, track.previewUrl, track.durationMs);
+        return new SongSource(track.trackId, track.title, track.previewUrl, track.durationMs);
     }
 
     private String sanitizeFileName(String value) {
