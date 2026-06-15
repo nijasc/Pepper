@@ -30,6 +30,7 @@ import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.buhlergroup.pepper.action.navigation.data.NavigationDatabase;
 import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
+import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -231,14 +232,24 @@ public final class NavigationManager {
                 Localize localize = LocalizeBuilder.with(c).withMap(map).build();
                 AtomicBoolean done = new AtomicBoolean(false);
                 localize.addOnStatusChangedListener(status -> {
-                    if (status == LocalizationStatus.LOCALIZED && done.compareAndSet(false, true)) {
+                    if (status == LocalizationStatus.LOCALIZED) {
+                        boolean recovered = done.get() && !localized;
                         localized = true;
-                        cb.onResult(true);
+                        if (done.compareAndSet(false, true)) {
+                            cb.onResult(true);
+                        } else if (recovered) {
+                            announceLocalization(c, true);
+                        }
+                    } else if (done.get() && localized) {
+                        handleLocalizationLost(c);
                     }
                 });
                 localizeFuture = localize.async().run();
                 localizeFuture.thenConsume(f -> {
                     if (f.hasError() || f.isCancelled()) {
+                        if (localized && done.get()) {
+                            handleLocalizationLost(c);
+                        }
                         localized = false;
                     }
                 });
@@ -388,6 +399,29 @@ public final class NavigationManager {
             }
             cb.onResult(bitmap);
         });
+    }
+
+    private void handleLocalizationLost(QiContext c) {
+        localized = false;
+        announceLocalization(c, false);
+    }
+
+    private void announceLocalization(QiContext c, boolean recovered) {
+        if (c == null) {
+            return;
+        }
+        final String text = recovered
+                ? "Ich habe mich wieder orientiert."
+                : "Ich habe meine Orientierung verloren. Ich halte an und versuche, "
+                + "mich neu zu orientieren.";
+        Thread announcer = new Thread(() -> {
+            try {
+                SpeechManager.getInstance().say(c, text);
+            } catch (Exception ignored) {
+            }
+        }, "nav-announce");
+        announcer.setDaemon(true);
+        announcer.start();
     }
 
     private Bitmap renderMap(ExplorationMap map) {
