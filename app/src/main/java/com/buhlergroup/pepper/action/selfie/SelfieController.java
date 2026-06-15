@@ -177,8 +177,7 @@ public final class SelfieController {
             acquireServer(context);
             serverAcquired = true;
 
-            String url = "http://" + ip + ":" + SERVER_PORT + "/" + entity.filename
-                    + "?token=" + tokenFor(entity.filename);
+            String url = downloadUrl(context, entity.filename);
             Bitmap qr = QrGenerator.encode(url, 600);
             Bitmap wifiQr = buildWifiQr(context);
 
@@ -231,6 +230,14 @@ public final class SelfieController {
     public String tokenFor(String filename) {
         LocalImageServer current = server;
         return current != null ? current.tokenFor(filename) : "";
+    }
+
+    public String downloadUrl(Context context, String filename) {
+        String ip = NetworkUtils.localIp(context);
+        if (ip == null) {
+            return null;
+        }
+        return "http://" + ip + ":" + SERVER_PORT + "/" + filename + "?token=" + tokenFor(filename);
     }
 
     private void ensureServer(File imagesDir) throws IOException {

@@ -1247,12 +1247,10 @@ public class AdminView extends FrameLayout {
     }
 
     private Bitmap buildSelfieQr(SelfieEntity selfie) {
-        String ip = NetworkUtils.localIp(getContext());
-        if (ip == null) {
+        String url = SelfieController.get().downloadUrl(getContext(), selfie.filename);
+        if (url == null) {
             return null;
         }
-        String url = "http://" + ip + ":" + SelfieController.get().serverPort() + "/" + selfie.filename
-                + "?token=" + SelfieController.get().tokenFor(selfie.filename);
         try {
             return QrGenerator.encode(url, 500);
         } catch (Exception e) {
