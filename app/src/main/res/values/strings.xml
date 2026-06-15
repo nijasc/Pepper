@@ -143,4 +143,7 @@
     <string name="raffle_entry_delete">Löschen</string>
     <string name="raffle_entry_delete_title">Teilnehmer löschen?</string>
     <string name="raffle_entry_delete_message">Alle Daten von %1$s (inkl. Selfie) endgültig löschen?</string>
+    <string name="raffle_delete">Verlosung löschen</string>
+    <string name="raffle_delete_title">Verlosung löschen?</string>
+    <string name="raffle_delete_message">Die Verlosung und ALLE Teilnehmerdaten (inkl. Selfies) endgültig löschen? Das kann nicht rückgängig gemacht werden.</string>
 </resources>

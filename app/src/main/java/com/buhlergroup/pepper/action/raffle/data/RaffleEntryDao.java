@@ -33,6 +33,9 @@ public interface RaffleEntryDao {
     @Query("DELETE FROM raffle_entries WHERE id = :entryId")
     void deleteById(long entryId);
 
+    @Query("DELETE FROM raffle_entries WHERE raffle_id = :raffleId")
+    void deleteByRaffle(long raffleId);
+
     @Query("SELECT * FROM raffle_entries WHERE raffle_id = :raffleId ORDER BY RANDOM() LIMIT 1")
     RaffleEntryEntity getRandomEntry(long raffleId);
 

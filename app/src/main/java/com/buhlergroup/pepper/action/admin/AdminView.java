@@ -126,6 +126,7 @@ public class AdminView extends FrameLayout {
     private LinearLayout raffleEntries;
     private Button raffleCloseButton;
     private Button raffleFinishButton;
+    private Button raffleDeleteButton;
     private Button raffleDrawButton;
     private Button raffleRedrawButton;
     private Button raffleEmailButton;
@@ -199,6 +200,7 @@ public class AdminView extends FrameLayout {
         raffleEntries = findViewById(R.id.adminRaffleEntries);
         raffleCloseButton = findViewById(R.id.adminRaffleClose);
         raffleFinishButton = findViewById(R.id.adminRaffleFinish);
+        raffleDeleteButton = findViewById(R.id.adminRaffleDelete);
         raffleDrawButton = findViewById(R.id.adminRaffleDraw);
         raffleRedrawButton = findViewById(R.id.adminRaffleRedraw);
         raffleEmailButton = findViewById(R.id.adminRaffleEmail);
@@ -233,6 +235,7 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.raffleCreateBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         raffleFinishButton.setOnClickListener(v -> finishCurrentRaffle());
         raffleCloseButton.setOnClickListener(v -> closeCurrentRaffle());
+        raffleDeleteButton.setOnClickListener(v -> confirmDeleteRaffle());
         raffleDrawButton.setOnClickListener(v -> drawWinner());
         raffleRedrawButton.setOnClickListener(v -> drawWinner());
         raffleEmailButton.setOnClickListener(v -> sendWinnerEmail());
@@ -506,6 +509,7 @@ public class AdminView extends FrameLayout {
         boolean ended = raffle.status == RaffleStatus.ENDED;
         raffleCloseButton.setVisibility(raffle.status == RaffleStatus.ACTIVE ? VISIBLE : GONE);
         raffleFinishButton.setVisibility(ended ? VISIBLE : GONE);
+        raffleDeleteButton.setVisibility(ended ? VISIBLE : GONE);
 
         RaffleEntryEntity winner = null;
         if (raffle.winnerId != null) {
@@ -602,6 +606,29 @@ public class AdminView extends FrameLayout {
             });
         }
         return row;
+    }
+
+    private void confirmDeleteRaffle() {
+        if (currentRaffleId <= 0) {
+            return;
+        }
+        new AlertDialog.Builder(getContext())
+                .setTitle(R.string.raffle_delete_title)
+                .setMessage(R.string.raffle_delete_message)
+                .setNegativeButton(R.string.admin_back, null)
+                .setPositiveButton(R.string.raffle_delete, (d, w) -> deleteCurrentRaffle())
+                .show();
+    }
+
+    private void deleteCurrentRaffle() {
+        long id = currentRaffleId;
+        if (id <= 0) {
+            return;
+        }
+        dbExecutor.submit(() -> {
+            RaffleRepository.get(getContext()).deleteRaffleCompletely(id);
+            post(this::openRaffle);
+        });
     }
 
     private void confirmDeleteEntry(RaffleEntryEntity entry) {

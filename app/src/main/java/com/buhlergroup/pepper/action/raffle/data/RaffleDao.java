@@ -31,4 +31,7 @@ public interface RaffleDao {
 
     @Query("UPDATE raffles SET winnerId = :entryId WHERE id = :raffleId")
     void setWinner(long raffleId, long entryId);
+
+    @Query("DELETE FROM raffles WHERE id = :id")
+    void deleteById(long id);
 }

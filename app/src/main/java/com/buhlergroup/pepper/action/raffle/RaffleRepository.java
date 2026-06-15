@@ -102,6 +102,15 @@ public final class RaffleRepository {
         deleteSelfieIfOrphaned(entry.selfieId);
     }
 
+    public void deleteRaffleCompletely(long raffleId) {
+        List<RaffleEntryEntity> entries = entryDao.getEntries(raffleId);
+        entryDao.deleteByRaffle(raffleId);
+        for (RaffleEntryEntity entry : entries) {
+            deleteSelfieIfOrphaned(entry.selfieId);
+        }
+        raffleDao.deleteById(raffleId);
+    }
+
     private void deleteSelfieIfOrphaned(String selfieId) {
         if (selfieId == null || selfieId.isEmpty()) {
             return;
