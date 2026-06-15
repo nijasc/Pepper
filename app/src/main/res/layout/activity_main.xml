@@ -46,40 +46,6 @@
         android:textSize="28sp"
         android:visibility="gone" />
 
-    <LinearLayout
-        android:id="@+id/homeTiles"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="16dp"
-        android:orientation="horizontal">
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/tileDance"
-            style="@style/HomeTile"
-            android:text="@string/tile_dance" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/tileSelfie"
-            style="@style/HomeTile"
-            android:text="@string/tile_selfie" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/tileMemory"
-            style="@style/HomeTile"
-            android:text="@string/tile_memory" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/tileRaffle"
-            style="@style/HomeTile"
-            android:text="@string/tile_raffle" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/tileHighFive"
-            style="@style/HomeTile"
-            android:text="@string/tile_highfive" />
-    </LinearLayout>
-
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/adminButton"
         android:layout_width="wrap_content"
