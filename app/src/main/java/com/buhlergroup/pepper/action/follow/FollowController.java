@@ -42,6 +42,13 @@ public final class FollowController {
     private static final double TARGET_LOCK_GATE_M = 0.75;
     private static final long LOOP_PAUSE_MS = 150;
     private static final int MAX_MISSES = 25;
+    private static final long FOLLOW_CONFIRM_INTERVAL_MS = 30000;
+
+    private static final String[] FOLLOW_CONFIRMATIONS = {
+            "Ich folge dir.",
+            "Ich bin noch hinter dir.",
+            "Ich bleibe an deiner Seite."
+    };
 
     private enum Move { STOP, ROTATE, DRIVE }
 
@@ -124,6 +131,8 @@ public final class FollowController {
         long lastGoToAtMs = 0L;
         int misses = 0;
         boolean lostTarget = false;
+        long lastConfirmAtMs = System.currentTimeMillis();
+        int confirmIndex = 0;
 
         try {
             Frame robotFrame = context.getActuation().robotFrame();
@@ -152,6 +161,14 @@ public final class FollowController {
                     continue;
                 }
                 misses = 0;
+
+                long confirmNow = System.currentTimeMillis();
+                if (confirmNow - lastConfirmAtMs > FOLLOW_CONFIRM_INTERVAL_MS) {
+                    lastConfirmAtMs = confirmNow;
+                    sayQuietly(context,
+                            FOLLOW_CONFIRMATIONS[confirmIndex % FOLLOW_CONFIRMATIONS.length]);
+                    confirmIndex++;
+                }
 
                 Transform t = human.getHeadFrame().computeTransform(robotFrame).getTransform();
                 double x = t.getTranslation().getX();
