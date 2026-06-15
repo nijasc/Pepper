@@ -75,7 +75,7 @@ public class DanceAction extends Action {
                 clipMs = dance.durationMs;
             }
             long playMs = Math.max(MIN_PLAY_MS, Math.min(MAX_PLAY_MS, clipMs));
-            sleep(playMs);
+            awaitAnimation(animationFuture, playMs);
 
             stopAudio();
             if (!animationFuture.isDone()) {
@@ -88,6 +88,16 @@ public class DanceAction extends Action {
                 animationFuture.requestCancellation();
             }
             playFallback(context);
+        }
+    }
+
+    private void awaitAnimation(Future<Void> animationFuture, long capMs) {
+        long deadline = System.currentTimeMillis() + capMs;
+        while (System.currentTimeMillis() < deadline) {
+            if (animationFuture == null || animationFuture.isDone()) {
+                return;
+            }
+            sleep(100);
         }
     }
 
