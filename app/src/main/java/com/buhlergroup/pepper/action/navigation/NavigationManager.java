@@ -530,6 +530,10 @@ public final class NavigationManager {
                         rotationSweep(c);
                     }
                 }
+                if (scanning) {
+                    driveToOriginOffset(c, 0.0, 0.0);
+                    announceScanComplete(c);
+                }
             } catch (Exception e) {
                 Log.w(TAG, "autoScanExplore failed: " + e.getMessage());
             } finally {
@@ -583,6 +587,18 @@ public final class NavigationManager {
 
     private double clampRadius(double value) {
         return Math.max(-SCAN_RADIUS_M, Math.min(SCAN_RADIUS_M, value));
+    }
+
+    private void announceScanComplete(QiContext c) {
+        Thread announcer = new Thread(() -> {
+            try {
+                SpeechManager.getInstance().say(c,
+                        "Ich habe den Raum fertig gescannt und bin zum Startpunkt zurückgefahren.");
+            } catch (Exception ignored) {
+            }
+        }, "scan-done");
+        announcer.setDaemon(true);
+        announcer.start();
     }
 
     private void cancelRotation() {
