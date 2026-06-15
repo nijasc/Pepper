@@ -59,6 +59,7 @@ public final class DanceRepository {
                 source.sourceId, songName, qianimFile.getAbsolutePath(),
                 durationMs, false, System.currentTimeMillis());
         entity.previewUrl = source.previewUrl;
+        entity.audioStartMs = generator.recommendStartSeconds(context, songName) * 1000L;
         dao.insert(entity);
         Log.i(TAG, "Created dance for " + songName + " from iTunes " + source.sourceId);
         return entity;

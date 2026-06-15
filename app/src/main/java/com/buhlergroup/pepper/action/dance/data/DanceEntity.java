@@ -31,6 +31,9 @@ public class DanceEntity {
     @ColumnInfo(name = "created_at")
     public long createdAt;
 
+    @ColumnInfo(name = "audio_start_ms", defaultValue = "0")
+    public long audioStartMs;
+
     @Ignore
     @Nullable
     public String previewUrl;

@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class AnimationGenerator {
 
@@ -38,6 +40,55 @@ public final class AnimationGenerator {
         int target = Math.min(MAX_SECONDS, Math.max(8, seconds));
         return generate(context, danceSystemPrompt(target),
                 "Choreograph a full-body dance for this song: " + songName);
+    }
+
+    public int recommendStartSeconds(Context context, String songName) {
+        openAi.setC(context);
+        try {
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(message("system",
+                    "You know popular songs and the iconic dance hooks people perform to them. The dance "
+                            + "audio is the roughly 30-second iTunes preview of the given song, which usually "
+                            + "begins around the chorus. Reply with ONLY a JSON object {\"startSeconds\": N} "
+                            + "where N is an integer from 0 to 15 giving how many seconds into that preview the "
+                            + "song's signature, most danceable hook lands, so a dance move can hit on it. If the "
+                            + "hook is right at the start or you are unsure, answer 0. No prose, only the JSON."));
+            messages.add(message("user", "Song: " + songName));
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("model", ModelSelector.FAST);
+            body.put("messages", messages);
+
+            String response = openAi.sendOpenAiRequest("/chat/completions", body, 20000);
+            String content = new JSONObject(response)
+                    .getJSONArray("choices")
+                    .getJSONObject(0)
+                    .getJSONObject("message")
+                    .getString("content");
+            int seconds = parseStartSeconds(content);
+            Log.i(TAG, "Recommended start offset for '" + songName + "': " + seconds + "s");
+            return seconds;
+        } catch (Exception e) {
+            Log.w(TAG, "Start-offset request failed, using 0: " + e.getMessage());
+            return 0;
+        }
+    }
+
+    private int parseStartSeconds(String content) {
+        if (content == null) {
+            return 0;
+        }
+        int seconds = 0;
+        Matcher tagged = Pattern.compile("startSeconds\"?\\s*[:=]\\s*(\\d{1,3})").matcher(content);
+        if (tagged.find()) {
+            seconds = Integer.parseInt(tagged.group(1));
+        } else {
+            Matcher any = Pattern.compile("(\\d{1,3})").matcher(content);
+            if (any.find()) {
+                seconds = Integer.parseInt(any.group(1));
+            }
+        }
+        return Math.max(0, Math.min(15, seconds));
     }
 
     private String generate(Context context, String systemPrompt, String userBase) {

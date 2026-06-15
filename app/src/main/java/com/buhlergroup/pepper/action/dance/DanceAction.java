@@ -63,13 +63,14 @@ public class DanceAction extends Action {
             Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 
-            boolean audioPlaying = dance.previewUrl != null && startAudioUrl(dance.previewUrl);
+            boolean audioPlaying = dance.previewUrl != null
+                    && startAudioUrl(dance.previewUrl, dance.audioStartMs);
 
             animationFuture = animate.async().run();
             QiFutures.consume(animationFuture, TAG, "dance animation");
 
             long clipMs = audioPlaying && mediaPlayer != null
-                    ? mediaPlayer.getDuration() : dance.durationMs;
+                    ? mediaPlayer.getDuration() - dance.audioStartMs : dance.durationMs;
             if (clipMs <= 0) {
                 clipMs = dance.durationMs;
             }
@@ -90,7 +91,7 @@ public class DanceAction extends Action {
         }
     }
 
-    private boolean startAudioUrl(String url) {
+    private boolean startAudioUrl(String url, long startMs) {
         stopAudio();
         try {
             MediaPlayer player = new MediaPlayer();
@@ -98,6 +99,9 @@ public class DanceAction extends Action {
             player.setAudioStreamType(AudioManager.STREAM_MUSIC);
             player.setDataSource(url);
             player.prepare();
+            if (startMs > 0 && startMs < player.getDuration()) {
+                player.seekTo((int) startMs);
+            }
             player.start();
             return true;
         } catch (Exception e) {
