@@ -70,6 +70,11 @@ public final class NavigationManager {
     private volatile MapUpdateListener mapUpdateListener;
     private volatile int pollGeneration;
     private volatile Future<Void> rotateFuture;
+    private volatile Future<Void> activeGoTo;
+
+    private interface Condition {
+        boolean shouldContinue();
+    }
 
     private NavigationManager() {
     }
@@ -86,6 +91,7 @@ public final class NavigationManager {
         scanning = false;
         stopMapPolling();
         cancelRotation();
+        cancelActiveGoTo();
         cancelLocalize();
         cancelMapping();
         releaseAbilities();
@@ -403,6 +409,7 @@ public final class NavigationManager {
 
     private void handleLocalizationLost(QiContext c) {
         localized = false;
+        cancelActiveGoTo();
         announceLocalization(c, false);
     }
 
@@ -490,10 +497,7 @@ public final class NavigationManager {
                     Future<Void> goToFuture = GoToBuilder.with(c)
                             .withFrame(target.frame()).build().async().run();
                     rotateFuture = goToFuture;
-                    if (!scanning) {
-                        goToFuture.requestCancellation();
-                    }
-                    goToFuture.get();
+                    awaitGoTo(goToFuture, () -> scanning);
                 } catch (Exception e) {
                     Log.w(TAG, "autoScanRotate step failed: " + e.getMessage());
                     break;
@@ -513,14 +517,45 @@ public final class NavigationManager {
         }
     }
 
-    private void driveTo(QiContext c, WaypointEntity wp) throws Exception {
+    private void cancelActiveGoTo() {
+        Future<Void> f = activeGoTo;
+        activeGoTo = null;
+        if (f != null && !f.isDone()) {
+            f.requestCancellation();
+        }
+    }
+
+    private void awaitGoTo(Future<Void> future, Condition condition) {
+        while (!future.isDone()) {
+            if (!condition.shouldContinue()) {
+                future.requestCancellation();
+                break;
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                future.requestCancellation();
+                break;
+            }
+        }
+    }
+
+    private void driveTo(QiContext c, WaypointEntity wp) {
         Mapping mapping = c.getMapping();
         Frame mapFrame = mapping.mapFrame();
         Transform t = TransformBuilder.create().from2DTransform(wp.x, wp.y, wp.theta);
         FreeFrame target = mapping.makeFreeFrame();
         target.update(mapFrame, t, 0L);
-        GoTo goTo = GoToBuilder.with(c).withFrame(target.frame()).build();
-        goTo.run();
+        Future<Void> future = GoToBuilder.with(c).withFrame(target.frame()).build().async().run();
+        activeGoTo = future;
+        try {
+            awaitGoTo(future, () -> localized && qiContext != null);
+        } finally {
+            if (activeGoTo == future) {
+                activeGoTo = null;
+            }
+        }
     }
 
     private Transform robotInMap(QiContext c) {
