@@ -12,6 +12,9 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,6 +24,7 @@ public final class LocalImageServer {
 
     private final File rootDir;
     private final int port;
+    private final String secret;
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
     private volatile ServerSocket serverSocket;
@@ -29,6 +33,41 @@ public final class LocalImageServer {
     public LocalImageServer(File rootDir, int port) {
         this.rootDir = rootDir;
         this.port = port;
+        byte[] random = new byte[16];
+        new SecureRandom().nextBytes(random);
+        this.secret = toHex(random, random.length);
+    }
+
+    public String tokenFor(String filename) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest((secret + ":" + filename).getBytes(StandardCharsets.UTF_8));
+            return toHex(hash, 8);
+        } catch (NoSuchAlgorithmException e) {
+            return "";
+        }
+    }
+
+    private static String toHex(byte[] bytes, int count) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < count && i < bytes.length; i++) {
+            sb.append(Character.forDigit((bytes[i] >> 4) & 0xF, 16));
+            sb.append(Character.forDigit(bytes[i] & 0xF, 16));
+        }
+        return sb.toString();
+    }
+
+    private static String paramValue(String query, String key) {
+        if (query.isEmpty()) {
+            return "";
+        }
+        for (String pair : query.split("&")) {
+            int eq = pair.indexOf('=');
+            if (eq > 0 && pair.substring(0, eq).equals(key)) {
+                return pair.substring(eq + 1);
+            }
+        }
+        return "";
     }
 
     public synchronized void start() throws IOException {
@@ -85,15 +124,23 @@ public final class LocalImageServer {
             }
 
             String path = parts[1];
-            int query = path.indexOf('?');
-            if (query >= 0) {
-                path = path.substring(0, query);
+            String query = "";
+            int queryIndex = path.indexOf('?');
+            if (queryIndex >= 0) {
+                query = path.substring(queryIndex + 1);
+                path = path.substring(0, queryIndex);
             }
             String name = new File(path).getName();
             File file = new File(rootDir, name);
 
             if (name.isEmpty() || !file.isFile() || !isWithin(rootDir, file)) {
                 writeStatus(out, "404 Not Found");
+                return;
+            }
+
+            String token = paramValue(query, "token");
+            if (token.isEmpty() || !token.equals(tokenFor(name))) {
+                writeStatus(out, "403 Forbidden");
                 return;
             }
 

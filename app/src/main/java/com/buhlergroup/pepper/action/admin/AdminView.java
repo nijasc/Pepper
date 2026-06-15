@@ -1045,7 +1045,8 @@ public class AdminView extends FrameLayout {
         if (ip == null) {
             return null;
         }
-        String url = "http://" + ip + ":" + SelfieController.get().serverPort() + "/" + selfie.filename;
+        String url = "http://" + ip + ":" + SelfieController.get().serverPort() + "/" + selfie.filename
+                + "?token=" + SelfieController.get().tokenFor(selfie.filename);
         try {
             return QrGenerator.encode(url, 500);
         } catch (Exception e) {
