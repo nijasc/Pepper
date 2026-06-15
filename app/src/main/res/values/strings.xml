@@ -177,6 +177,8 @@
     <string name="attract_greet_label">Begrüßungs-Intervall (Sekunden)</string>
     <string name="attract_test">Jetzt testen</string>
     <string name="attract_saved">Attract-Einstellungen gespeichert.</string>
+    <string name="dance_startpoint">Startpunkt</string>
+    <string name="dance_preview_here">Ab hier vorhören</string>
     <string name="status_refresh">Aktualisieren</string>
     <string name="status_wifi_connected">WLAN: verbunden (%1$s)</string>
     <string name="status_wifi_disconnected">WLAN: getrennt</string>

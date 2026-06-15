@@ -102,6 +102,10 @@ public final class DanceRepository {
         DanceDatabase.get(context).danceDao().setFavorite(youtubeId, favorite);
     }
 
+    public void setAudioStart(Context context, String youtubeId, long audioStartMs) {
+        DanceDatabase.get(context).danceDao().setAudioStartMs(youtubeId, audioStartMs);
+    }
+
     public void rename(Context context, String youtubeId, String name) {
         DanceDatabase.get(context).danceDao().rename(youtubeId, name);
     }

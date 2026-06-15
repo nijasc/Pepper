@@ -2,6 +2,9 @@ package com.buhlergroup.pepper.action.dance;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -15,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 
 import java.util.List;
@@ -110,6 +114,8 @@ public class DanceLibraryView extends FrameLayout {
             row.addView(label);
 
             row.addView(pill("Abspielen", R.drawable.bg_pill_teal, v -> playDance(dance)));
+            row.addView(pill(getContext().getString(R.string.dance_startpoint),
+                    R.drawable.bg_pill_teal, v -> showStartPointDialog(dance)));
             row.addView(pill("KI-Edit", R.drawable.bg_pill_teal,
                     v -> DanceLibraryController.get().requestVoiceEdit(dance)));
             row.addView(pill(getContext().getString(R.string.dance_favorite),
@@ -150,6 +156,70 @@ public class DanceLibraryView extends FrameLayout {
                 });
             } catch (Exception e) {
                 post(() -> toast("Bearbeitung fehlgeschlagen: " + e.getMessage()));
+            }
+        });
+    }
+
+    private void showStartPointDialog(DanceEntity dance) {
+        EditText input = new EditText(getContext());
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setText(String.valueOf(dance.audioStartMs / 1000));
+        new AlertDialog.Builder(getContext())
+                .setTitle(R.string.dance_startpoint)
+                .setView(input)
+                .setNeutralButton(R.string.dance_preview_here,
+                        (d, w) -> previewFrom(dance, parseSeconds(input) * 1000L))
+                .setNegativeButton(R.string.admin_back, null)
+                .setPositiveButton(R.string.raffle_save, (d, w) -> {
+                    long ms = parseSeconds(input) * 1000L;
+                    executor.execute(() -> {
+                        repository.setAudioStart(getContext(), dance.youtubeId, ms);
+                        dance.audioStartMs = ms;
+                    });
+                })
+                .show();
+    }
+
+    private long parseSeconds(EditText input) {
+        try {
+            return Math.max(0, Math.min(29, Long.parseLong(input.getText().toString().trim())));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private void previewFrom(DanceEntity dance, long ms) {
+        heavyExecutor.execute(() -> {
+            MediaPlayer player = null;
+            try {
+                repository.preparePlayback(dance);
+                if (dance.previewUrl == null) {
+                    post(() -> toast("Keine Vorschau verfügbar."));
+                    return;
+                }
+                player = new MediaPlayer();
+                player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                player.setDataSource(dance.previewUrl);
+                player.prepare();
+                if (ms > 0 && ms < player.getDuration()) {
+                    player.seekTo((int) ms);
+                }
+                AudioCoordinator.get().attachMusic(player);
+                player.start();
+                Thread.sleep(8000);
+            } catch (Exception e) {
+                post(() -> toast("Vorhören fehlgeschlagen: " + e.getMessage()));
+            } finally {
+                if (player != null) {
+                    AudioCoordinator.get().detachMusic(player);
+                    try {
+                        if (player.isPlaying()) {
+                            player.stop();
+                        }
+                    } catch (Exception ignored) {
+                    }
+                    player.release();
+                }
             }
         });
     }
