@@ -94,6 +94,7 @@ public final class NavigationManager {
 
     public void onFocusLost() {
         scanning = false;
+        scanOrigin = null;
         stopMapPolling();
         cancelRotation();
         cancelActiveGoTo();
@@ -148,6 +149,7 @@ public final class NavigationManager {
     public void stopAndSaveScan(String name, Callback<RoomScanEntity> cb) {
         scanning = false;
         cancelRotation();
+        cancelActiveGoTo();
         executor.execute(() -> {
             QiContext c = qiContext;
             LocalizeAndMap lam = currentMapping;
@@ -177,6 +179,7 @@ public final class NavigationManager {
                 stopMapPolling();
                 cancelMapping();
                 releaseAbilities();
+                scanOrigin = null;
                 scanning = false;
             }
         });
