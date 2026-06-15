@@ -53,6 +53,10 @@
     <string name="dance_subtitle">Automatisch generierte Tänze zu YouTube-Songs.</string>
     <string name="dance_close">Schließen</string>
     <string name="dance_favorite">Favorit</string>
+    <string name="dance_unfavorite">Favorit entfernen</string>
+    <string name="dance_ai_edit">KI-Edit</string>
+    <string name="dance_play">Abspielen</string>
+    <string name="dance_more">Mehr Optionen</string>
     <string name="dance_rename">Umbenennen</string>
     <string name="dance_delete">Löschen</string>
     <string name="dance_empty">Noch keine Tänze. Bitte Pepper einen Song zum Tanzen nennen.</string>

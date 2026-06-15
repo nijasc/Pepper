@@ -8,9 +8,11 @@ import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -113,17 +115,9 @@ public class DanceLibraryView extends FrameLayout {
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
             row.addView(label);
 
-            row.addView(pill("Abspielen", R.drawable.bg_pill_teal, v -> playDance(dance)));
-            row.addView(pill(getContext().getString(R.string.dance_startpoint),
-                    R.drawable.bg_pill_teal, v -> showStartPointDialog(dance)));
-            row.addView(pill("KI-Edit", R.drawable.bg_pill_teal,
-                    v -> DanceLibraryController.get().requestVoiceEdit(dance)));
-            row.addView(pill(getContext().getString(R.string.dance_favorite),
-                    R.drawable.bg_pill_teal, v -> toggleFavorite(dance)));
-            row.addView(pill(getContext().getString(R.string.dance_rename),
-                    R.drawable.bg_pill_teal, v -> promptRename(dance)));
-            row.addView(pill(getContext().getString(R.string.dance_delete),
-                    R.drawable.bg_pill_red, v -> delete(dance)));
+            row.addView(pill("▶  " + getContext().getString(R.string.dance_play),
+                    R.drawable.bg_pill_teal, v -> playDance(dance)));
+            row.addView(pill("⋯", R.drawable.bg_pill_teal, v -> showOverflow(v, dance)));
             list.addView(row);
         }
     }
@@ -143,6 +137,38 @@ public class DanceLibraryView extends FrameLayout {
                 post(() -> toast("Abspielen fehlgeschlagen: " + e.getMessage()));
             }
         });
+    }
+
+    private void showOverflow(View anchor, DanceEntity dance) {
+        PopupMenu menu = new PopupMenu(getContext(), anchor);
+        menu.getMenu().add(0, 1, 0, getContext().getString(R.string.dance_startpoint));
+        menu.getMenu().add(0, 2, 1, getContext().getString(R.string.dance_ai_edit));
+        menu.getMenu().add(0, 3, 2, getContext().getString(
+                dance.favorite ? R.string.dance_unfavorite : R.string.dance_favorite));
+        menu.getMenu().add(0, 4, 3, getContext().getString(R.string.dance_rename));
+        menu.getMenu().add(0, 5, 4, getContext().getString(R.string.dance_delete));
+        menu.setOnMenuItemClickListener(item -> {
+            switch (item.getItemId()) {
+                case 1:
+                    showStartPointDialog(dance);
+                    return true;
+                case 2:
+                    DanceLibraryController.get().requestVoiceEdit(dance);
+                    return true;
+                case 3:
+                    toggleFavorite(dance);
+                    return true;
+                case 4:
+                    promptRename(dance);
+                    return true;
+                case 5:
+                    delete(dance);
+                    return true;
+                default:
+                    return false;
+            }
+        });
+        menu.show();
     }
 
     public void applyAiEdit(DanceEntity dance, String instruction) {
