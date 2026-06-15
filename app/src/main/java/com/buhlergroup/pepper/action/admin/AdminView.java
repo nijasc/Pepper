@@ -69,7 +69,6 @@ import java.util.zip.ZipOutputStream;
 public class AdminView extends FrameLayout {
 
     private static final String TAG = "AdminView";
-    private static final String PIN = "1019";
     private static final int PANEL_PIN = 0;
     private static final int PANEL_MENU = 1;
     private static final int PANEL_DEVLOG = 2;
@@ -251,6 +250,7 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminNavigation).setOnClickListener(v -> openNavigation());
         findViewById(R.id.adminDances).setOnClickListener(v -> openDanceLibrary());
         findViewById(R.id.adminDsgvo).setOnClickListener(v -> showDsgvoAccessDialog());
+        findViewById(R.id.adminChangePin).setOnClickListener(v -> showChangePinDialog());
 
         selfieAdapter = new SelfieAdapter(this::showDetail);
         selfieGrid.setLayoutManager(new GridLayoutManager(context, 3));
@@ -320,7 +320,7 @@ public class AdminView extends FrameLayout {
     }
 
     private void checkPin() {
-        if (PIN.contentEquals(entered)) {
+        if (AdminSettings.getPin(getContext()).contentEquals(entered)) {
             resetEntry();
             showPanel(PANEL_MENU);
         } else {
@@ -621,6 +621,28 @@ public class AdminView extends FrameLayout {
             });
         }
         return row;
+    }
+
+    private void showChangePinDialog() {
+        EditText input = new EditText(getContext());
+        input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        input.setHint(R.string.admin_change_pin_hint);
+        new AlertDialog.Builder(getContext())
+                .setTitle(R.string.admin_change_pin)
+                .setView(input)
+                .setNegativeButton(R.string.admin_back, null)
+                .setPositiveButton(R.string.raffle_save, (d, w) -> {
+                    String pin = input.getText().toString().trim();
+                    if (pin.matches("\\d{4}")) {
+                        AdminSettings.setPin(getContext(), pin);
+                        Toast.makeText(getContext(), R.string.admin_change_pin_saved,
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), R.string.admin_change_pin_invalid,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .show();
     }
 
     private void showDsgvoAccessDialog() {

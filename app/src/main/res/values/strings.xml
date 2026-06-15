@@ -154,4 +154,8 @@
     <string name="dsgvo_access_none">Zu dieser E-Mail-Adresse sind keine Daten gespeichert.</string>
     <string name="dsgvo_access_share">Auskunft teilen</string>
     <string name="dsgvo_report_title">Gespeicherte Daten zu %1$s</string>
+    <string name="admin_change_pin">PIN ändern</string>
+    <string name="admin_change_pin_hint">Neue 4-stellige PIN</string>
+    <string name="admin_change_pin_invalid">Bitte genau 4 Ziffern eingeben.</string>
+    <string name="admin_change_pin_saved">PIN geändert.</string>
 </resources>
