@@ -1,7 +1,9 @@
 package com.buhlergroup.pepper.action.selfie;
 
 import android.content.Context;
+import android.util.Log;
 
+import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.selfie.data.SelfieDao;
 import com.buhlergroup.pepper.action.selfie.data.SelfieDatabase;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
@@ -9,12 +11,17 @@ import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class SelfieRepository {
 
     private static volatile SelfieRepository instance;
+    private static final ExecutorService maintenanceExecutor = Executors.newSingleThreadExecutor();
 
     private final SelfieDao dao;
     private final File imagesDir;
@@ -71,5 +78,31 @@ public final class SelfieRepository {
 
     public File imagesDir() {
         return imagesDir;
+    }
+
+    public static void purgeExpiredAsync(Context context) {
+        Context app = context.getApplicationContext();
+        maintenanceExecutor.submit(() -> {
+            try {
+                int days = SelfieSettings.getRetentionDays(app);
+                if (days <= 0) {
+                    return;
+                }
+                Set<String> protectedIds = new HashSet<>(RaffleRepository.get(app).linkedSelfieIds());
+                get(app).purgeExpired(days, protectedIds);
+            } catch (Exception e) {
+                Log.w("SelfieRepository", "purgeExpired failed: " + e.getMessage());
+            }
+        });
+    }
+
+    public void purgeExpired(int days, Set<String> protectedIds) {
+        long cutoff = System.currentTimeMillis() - days * 24L * 60L * 60L * 1000L;
+        for (SelfieEntity selfie : dao.getExpired(cutoff)) {
+            if (protectedIds != null && protectedIds.contains(selfie.id)) {
+                continue;
+            }
+            delete(selfie.id);
+        }
     }
 }

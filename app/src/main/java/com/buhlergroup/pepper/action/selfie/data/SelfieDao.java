@@ -23,4 +23,7 @@ public interface SelfieDao {
 
     @Query("DELETE FROM selfies WHERE id = :id")
     void deleteById(String id);
+
+    @Query("SELECT * FROM selfies WHERE created_at < :cutoff AND favorite = 0")
+    List<SelfieEntity> getExpired(long cutoff);
 }

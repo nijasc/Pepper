@@ -159,4 +159,8 @@
     <string name="admin_change_pin_invalid">Bitte genau 4 Ziffern eingeben.</string>
     <string name="admin_change_pin_saved">PIN geändert.</string>
     <string name="admin_pin_locked">Zu viele Fehlversuche. Bitte %1$d Sekunden warten.</string>
+    <string name="selfie_retention_button">Aufbewahrung</string>
+    <string name="selfie_retention_title">Selfies automatisch löschen</string>
+    <string name="selfie_retention_hint">Tage (0 = nie)</string>
+    <string name="selfie_retention_saved">Aufbewahrung gespeichert.</string>
 </resources>

@@ -46,6 +46,7 @@ import com.buhlergroup.pepper.action.selfie.NetworkUtils;
 import com.buhlergroup.pepper.action.selfie.QrGenerator;
 import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
+import com.buhlergroup.pepper.action.selfie.SelfieSettings;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 import com.buhlergroup.pepper.openai.history.HistoryEntry;
@@ -228,6 +229,7 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminSelfies).setOnClickListener(v -> showGallery());
         findViewById(R.id.adminGalleryBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         exportAllButton.setOnClickListener(v -> onExportAll());
+        findViewById(R.id.adminSelfieRetention).setOnClickListener(v -> showSelfieRetentionDialog());
         findViewById(R.id.adminDetailBack).setOnClickListener(v -> showGallery());
         detailFavorite.setOnClickListener(v -> toggleFavorite());
         findViewById(R.id.adminDetailDelete).setOnClickListener(v -> deleteCurrent());
@@ -677,6 +679,29 @@ public class AdminView extends FrameLayout {
                         Toast.makeText(getContext(), R.string.admin_change_pin_invalid,
                                 Toast.LENGTH_SHORT).show();
                     }
+                })
+                .show();
+    }
+
+    private void showSelfieRetentionDialog() {
+        EditText input = new EditText(getContext());
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        input.setHint(R.string.selfie_retention_hint);
+        input.setText(String.valueOf(SelfieSettings.getRetentionDays(getContext())));
+        new AlertDialog.Builder(getContext())
+                .setTitle(R.string.selfie_retention_title)
+                .setView(input)
+                .setNegativeButton(R.string.admin_back, null)
+                .setPositiveButton(R.string.raffle_save, (d, w) -> {
+                    int days;
+                    try {
+                        days = Math.max(0, Integer.parseInt(input.getText().toString().trim()));
+                    } catch (NumberFormatException e) {
+                        days = SelfieSettings.DEFAULT_RETENTION_DAYS;
+                    }
+                    SelfieSettings.setRetentionDays(getContext(), days);
+                    Toast.makeText(getContext(), R.string.selfie_retention_saved,
+                            Toast.LENGTH_SHORT).show();
                 })
                 .show();
     }
