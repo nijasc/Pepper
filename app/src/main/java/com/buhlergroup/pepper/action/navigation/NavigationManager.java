@@ -564,8 +564,10 @@ public final class NavigationManager {
         if (origin == null) {
             return false;
         }
+        double clampedX = clampRadius(dx);
+        double clampedY = clampRadius(dy);
         try {
-            Transform t = TransformBuilder.create().from2DTransform(dx, dy, 0.0);
+            Transform t = TransformBuilder.create().from2DTransform(clampedX, clampedY, 0.0);
             FreeFrame target = c.getMapping().makeFreeFrame();
             target.update(origin.frame(), t, 0L);
             Future<Void> goToFuture = GoToBuilder.with(c)
@@ -577,6 +579,10 @@ public final class NavigationManager {
             Log.w(TAG, "driveToOriginOffset failed: " + e.getMessage());
             return false;
         }
+    }
+
+    private double clampRadius(double value) {
+        return Math.max(-SCAN_RADIUS_M, Math.min(SCAN_RADIUS_M, value));
     }
 
     private void cancelRotation() {
