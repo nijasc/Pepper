@@ -49,6 +49,43 @@ public class GuideAction extends Action {
         }
         SpeechManager.getInstance().systemSay(context,
                 "Folge mir, ich bringe dich zu " + target.name + ".");
+
+        NavigationManager.GuideOutcome outcome = drive(nav, target);
+        announceOutcome(context, target, outcome);
+    }
+
+    private NavigationManager.GuideOutcome drive(NavigationManager nav, WaypointEntity target) {
+        AtomicReference<NavigationManager.GuideOutcome> ref = new AtomicReference<>();
+        CountDownLatch latch = new CountDownLatch(1);
+        nav.guideToWaypoint(target, new NavigationManager.Callback<NavigationManager.GuideOutcome>() {
+            @Override
+            public void onResult(NavigationManager.GuideOutcome value) {
+                ref.set(value);
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(String error) {
+                latch.countDown();
+            }
+        });
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return ref.get();
+    }
+
+    private void announceOutcome(QiContext context, WaypointEntity target,
+                                NavigationManager.GuideOutcome outcome) {
+        if (outcome == NavigationManager.GuideOutcome.ARRIVED) {
+            SpeechManager.getInstance().systemSay(context,
+                    "Wir sind da! Hier ist " + target.name + ". Kann ich sonst noch helfen?");
+        } else if (outcome == null) {
+            SpeechManager.getInstance().systemSay(context,
+                    "Ich kann dich gerade nicht dorthin bringen.");
+        }
     }
 
     private WaypointEntity match(String input, List<WaypointEntity> waypoints) {

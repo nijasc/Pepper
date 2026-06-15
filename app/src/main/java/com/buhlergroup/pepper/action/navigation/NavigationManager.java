@@ -54,6 +54,12 @@ public final class NavigationManager {
         void onError(String error);
     }
 
+    public enum GuideOutcome {
+        ARRIVED,
+        STOPPED,
+        LOST
+    }
+
     public interface MapUpdateListener {
         void onMapBitmap(Bitmap bitmap);
     }
@@ -362,6 +368,23 @@ public final class NavigationManager {
         });
     }
 
+    public void guideToWaypoint(WaypointEntity wp, Callback<GuideOutcome> cb) {
+        submit(() -> {
+            QiContext c = qiContext;
+            if (c == null || !localized) {
+                cb.onError("Pepper ist noch nicht lokalisiert.");
+                return;
+            }
+            try {
+                driveTo(c, wp, () -> localized && qiContext != null);
+                cb.onResult(localized && qiContext != null ? GuideOutcome.ARRIVED : GuideOutcome.LOST);
+            } catch (Exception e) {
+                Log.w(TAG, "guideToWaypoint failed: " + e.getMessage());
+                cb.onError("Pepper konnte nicht hinfahren.");
+            }
+        });
+    }
+
     public boolean hasFotostand(QiContext context) {
         if (context == null || !localized) {
             return false;
@@ -651,6 +674,10 @@ public final class NavigationManager {
     }
 
     private void driveTo(QiContext c, WaypointEntity wp) {
+        driveTo(c, wp, () -> localized && qiContext != null);
+    }
+
+    private void driveTo(QiContext c, WaypointEntity wp, Condition condition) {
         Mapping mapping = c.getMapping();
         Frame mapFrame = mapping.mapFrame();
         Transform t = TransformBuilder.create().from2DTransform(wp.x, wp.y, wp.theta);
@@ -659,7 +686,7 @@ public final class NavigationManager {
         Future<Void> future = GoToBuilder.with(c).withFrame(target.frame()).build().async().run();
         activeGoTo = future;
         try {
-            awaitGoTo(future, () -> localized && qiContext != null);
+            awaitGoTo(future, condition);
         } finally {
             if (activeGoTo == future) {
                 activeGoTo = null;
