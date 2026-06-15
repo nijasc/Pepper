@@ -36,6 +36,9 @@ import java.util.List;
 import java.util.Map;
 
 public class ActionHandler {
+    private static final int MAX_ATTEMPTS = 2;
+    private static final long RETRY_BACKOFF_MS = 600;
+
     private enum CombinedResult {
         HANDLED,
         NOT_HANDLED,
@@ -94,6 +97,29 @@ public class ActionHandler {
 
     private CombinedResult handleCombined(QiContext context, String input) {
         routingService.setC(context);
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            CombinedResult result = attemptCombined(context, input, attempt);
+            if (result != CombinedResult.NETWORK_ERROR) {
+                return result;
+            }
+            if (attempt < MAX_ATTEMPTS && !backoff()) {
+                break;
+            }
+        }
+        return CombinedResult.NETWORK_ERROR;
+    }
+
+    private boolean backoff() {
+        try {
+            Thread.sleep(RETRY_BACKOFF_MS);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    private CombinedResult attemptCombined(QiContext context, String input, int attempt) {
         final Action[] routed = new Action[1];
         final boolean[] spokeAny = new boolean[1];
         try {
@@ -135,8 +161,8 @@ public class ActionHandler {
             }
             return spokeAny[0] ? CombinedResult.HANDLED : CombinedResult.NOT_HANDLED;
         } catch (IOException e) {
-            Log.w(this.getClass().getSimpleName(),
-                    "Combined turn failed with network error: " + e.getMessage());
+            Log.w(this.getClass().getSimpleName(), "Combined turn attempt " + attempt
+                    + " failed with network error: " + e.getMessage());
             return spokeAny[0] ? CombinedResult.HANDLED : CombinedResult.NETWORK_ERROR;
         } catch (Exception e) {
             Log.w(this.getClass().getSimpleName(),
