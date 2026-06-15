@@ -65,6 +65,14 @@ public class DanceAction extends Action {
         } catch (Exception e) {
             ThinkingController.get().stop();
             Log.w(TAG, "Dance preparation failed: " + e.getMessage());
+            DanceEntity cached = pickFromLibrary(context);
+            if (cached != null) {
+                repository.preparePlayback(context, cached);
+                SpeechManager.getInstance().systemSay(context,
+                        "Den Song erreiche ich gerade nicht. Ich tanze stattdessen einen aus meiner Sammlung.");
+                playDance(context, cached);
+                return;
+            }
             SpeechManager.getInstance().systemSay(context,
                     "Diesen Song bekomme ich gerade nicht, ich tanze etwas Eigenes.");
             playFallback(context);
