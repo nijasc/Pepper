@@ -356,6 +356,16 @@ public class RaffleJoinView extends FrameLayout {
         nextButton.setAlpha(1f);
         errorView.setText(messageRes);
         errorView.setVisibility(VISIBLE);
+        shake(stepContainer);
+    }
+
+    private void shake(View target) {
+        target.animate().cancel();
+        target.setTranslationX(0f);
+        target.animate().translationX(-14f).setDuration(50).withEndAction(() ->
+                target.animate().translationX(14f).setDuration(50).withEndAction(() ->
+                        target.animate().translationX(-8f).setDuration(50).withEndAction(() ->
+                                target.animate().translationX(0f).setDuration(50).start()))).start();
     }
 
     private int indexOf(int stepType) {
