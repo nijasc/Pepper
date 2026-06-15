@@ -4,6 +4,9 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
@@ -55,6 +58,8 @@ import java.util.ArrayList;
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
     private static final int SPEECH_EVENT = 10;
     private static final int DANCE_EDIT_SPEECH_EVENT = 11;
+    private static final long SPEECH_WATCHDOG_INTERVAL_MS = 5000;
+    private static final long SPEECH_WATCHDOG_IDLE_MS = 15000;
     private SpeechRecognizer recognizer;
     private Intent intent;
     private String said = "";
@@ -67,6 +72,16 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private TextView languageLabel;
     private volatile boolean listening;
     private volatile boolean listenPending;
+    private volatile boolean processing;
+    private volatile long lastListenStartMs;
+    private final Handler watchdogHandler = new Handler(Looper.getMainLooper());
+    private final Runnable speechWatchdog = new Runnable() {
+        @Override
+        public void run() {
+            checkSpeechWatchdog();
+            watchdogHandler.postDelayed(this, SPEECH_WATCHDOG_INTERVAL_MS);
+        }
+    };
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -114,6 +129,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         HoldController.get().setStateListener(active -> updateHomeControls());
 
         initSpeech();
+        lastListenStartMs = SystemClock.elapsedRealtime();
+        watchdogHandler.postDelayed(speechWatchdog, SPEECH_WATCHDOG_INTERVAL_MS);
 
         DanceLibraryController.get().setVoiceRequester(() -> runOnUiThread(() -> {
             if (intent != null && intent.resolveActivity(getPackageManager()) != null) {
@@ -143,6 +160,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         DanceLibraryController.get().detachView();
         HoldController.get().setStateListener(null);
         HoldController.get().detachView();
+        watchdogHandler.removeCallbacks(speechWatchdog);
         QiSDK.unregister(this);
         recognizer.cancel();
         recognizer.destroy();
@@ -184,7 +202,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 executionHandler = new ActionHandler(languageManager, historyManager);
             }
             if (!said.isEmpty()) {
-                executionHandler.handleInput(qiContext, said);
+                processing = true;
+                try {
+                    executionHandler.handleInput(qiContext, said);
+                } finally {
+                    processing = false;
+                }
                 said = "";
             }
         } catch (Exception e) {
@@ -291,6 +314,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
             if (intent != null && intent.resolveActivity(getPackageManager()) != null) {
                 listening = true;
+                lastListenStartMs = SystemClock.elapsedRealtime();
                 startActivityForResult(intent, SPEECH_EVENT);
             }
         });
@@ -298,6 +322,17 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     private void maybeResumeListening() {
         if (listenPending && !listening && !isOverlayOpen()) {
+            listenToSpeech();
+        }
+    }
+
+    private void checkSpeechWatchdog() {
+        if (listening || processing || isOverlayOpen()) {
+            return;
+        }
+        long idle = SystemClock.elapsedRealtime() - lastListenStartMs;
+        if (idle > SPEECH_WATCHDOG_IDLE_MS) {
+            Log.w("Mainactivity", "Speech watchdog restarting recognition after " + idle + "ms idle");
             listenToSpeech();
         }
     }
