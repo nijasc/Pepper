@@ -70,6 +70,7 @@ public final class MemoryGameController {
         board.setOnPadListener(touches::offer);
         board.setInputEnabled(false);
         board.setScore(0);
+        board.setHighscore(MemoryHighscore.get(context, config.label));
         board.setStatus("Schau gut zu!");
         board.setHint("Wiederhole die Sequenz auf dem Tablet");
         board.show();
@@ -148,10 +149,12 @@ public final class MemoryGameController {
             return completed;
         }
 
+        boolean record = MemoryHighscore.submit(context, config.label, completed);
         board.setStatus("Game Over!");
         board.setScore(completed);
+        board.setHighscore(MemoryHighscore.get(context, config.label));
         board.setHint("Sag \"Memory\", um nochmal zu spielen");
-        endGame(context, completed);
+        endGame(context, completed, record);
         sleep(4500);
         board.hide();
         return completed;
@@ -167,9 +170,15 @@ public final class MemoryGameController {
         }
     }
 
-    private void endGame(QiContext context, int completed) {
+    private void endGame(QiContext context, int completed, boolean record) {
         if (completed <= 0) {
             say(context, "Kein Treffer diesmal, aber das schaffst du! Sag Memory, dann spielen wir nochmal.");
+            return;
+        }
+        if (record) {
+            say(context, "Neuer Rekord! Du hast " + completed
+                    + " Runden geschafft. Das war fantastisch!");
+            playAnimation(context, R.raw.pepper_highfive);
             return;
         }
         if (completed >= 8) {

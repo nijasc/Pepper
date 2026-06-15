@@ -25,6 +25,7 @@ public class MemoryGameView extends FrameLayout {
     private final TonePlayer tonePlayer = new TonePlayer();
     private TextView statusView;
     private TextView scoreView;
+    private TextView highscoreView;
     private TextView hintView;
     private volatile boolean inputEnabled = false;
     private OnPadListener padListener;
@@ -52,6 +53,7 @@ public class MemoryGameView extends FrameLayout {
 
         statusView = findViewById(R.id.memStatus);
         scoreView = findViewById(R.id.memScore);
+        highscoreView = findViewById(R.id.memHighscore);
         hintView = findViewById(R.id.memHint);
         pads[0] = findViewById(R.id.memPad0);
         pads[1] = findViewById(R.id.memPad1);
@@ -90,6 +92,10 @@ public class MemoryGameView extends FrameLayout {
 
     public void setScore(int score) {
         post(() -> scoreView.setText("Punkte: " + score));
+    }
+
+    public void setHighscore(int highscore) {
+        post(() -> highscoreView.setText(highscore > 0 ? "Rekord: " + highscore : ""));
     }
 
     public void setHint(String text) {
