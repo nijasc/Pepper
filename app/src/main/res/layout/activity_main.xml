@@ -118,6 +118,12 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
+    <com.buhlergroup.pepper.action.career.CareerView
+        android:id="@+id/careerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone" />
+
     <com.buhlergroup.pepper.action.selfie.SelfieView
         android:id="@+id/selfieView"
         android:layout_width="match_parent"

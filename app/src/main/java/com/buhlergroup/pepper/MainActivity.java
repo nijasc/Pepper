@@ -30,6 +30,8 @@ import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.buhlergroup.pepper.action.ActionHandler;
 import com.buhlergroup.pepper.action.attract.AttractController;
 import com.buhlergroup.pepper.action.attract.AttractView;
+import com.buhlergroup.pepper.action.career.CareerController;
+import com.buhlergroup.pepper.action.career.CareerView;
 import com.buhlergroup.pepper.action.follow.FollowController;
 import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
@@ -114,6 +116,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         QuizView quizView = findViewById(R.id.quizView);
         QuizController.get().attachView(quizView);
 
+        CareerView careerView = findViewById(R.id.careerView);
+        CareerController.get().attachView(careerView);
+
         SelfieView selfieView = findViewById(R.id.selfieView);
         SelfieController.get().attachView(selfieView);
 
@@ -171,6 +176,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         MemoryGameController.get().abort();
         MemoryGameController.get().detachView();
         QuizController.get().detachView();
+        CareerController.get().detachView();
         SelfieController.get().setStateListener(null);
         SelfieController.get().detachView();
         SelfieController.get().stopServer();

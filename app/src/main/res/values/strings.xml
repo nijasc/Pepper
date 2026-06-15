@@ -8,6 +8,8 @@
     <string name="lang_button_de">DE</string>
     <string name="lang_button_en">EN</string>
     <string name="quiz_title">Bühler-Quiz</string>
+    <string name="career_title">Karriere bei Bühler</string>
+    <string name="career_hint">Scanne den QR-Code für unsere Karriereseite</string>
     <string name="mem_title">Memory mit Bewegung</string>
     <string name="mem_status_idle">Bereit?</string>
     <string name="mem_score_idle">Punkte: 0</string>

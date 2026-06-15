@@ -1,20 +1,44 @@
 package com.buhlergroup.pepper.action.career;
 
+import android.graphics.Bitmap;
+import android.util.Log;
+
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.action.selfie.QrGenerator;
 import com.buhlergroup.pepper.config.Env;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 
 public class CareerAction extends Action {
 
+    private static final String TAG = "Career";
     private static final String CAREER_URL_KEY = "PEPPER_CAREER_URL";
+    private static final long DISPLAY_MS = 30000;
 
     @Override
     public void execute(QiContext context, String input) {
         SupportedLanguage lang = SpeechManager.getInstance().currentLanguage();
         String url = Env.get(context, CAREER_URL_KEY, "").trim();
         SpeechManager.getInstance().systemSay(context, answer(lang, !url.isEmpty()));
+        if (!url.isEmpty()) {
+            showQr(context, lang, url);
+        }
+    }
+
+    private void showQr(QiContext context, SupportedLanguage lang, String url) {
+        try {
+            Bitmap qr = QrGenerator.encode(url, 600);
+            CareerController.get().present(qr, hint(lang), DISPLAY_MS);
+        } catch (Exception e) {
+            Log.w(TAG, "Career QR could not be shown: " + e.getMessage());
+        }
+    }
+
+    private String hint(SupportedLanguage lang) {
+        return lang == SupportedLanguage.ENGLISH
+                ? "Scan the QR code for our careers page"
+                : "Scanne den QR-Code für unsere Karriereseite";
     }
 
     private String answer(SupportedLanguage lang, boolean hasQr) {
