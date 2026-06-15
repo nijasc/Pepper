@@ -34,6 +34,9 @@ public interface DanceDao {
     @Query("UPDATE dances SET audio_start_ms = :audioStartMs WHERE youtube_id = :youtubeId")
     void setAudioStartMs(String youtubeId, long audioStartMs);
 
+    @Query("UPDATE dances SET audio_path = :audioPath WHERE youtube_id = :youtubeId")
+    void setAudioPath(String youtubeId, String audioPath);
+
     @Query("DELETE FROM dances WHERE youtube_id = :youtubeId")
     void deleteById(String youtubeId);
 }

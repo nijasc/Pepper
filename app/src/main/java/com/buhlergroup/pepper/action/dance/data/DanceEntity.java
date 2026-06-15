@@ -34,6 +34,10 @@ public class DanceEntity {
     @ColumnInfo(name = "audio_start_ms", defaultValue = "0")
     public long audioStartMs;
 
+    @ColumnInfo(name = "audio_path")
+    @Nullable
+    public String audioPath;
+
     @Ignore
     @Nullable
     public String previewUrl;

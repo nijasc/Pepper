@@ -12,6 +12,10 @@ import com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -61,6 +65,7 @@ public final class DanceRepository {
                 durationMs, false, System.currentTimeMillis());
         entity.previewUrl = source.previewUrl;
         entity.audioStartMs = plan.startSeconds * 1000L;
+        cacheAudioQuietly(danceDir, entity, source);
         dao.insert(entity);
         Log.i(TAG, "Created dance for " + songName + " from iTunes " + source.sourceId);
         return entity;
@@ -113,6 +118,52 @@ public final class DanceRepository {
     public void delete(Context context, DanceEntity dance) {
         DanceDatabase.get(context).danceDao().deleteById(dance.youtubeId);
         deleteQuietly(dance.qianimPath);
+        deleteQuietly(dance.audioPath);
+    }
+
+    private void cacheAudioQuietly(File danceDir, DanceEntity entity, SongSource source) {
+        if (source.previewUrl == null || source.previewUrl.isEmpty()) {
+            return;
+        }
+        try {
+            File audioFile = new File(danceDir, sanitizeFileName(source.sourceId) + ".m4a");
+            downloadToFile(source.previewUrl, audioFile);
+            entity.audioPath = audioFile.getAbsolutePath();
+            entity.previewUrl = audioFile.getAbsolutePath();
+            Log.i(TAG, "Cached preview audio for " + entity.songName);
+        } catch (Exception e) {
+            Log.w(TAG, "Could not cache preview audio for " + entity.songName + ": " + e.getMessage());
+        }
+    }
+
+    private void downloadToFile(String urlString, File dest) throws IOException {
+        HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
+        connection.setConnectTimeout(8000);
+        connection.setReadTimeout(15000);
+        connection.setRequestProperty("User-Agent", "PepperDance/1.0");
+        try {
+            int code = connection.getResponseCode();
+            if (code != HttpURLConnection.HTTP_OK) {
+                throw new IOException("Audio-Download fehlgeschlagen (HTTP " + code + ").");
+            }
+            File tmp = new File(dest.getAbsolutePath() + ".part");
+            try (InputStream in = connection.getInputStream();
+                 FileOutputStream out = new FileOutputStream(tmp)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                }
+            }
+            if (dest.exists() && !dest.delete()) {
+                throw new IOException("Alte Audio-Datei konnte nicht ersetzt werden.");
+            }
+            if (!tmp.renameTo(dest)) {
+                throw new IOException("Audio-Datei konnte nicht gespeichert werden.");
+            }
+        } finally {
+            connection.disconnect();
+        }
     }
 
     public void preparePlayback(DanceEntity dance) {
