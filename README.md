@@ -1,12 +1,9 @@
 # Pepper
 
-> Bedienungs- und Entwicklerdokumentation für den Roboter Pepper
-
-> [!CAUTION]
-> Pepper hat selbst Zugriff auf diese Dokumentation. Veröffentliche hier keine Informationen, zu denen potenzielle Benutzer von Pepper keinen Zugriff haben sollten. Alles, was in diesem Dokument steht, kann Pepper auf Nachfrage wiedergeben.
+> Entwicklerdokumentation für den Roboter Pepper
 
 > [!NOTE]
-> Hinweis für Pepper: Diagramme in dieser Dokumentation (z. B. Mermaid-Diagramme) sind ausschliesslich für Entwickler gedacht. Lies sie niemals laut vor und gib ihren Code nicht wieder. Nutze ihren Inhalt nur, wenn du explizit nach der Architektur oder dem internen Aufbau gefragt wirst, und beschreibe ihn dann in eigenen Worten.
+> Diese `README.md` ist die **Entwickler-Dokumentation** (Architektur, Einrichtung, Release, interne Details, Diagramme). Peppers eigene, besuchertaugliche Wissensbasis – die er selbst vorliest – steht getrennt in [`PEPPER.md`](PEPPER.md). Besucherrelevante Funktions- und Bühler-Infos gehören dorthin; interne Details, Geheimnisse und Diagramme bleiben hier und werden von Pepper **nicht** gelesen. Die [Dokumentation](#dokumentation)-Funktion lädt ausschliesslich `PEPPER.md`.
 
 ## Inhalt
 
@@ -31,12 +28,15 @@
   - [High Five](#high-five)
   - [Hold my beer](#hold-my-beer)
   - [Memory-Minispiel](#memory-minispiel)
+  - [Bühler-Quiz](#bühler-quiz)
   - [Selfie](#selfie)
+  - [Karriere](#karriere)
   - [Verlosung](#verlosung)
   - [Lautstärke](#lautstärke)
   - [Sprache](#sprache)
   - [Dokumentation](#dokumentation)
   - [Folgen (FollowMe)](#folgen-followme)
+  - [Lotse-Modus](#lotse-modus)
   - [Systeminformationen](#systeminformationen)
   - [Siri und andere Assistenten](#siri-und-andere-assistenten)
   - [Test (Entwicklung)](#test-entwicklung)
@@ -213,6 +213,8 @@ Auf Peppers Display sind dauerhaft zwei Elemente eingeblendet: oben links das **
 
 Die Sprachanzeige wird live aktualisiert: Wechselt der Benutzer die Sprache (siehe Funktion [Sprache](#sprache)), passt sich die Anzeige sofort an, ohne dass die Applikation neu gestartet werden muss.
 
+Direkt unter der Sprachanzeige liegen zwei **Touch-Tasten «DE» / «EN»**, mit denen jede Person die Erkennungs- und Anzeigesprache sofort umschalten kann – ohne erst einen deutschen Sprachbefehl geben zu müssen. So lässt sich der dokumentierte «erste Anfrage auf Deutsch»-Einstieg umgehen. Wie der Admin-Button werden auch diese Tasten ausgeblendet, solange ein Overlay offen ist.
+
 Während Pepper spricht, blendet die `DialogueView` seine Antwort zusätzlich als **Untertitel** ein – Wort für Wort, synchron zum Sprechen. Nach dem Satz bleibt der Text kurz stehen und wird dann automatisch ausgeblendet. Solange ein Overlay (Admin, Selfie, Memory, Verlosung, Navigation, Tanz-Bibliothek, Hold) offen ist, wird der Untertitel unterdrückt.
 
 Die Oberfläche ist im Bühler-Stil gehalten: Die Akzentfarbe der App (Theme-Farbe) entspricht dem Türkis des Bühler-Logos, und der Titelbalken oben zeigt den Schriftzug «Bühler Pepper». Das Layout wird als reguläres Android-Layout (`res/layout/activity_main.xml`) geladen.
@@ -254,11 +256,13 @@ Pepper tanzt zu einem Lied – und zwar zu **(fast) jedem gewünschten Song**. D
 3. Eine passende **Choreografie wird von einem Sprachmodell generiert** (`ModelSelector`-Aufgabe `GENERATION`, siehe [Sprachmodelle](#sprachmodelle)). Das Modell liefert kompaktes JSON mit Gelenk-Kurven, das in eine Pepper-Animationsdatei (`.qianim`) umgewandelt, validiert und geglättet wird.
 4. Pepper spielt die Vorschau ab und bewegt sich rhythmisch dazu. Endet die Animation, wird die Musik gestoppt, damit beides synchron bleibt.
 
-Generierte Tänze werden lokal in einer Room-Datenbank (`dances.db`) samt `.qianim`-Datei **gespeichert und wiederverwendet** – derselbe Song muss also nicht erneut einstudiert werden. Verwalten lässt sich die Sammlung im Admin-Bereich (siehe [Tanz-Bibliothek](#tanz-bibliothek)).
+Generierte Tänze werden lokal in einer Room-Datenbank (`dances.db`) samt `.qianim`-Datei **gespeichert und wiederverwendet** – derselbe Song muss also nicht erneut einstudiert werden. Zusätzlich wird das **Vorschau-Audio lokal zwischengespeichert**, sodass gespeicherte Tänze auch ohne erneuten iTunes-Aufruf laufen – ein WLAN-Aussetzer stoppt das Tanzen nicht mehr. Verwalten lässt sich die Sammlung im Admin-Bereich (siehe [Tanz-Bibliothek](#tanz-bibliothek)).
+
+Die Choreografie wird bewusst **ruhig und fliessend** generiert und im Tempo grob an die **Stimmung** des Songs angepasst (ruhig vs. lebhaft).
 
 **Zu beachten:**
 
-- Findet Pepper den Song nicht oder schlägt die Generierung fehl, tanzt er ersatzweise eine vorbereitete Choreografie.
+- Ist iTunes vorübergehend nicht erreichbar, versucht Pepper es mit kurzem Backoff erneut. Gelingt es für einen neuen Song nicht, bietet er freundlich einen gespeicherten Tanz aus seiner Sammlung an, statt abzubrechen; erst bei leerer Sammlung tanzt er eine vorbereitete Eigen-Choreografie.
 - Es wird nur die kurze iTunes-Vorschau gespielt, nicht das komplette Lied.
 
 ```text
@@ -326,9 +330,22 @@ Beispiel (en): Let's play the memory game.
 Beispiel (de): Lass uns Memory spielen. / Lass uns Memory spielen, schwer.
 ```
 
+### Bühler-Quiz
+
+Pepper stellt eine kurze Multiple-Choice-Quizrunde (Standard vier Fragen) rund um Bühler, Industrie und Berufe. Die Fragen werden bei Verbindung vom Sprachmodell generiert (`ModelSelector`-Aufgabe `GENERATION`, in der aktuellen Sprache); fällt das LLM aus oder ist Pepper offline, greift ein lokaler, kuratierter Fragenkatalog (Deutsch/Englisch). Die Antwortoptionen erscheinen als Touch-Buttons auf dem Tablet.
+
+Pro Frage gibt Pepper Rückmeldung (richtig/falsch inkl. korrekter Antwort) und hebt die Lösung visuell hervor; am Ende nennt er den Punktestand mit einem passenden Kommentar. Erreicht der Gast ein gutes Ergebnis und läuft gerade eine [Verlosung](#verlosung), lädt Pepper im Anschluss zur Teilnahme ein.
+
+```text
+Beispiel (en): Quiz me. / Ask me a question about Bühler.
+Beispiel (de): Quiz. / Frag mich was über Bühler.
+```
+
 ### Selfie
 
 Auf Wunsch macht Pepper ein gemeinsames Selfie: Er nimmt mit seiner Kamera ein Foto auf, fügt ein Pepper-Motiv ins Bild ein und zeigt anschliessend auf dem Tablet einen QR-Code an. Über diesen QR-Code lässt sich das Bild auf das eigene Smartphone herunterladen.
+
+Vor dem Speichern zeigt Pepper das Foto zur **Vorschau**: Der Gast kann es **speichern** oder mit **«Nochmal»** (Touch oder Sprachbefehl «passt» / «nochmal») bis zu zweimal neu aufnehmen. Erfolgt keine Eingabe, wird nach kurzer Zeit automatisch das aktuelle Bild gespeichert (kein hängendes Overlay). Nur das bestätigte Foto wird gespeichert und geteilt.
 
 Das Foto wird **lokal auf Peppers Tablet** gespeichert (Metadaten in einer Room-Datenbank, das Bild als Datei) und über einen kleinen, in die App eingebetteten Webserver bereitgestellt. Über den QR-Code lädt das Smartphone das Bild **direkt von Pepper** – nichts wird ins Internet hochgeladen. Damit der Download funktioniert, muss sich das Smartphone im **selben WLAN wie Pepper** befinden.
 
@@ -340,6 +357,17 @@ Das Foto wird **lokal auf Peppers Tablet** gespeichert (Metadaten in einer Room-
 ```text
 Beispiel (en): Let's take a selfie.
 Beispiel (de): Lass uns ein Selfie machen.
+```
+
+### Karriere
+
+Pepper tritt als Recruiting-Helfer auf: Fragt jemand nach Stellen, Ausbildungen, Praktika oder einer Bewerbung, gibt er eine kurze Antwort (Deutsch/Englisch) und zeigt auf dem Tablet einen **QR-Code zur Karriereseite**, damit Interessierte den nächsten Schritt direkt mitnehmen.
+
+Die Karriere-URL ist **konfigurierbar** und nicht hartkodiert: Sie wird über den Schlüssel `PEPPER_CAREER_URL` aus der `env`-Datei gelesen (siehe [Env-Setup](#env-setup)). Ist keine oder eine ungültige URL gesetzt, gibt Pepper nur die Sprachantwort und zeigt keinen (toten) QR-Code.
+
+```text
+Beispiel (en): What jobs are there at Bühler? / How can I apply?
+Beispiel (de): Welche Jobs gibt es bei Bühler? / Welche Ausbildungen bietet Bühler?
 ```
 
 ### Verlosung
@@ -401,7 +429,7 @@ Beispiel (de): Stelle die Sprache auf Englisch.
 
 ### Dokumentation
 
-Gibt dem Nutzer Informationen aus dieser Dokumentation wieder. Die Dokumentation wird bei jedem Aufruf neu von GitHub geladen – Änderungen an diesem Dokument werden also unmittelbar übernommen, ohne dass die Applikation neu gestartet werden muss.
+Gibt dem Nutzer Informationen aus Peppers Wissensbasis [`PEPPER.md`](PEPPER.md) wieder (nicht aus dieser README). Die Datei wird von GitHub geladen und einige Stunden zwischengespeichert (mit Rückfall auf die zuletzt geladene Version bei Netzwerkfehlern); Änderungen werden so ohne App-Neustart übernommen.
 
 **Unterstützte Sprachen:** Deutsch, Englisch
 
@@ -417,6 +445,17 @@ Pepper folgt einer Person physisch, indem er ihr nachläuft. Erkennt er, dass er
 ```text
 Beispiel (en): Follow me.
 Beispiel (de): Folge mir.
+```
+
+### Lotse-Modus
+
+Pepper führt Besucher aktiv zu einem Ziel. Auf «bring mich zum Fotostand» oder «wo finde ich den Ausgang» gleicht er den genannten Ort gegen die gespeicherten [Wegpunkte](#navigation--wegpunkte) ab (unscharfer Abgleich, Deutsch/Englisch), kündigt an «Folge mir, ich bringe dich zu …» und fährt per `goToWaypoint` hin (mit der vorhandenen Hindernisvermeidung). Bei der Ankunft meldet er das Ziel; kennt er den Ort nicht, zählt er die verfügbaren Wegpunkte auf.
+
+Voraussetzung ist ein aktiver, lokalisierter [Raum-Scan](#navigation--wegpunkte). Unterwegs lässt sich die Fahrt per Sprachbefehl («Stopp», «halt an», «bleib stehen») sauber abbrechen; verliert Pepper die Orientierung, hält er an und sagt Bescheid.
+
+```text
+Beispiel (en): Take me to the photo booth. / Where is the exit?
+Beispiel (de): Bring mich zum Fotostand. / Wo finde ich den Ausgang?
 ```
 
 ### Systeminformationen
@@ -558,9 +597,12 @@ Der OpenAI-API-Token wird **nicht** im Quellcode hinterlegt, sondern aus einer l
 
 **Unterstützte Schlüssel:**
 
-| Schlüssel          | Pflicht | Beschreibung                                  |
-| ------------------ | ------- | --------------------------------------------- |
-| `OPENAI_API_TOKEN` | Ja      | Dein OpenAI-API-Token für sämtliche Anfragen. |
+| Schlüssel             | Pflicht | Beschreibung                                                                 |
+| --------------------- | ------- | --------------------------------------------------------------------------- |
+| `OPENAI_API_TOKEN`    | Ja      | Dein OpenAI-API-Token für sämtliche Anfragen.                               |
+| `PEPPER_CAREER_URL`   | Nein    | URL der Karriereseite für die [Karriere](#karriere)-Funktion (QR-Code). Ohne gültige `http(s)`-URL zeigt Pepper keinen QR. |
+| `PEPPER_WIFI_SSID`    | Nein    | WLAN-Name für den optionalen WLAN-Beitritts-QR-Code beim [Selfie](#selfie). |
+| `PEPPER_WIFI_PASSWORD`| Nein    | WLAN-Passwort für den WLAN-Beitritts-QR-Code (leer = offenes Netz).         |
 
 **So richtest du die Datei ein:**
 
