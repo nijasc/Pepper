@@ -111,6 +111,46 @@ public final class DanceRepository {
         deleteQuietly(dance.qianimPath);
     }
 
+    public void preparePlayback(DanceEntity dance) {
+        try {
+            ITunesSearch.Result track = new ITunesSearch().search(dance.songName);
+            dance.previewUrl = track.previewUrl;
+        } catch (Exception e) {
+            Log.w(TAG, "Could not resolve preview for '" + dance.songName + "': " + e.getMessage());
+            dance.previewUrl = null;
+        }
+    }
+
+    public void aiEdit(Context context, DanceEntity dance, String instruction) throws Exception {
+        AnimationGenerator.DanceEdit edit =
+                generator.interpretEdit(context, dance.songName, dance.audioStartMs, instruction);
+        DanceDao dao = DanceDatabase.get(context).danceDao();
+        boolean changed = false;
+
+        if (edit.startSeconds != null) {
+            long ms = Math.max(0, Math.min(29, edit.startSeconds)) * 1000L;
+            dao.setAudioStartMs(dance.youtubeId, ms);
+            dance.audioStartMs = ms;
+            Log.i(TAG, "Edit set start offset to " + ms + "ms for " + dance.songName);
+            changed = true;
+        }
+
+        if (edit.choreography != null && dance.qianimPath != null) {
+            int seconds = (int) Math.max(8, Math.min(30, dance.durationMs / 1000));
+            String qianim = generator.generateValidatedDance(
+                    context, dance.songName, seconds, edit.choreography);
+            if (qianim != null) {
+                writeFile(new File(dance.qianimPath), qianim);
+                Log.i(TAG, "Edit regenerated choreography for " + dance.songName);
+                changed = true;
+            }
+        }
+
+        if (!changed) {
+            throw new Exception("Die Anweisung konnte nicht angewendet werden.");
+        }
+    }
+
     public static String readQianim(File file) throws Exception {
         byte[] bytes = new byte[(int) file.length()];
         try (FileInputStream in = new FileInputStream(file)) {

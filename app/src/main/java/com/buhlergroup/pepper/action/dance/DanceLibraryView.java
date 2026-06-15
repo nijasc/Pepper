@@ -24,6 +24,7 @@ import java.util.concurrent.Executors;
 public class DanceLibraryView extends FrameLayout {
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService heavyExecutor = Executors.newSingleThreadExecutor();
     private final DanceRepository repository = new DanceRepository();
     private LinearLayout list;
 
@@ -101,6 +102,9 @@ public class DanceLibraryView extends FrameLayout {
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
             row.addView(label);
 
+            row.addView(pill("Abspielen", R.drawable.bg_pill_teal, v -> playDance(dance)));
+            row.addView(pill("KI-Edit", R.drawable.bg_pill_teal,
+                    v -> DanceLibraryController.get().requestVoiceEdit(dance)));
             row.addView(pill(getContext().getString(R.string.dance_favorite),
                     R.drawable.bg_pill_teal, v -> toggleFavorite(dance)));
             row.addView(pill(getContext().getString(R.string.dance_rename),
@@ -109,6 +113,38 @@ public class DanceLibraryView extends FrameLayout {
                     R.drawable.bg_pill_red, v -> delete(dance)));
             list.addView(row);
         }
+    }
+
+    private void playDance(DanceEntity dance) {
+        com.aldebaran.qi.sdk.QiContext qiContext = RobotContext.get();
+        if (qiContext == null) {
+            toast("Roboter ist gerade nicht bereit.");
+            return;
+        }
+        toast("Spiele " + dance.songName);
+        heavyExecutor.execute(() -> {
+            try {
+                repository.preparePlayback(dance);
+                DancePlayback.play(qiContext, dance);
+            } catch (Exception e) {
+                post(() -> toast("Abspielen fehlgeschlagen: " + e.getMessage()));
+            }
+        });
+    }
+
+    public void applyAiEdit(DanceEntity dance, String instruction) {
+        toast("Bearbeite \"" + dance.songName + "\"...");
+        heavyExecutor.execute(() -> {
+            try {
+                repository.aiEdit(getContext(), dance, instruction);
+                post(() -> {
+                    toast("Tanz aktualisiert.");
+                    refresh();
+                });
+            } catch (Exception e) {
+                post(() -> toast("Bearbeitung fehlgeschlagen: " + e.getMessage()));
+            }
+        });
     }
 
     private void toggleFavorite(DanceEntity dance) {

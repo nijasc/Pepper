@@ -1,5 +1,7 @@
 package com.buhlergroup.pepper.action.dance;
 
+import com.buhlergroup.pepper.action.dance.data.DanceEntity;
+
 public final class DanceLibraryController {
 
     public interface StateListener {
@@ -11,6 +13,8 @@ public final class DanceLibraryController {
     private volatile DanceLibraryView view;
     private volatile boolean open;
     private volatile StateListener stateListener;
+    private volatile Runnable voiceRequester;
+    private volatile DanceEntity pendingEdit;
 
     private DanceLibraryController() {
     }
@@ -30,6 +34,27 @@ public final class DanceLibraryController {
 
     public void setStateListener(StateListener listener) {
         this.stateListener = listener;
+    }
+
+    public void setVoiceRequester(Runnable requester) {
+        this.voiceRequester = requester;
+    }
+
+    public void requestVoiceEdit(DanceEntity dance) {
+        pendingEdit = dance;
+        Runnable requester = voiceRequester;
+        if (requester != null) {
+            requester.run();
+        }
+    }
+
+    public void onVoiceEditResult(String text) {
+        DanceEntity dance = pendingEdit;
+        pendingEdit = null;
+        DanceLibraryView current = view;
+        if (dance != null && current != null && text != null && !text.trim().isEmpty()) {
+            current.applyAiEdit(dance, text.trim());
+        }
     }
 
     public boolean isOpen() {

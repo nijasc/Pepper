@@ -30,6 +30,7 @@ import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.dance.DanceLibraryView;
+import com.buhlergroup.pepper.action.dance.RobotContext;
 import com.buhlergroup.pepper.action.dialogue.DialogueController;
 import com.buhlergroup.pepper.action.dialogue.DialogueView;
 import com.buhlergroup.pepper.action.hold.HoldController;
@@ -53,6 +54,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
     private static final int SPEECH_EVENT = 10;
+    private static final int DANCE_EDIT_SPEECH_EVENT = 11;
     private SpeechRecognizer recognizer;
     private Intent intent;
     private String said = "";
@@ -110,6 +112,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         HoldController.get().setStateListener(active -> updateHomeControls());
 
         initSpeech();
+
+        DanceLibraryController.get().setVoiceRequester(() -> runOnUiThread(() -> {
+            if (intent != null && intent.resolveActivity(getPackageManager()) != null) {
+                startActivityForResult(intent, DANCE_EDIT_SPEECH_EVENT);
+            }
+        }));
     }
 
     @Override
@@ -146,6 +154,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         s.setC(qiContext);
         s.getAuthToken(qiContext);
         Log.d("Mainactivity", "AFocus Gained");
+        RobotContext.set(qiContext);
         holdBackgroundMovement(qiContext);
         NavigationManager.get().setQiContext(qiContext);
         FollowController.get().onFocusGained(qiContext);
@@ -180,6 +189,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     @Override
     public void onRobotFocusLost() {
+        RobotContext.clear();
         MemoryGameController.get().abort();
         FollowController.get().setFollowStateListener(null);
         FollowController.get().onFocusLost();
@@ -299,6 +309,14 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         if (requestCode == SPEECH_EVENT) {
             if (resultCode == RESULT_OK && data != null) {
                 said = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0);
+            }
+        } else if (requestCode == DANCE_EDIT_SPEECH_EVENT) {
+            if (resultCode == RESULT_OK && data != null) {
+                ArrayList<String> results =
+                        data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (results != null && !results.isEmpty()) {
+                    DanceLibraryController.get().onVoiceEditResult(results.get(0));
+                }
             }
         }
     }

@@ -39,13 +39,21 @@ public final class AnimationGenerator {
     }
 
     public String generateValidatedDance(Context context, String songName, int seconds) {
+        return generateValidatedDance(context, songName, seconds, null);
+    }
+
+    public String generateValidatedDance(Context context, String songName, int seconds, String editNote) {
         int target = Math.min(MAX_SECONDS, Math.max(8, seconds));
         openAi.setC(context);
+        String userMessage = "Song: " + songName;
+        if (editNote != null && !editNote.trim().isEmpty()) {
+            userMessage += "\nApply this specific change to the choreography: " + editNote.trim();
+        }
         for (int attempt = 1; attempt <= 2; attempt++) {
             try {
                 List<Map<String, String>> messages = new ArrayList<>();
                 messages.add(message("system", danceCompactPrompt()));
-                messages.add(message("user", "Song: " + songName));
+                messages.add(message("user", userMessage));
 
                 Map<String, Object> body = new HashMap<>();
                 body.put("model", MODEL);
@@ -113,6 +121,56 @@ public final class AnimationGenerator {
         } catch (Exception e) {
             Log.w(TAG, "Song planning failed, using raw query: " + e.getMessage());
             return new SongPlan(fallbackQuery, 0);
+        }
+    }
+
+    public static final class DanceEdit {
+        public final Integer startSeconds;
+        public final String choreography;
+
+        public DanceEdit(Integer startSeconds, String choreography) {
+            this.startSeconds = startSeconds;
+            this.choreography = choreography;
+        }
+    }
+
+    public DanceEdit interpretEdit(Context context, String songName, long currentStartMs, String instruction) {
+        openAi.setC(context);
+        try {
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(message("system",
+                    "You edit a saved Pepper robot dance from a spoken instruction. The dance plays a roughly "
+                            + "30-second music preview (currently starting " + (currentStartMs / 1000)
+                            + " seconds in) with a generated choreography. Reply with ONLY a JSON object "
+                            + "{\"startSeconds\":N,\"choreography\":\"...\"}. Set startSeconds to the new start "
+                            + "offset in whole seconds (0-29) if the instruction asks to change WHERE the music "
+                            + "starts, otherwise null. Set choreography to a short English instruction describing "
+                            + "the requested change to the DANCE MOVES (for example 'smoother arm movements', "
+                            + "'bigger gestures', 'add more head movement') if the instruction asks to change the "
+                            + "moves, otherwise null. No prose, only the JSON."));
+            messages.add(message("user", instruction));
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("model", ModelSelector.FAST);
+            body.put("messages", messages);
+
+            String response = openAi.sendOpenAiRequest("/chat/completions", body, 15000);
+            String content = new JSONObject(response)
+                    .getJSONArray("choices")
+                    .getJSONObject(0)
+                    .getJSONObject("message")
+                    .getString("content");
+            JSONObject obj = new JSONObject(extractJson(content));
+            Integer startSeconds = obj.isNull("startSeconds") ? null : obj.optInt("startSeconds");
+            String choreography = obj.isNull("choreography") ? null : obj.optString("choreography", "").trim();
+            if (choreography != null && choreography.isEmpty()) {
+                choreography = null;
+            }
+            Log.i(TAG, "Edit interpreted: start=" + startSeconds + " choreo=" + choreography);
+            return new DanceEdit(startSeconds, choreography);
+        } catch (Exception e) {
+            Log.w(TAG, "Edit interpretation failed: " + e.getMessage());
+            return new DanceEdit(null, null);
         }
     }
 
