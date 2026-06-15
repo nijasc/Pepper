@@ -34,7 +34,8 @@ public final class ITunesSearch {
     }
 
     public Result search(String query) throws IOException {
-        String response = fetch(SEARCH_URL + "?entity=song&limit=5&term="
+        Log.i(TAG, "Searching iTunes for: '" + query + "'");
+        String response = fetch(SEARCH_URL + "?entity=song&limit=10&term="
                 + URLEncoder.encode(query, "UTF-8"));
         try {
             JSONArray items = new JSONObject(response).getJSONArray("results");
@@ -51,7 +52,7 @@ public final class ITunesSearch {
                 Log.i(TAG, "Resolved '" + query + "' -> " + title + " (" + trackId + ")");
                 return new Result(trackId, title, previewUrl, item.optLong("trackTimeMillis", 0L));
             }
-            throw new IOException("Kein Song für die Suche gefunden.");
+            throw new IOException("Kein Song für die Suche gefunden: '" + query + "'");
         } catch (JSONException e) {
             throw new IOException("iTunes-Antwort nicht lesbar: " + e.getMessage());
         }

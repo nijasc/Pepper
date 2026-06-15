@@ -42,53 +42,74 @@ public final class AnimationGenerator {
                 "Choreograph a full-body dance for this song: " + songName);
     }
 
-    public int recommendStartSeconds(Context context, String songName) {
+    public static final class SongPlan {
+        public final String query;
+        public final int startSeconds;
+
+        public SongPlan(String query, int startSeconds) {
+            this.query = query;
+            this.startSeconds = startSeconds;
+        }
+    }
+
+    public SongPlan planSong(Context context, String utterance) {
         openAi.setC(context);
+        String fallbackQuery = utterance == null ? "" : utterance.trim();
         try {
             List<Map<String, String>> messages = new ArrayList<>();
             messages.add(message("system",
-                    "You know popular songs and the iconic dance hooks people perform to them. The dance "
-                            + "audio is the roughly 30-second iTunes preview of the given song, which usually "
-                            + "begins around the chorus. Reply with ONLY a JSON object {\"startSeconds\": N} "
-                            + "where N is an integer from 0 to 15 giving how many seconds into that preview the "
-                            + "song's signature, most danceable hook lands, so a dance move can hit on it. If the "
-                            + "hook is right at the start or you are unsure, answer 0. No prose, only the JSON."));
-            messages.add(message("user", "Song: " + songName));
+                    "The user asked a Pepper robot to dance. From their utterance work out which song to "
+                            + "play and reply with ONLY a JSON object {\"query\":\"...\",\"startSeconds\":N}. "
+                            + "\"query\" is a clean music-search string of artist and title (for example "
+                            + "\"Los del Rio Macarena\" or \"Silento Watch Me Whip Nae Nae\") for the song they "
+                            + "want - strip greetings, filler words and commands, and translate a described song "
+                            + "into its real title. If they name no specific song, choose a famous, upbeat, "
+                            + "danceable song yourself. The audio will be the roughly 30-second iTunes preview of "
+                            + "that song (which usually starts near the chorus); \"startSeconds\" is an integer "
+                            + "from 0 to 15 for how many seconds into that preview the song's signature danceable "
+                            + "hook lands, or 0 if unsure. No prose, only the JSON."));
+            messages.add(message("user", fallbackQuery));
 
             Map<String, Object> body = new HashMap<>();
             body.put("model", ModelSelector.FAST);
             body.put("messages", messages);
 
-            String response = openAi.sendOpenAiRequest("/chat/completions", body, 20000);
+            String response = openAi.sendOpenAiRequest("/chat/completions", body, 15000);
             String content = new JSONObject(response)
                     .getJSONArray("choices")
                     .getJSONObject(0)
                     .getJSONObject("message")
                     .getString("content");
-            int seconds = parseStartSeconds(content);
-            Log.i(TAG, "Recommended start offset for '" + songName + "': " + seconds + "s");
-            return seconds;
+            SongPlan plan = parseSongPlan(content, fallbackQuery);
+            Log.i(TAG, "Planned dance: query='" + plan.query + "' start=" + plan.startSeconds + "s");
+            return plan;
         } catch (Exception e) {
-            Log.w(TAG, "Start-offset request failed, using 0: " + e.getMessage());
-            return 0;
+            Log.w(TAG, "Song planning failed, using raw query: " + e.getMessage());
+            return new SongPlan(fallbackQuery, 0);
         }
     }
 
-    private int parseStartSeconds(String content) {
-        if (content == null) {
-            return 0;
-        }
-        int seconds = 0;
-        Matcher tagged = Pattern.compile("startSeconds\"?\\s*[:=]\\s*(\\d{1,3})").matcher(content);
-        if (tagged.find()) {
-            seconds = Integer.parseInt(tagged.group(1));
-        } else {
-            Matcher any = Pattern.compile("(\\d{1,3})").matcher(content);
-            if (any.find()) {
-                seconds = Integer.parseInt(any.group(1));
+    private SongPlan parseSongPlan(String content, String fallbackQuery) {
+        String query = fallbackQuery;
+        int startSeconds = 0;
+        try {
+            String json = content.substring(content.indexOf('{'), content.lastIndexOf('}') + 1);
+            JSONObject obj = new JSONObject(json);
+            String parsed = obj.optString("query", "").trim();
+            if (!parsed.isEmpty()) {
+                query = parsed;
+            }
+            startSeconds = obj.optInt("startSeconds", 0);
+        } catch (Exception e) {
+            Matcher matcher = Pattern.compile("startSeconds\"?\\s*[:=]\\s*(\\d{1,3})").matcher(content);
+            if (matcher.find()) {
+                startSeconds = Integer.parseInt(matcher.group(1));
             }
         }
-        return Math.max(0, Math.min(15, seconds));
+        if (query == null || query.trim().isEmpty()) {
+            query = fallbackQuery;
+        }
+        return new SongPlan(query, Math.max(0, Math.min(15, startSeconds)));
     }
 
     private String generate(Context context, String systemPrompt, String userBase) {

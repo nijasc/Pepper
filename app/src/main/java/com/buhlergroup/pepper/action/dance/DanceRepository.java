@@ -25,7 +25,8 @@ public final class DanceRepository {
         DanceDao dao = DanceDatabase.get(context).danceDao();
         File danceDir = danceDir(context);
 
-        SongSource source = resolveSource(normalizeSongName(query));
+        AnimationGenerator.SongPlan plan = generator.planSong(context, query);
+        SongSource source = resolveSource(plan.query);
         String songName = normalizeSongName(source.title);
 
         DanceEntity bySong = dao.findBySongName(songName);
@@ -59,7 +60,7 @@ public final class DanceRepository {
                 source.sourceId, songName, qianimFile.getAbsolutePath(),
                 durationMs, false, System.currentTimeMillis());
         entity.previewUrl = source.previewUrl;
-        entity.audioStartMs = generator.recommendStartSeconds(context, songName) * 1000L;
+        entity.audioStartMs = plan.startSeconds * 1000L;
         dao.insert(entity);
         Log.i(TAG, "Created dance for " + songName + " from iTunes " + source.sourceId);
         return entity;
