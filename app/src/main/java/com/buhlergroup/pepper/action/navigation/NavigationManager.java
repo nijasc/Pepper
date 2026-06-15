@@ -13,7 +13,9 @@ import com.aldebaran.qi.sdk.builder.ExplorationMapBuilder;
 import com.aldebaran.qi.sdk.builder.GoToBuilder;
 import com.aldebaran.qi.sdk.builder.HolderBuilder;
 import com.aldebaran.qi.sdk.builder.LocalizeAndMapBuilder;
+import com.aldebaran.qi.sdk.builder.ListenBuilder;
 import com.aldebaran.qi.sdk.builder.LocalizeBuilder;
+import com.aldebaran.qi.sdk.builder.PhraseSetBuilder;
 import com.aldebaran.qi.sdk.builder.TransformBuilder;
 import com.aldebaran.qi.sdk.object.actuation.ExplorationMap;
 import com.aldebaran.qi.sdk.object.actuation.Frame;
@@ -23,6 +25,9 @@ import com.aldebaran.qi.sdk.object.actuation.Localize;
 import com.aldebaran.qi.sdk.object.actuation.LocalizeAndMap;
 import com.aldebaran.qi.sdk.object.actuation.LocalizationStatus;
 import com.aldebaran.qi.sdk.object.actuation.Mapping;
+import com.aldebaran.qi.sdk.object.conversation.Listen;
+import com.aldebaran.qi.sdk.object.conversation.ListenResult;
+import com.aldebaran.qi.sdk.object.conversation.PhraseSet;
 import com.aldebaran.qi.sdk.object.geometry.Quaternion;
 import com.aldebaran.qi.sdk.object.geometry.Transform;
 import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
@@ -82,6 +87,7 @@ public final class NavigationManager {
     private volatile Future<Void> rotateFuture;
     private volatile Future<Void> activeGoTo;
     private volatile FreeFrame scanOrigin;
+    private volatile boolean stopGuideRequested;
 
     private interface Condition {
         boolean shouldContinue();
@@ -375,14 +381,54 @@ public final class NavigationManager {
                 cb.onError("Pepper ist noch nicht lokalisiert.");
                 return;
             }
+            stopGuideRequested = false;
+            Future<ListenResult> stopListener = startGuideStopListener(c);
             try {
-                driveTo(c, wp, () -> localized && qiContext != null);
-                cb.onResult(localized && qiContext != null ? GuideOutcome.ARRIVED : GuideOutcome.LOST);
+                driveTo(c, wp, () -> localized && qiContext != null && !stopGuideRequested);
+                GuideOutcome outcome;
+                if (stopGuideRequested) {
+                    outcome = GuideOutcome.STOPPED;
+                } else if (localized && qiContext != null) {
+                    outcome = GuideOutcome.ARRIVED;
+                } else {
+                    outcome = GuideOutcome.LOST;
+                }
+                cb.onResult(outcome);
             } catch (Exception e) {
                 Log.w(TAG, "guideToWaypoint failed: " + e.getMessage());
                 cb.onError("Pepper konnte nicht hinfahren.");
+            } finally {
+                if (stopListener != null && !stopListener.isDone()) {
+                    stopListener.requestCancellation();
+                }
             }
         });
+    }
+
+    private Future<ListenResult> startGuideStopListener(QiContext c) {
+        try {
+            PhraseSet phrases = PhraseSetBuilder.with(c)
+                    .withTexts("stopp", "stop", "halt", "halt an", "anhalten",
+                            "bleib stehen", "bleib hier")
+                    .build();
+            Listen listen = ListenBuilder.with(c).withPhraseSet(phrases).build();
+            Future<ListenResult> future = listen.async().run();
+            future.thenConsume(f -> {
+                if (f.isCancelled() || f.hasError()) {
+                    return;
+                }
+                ListenResult result = f.get();
+                if (result != null && result.getHeardPhrase() != null
+                        && !result.getHeardPhrase().getText().isEmpty()) {
+                    stopGuideRequested = true;
+                    cancelActiveGoTo();
+                }
+            });
+            return future;
+        } catch (Exception e) {
+            Log.w(TAG, "startGuideStopListener failed: " + e.getMessage());
+            return null;
+        }
     }
 
     public boolean hasFotostand(QiContext context) {

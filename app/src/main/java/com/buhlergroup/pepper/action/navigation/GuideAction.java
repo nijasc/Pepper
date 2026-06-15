@@ -82,6 +82,9 @@ public class GuideAction extends Action {
         if (outcome == NavigationManager.GuideOutcome.ARRIVED) {
             SpeechManager.getInstance().systemSay(context,
                     "Wir sind da! Hier ist " + target.name + ". Kann ich sonst noch helfen?");
+        } else if (outcome == NavigationManager.GuideOutcome.STOPPED) {
+            SpeechManager.getInstance().systemSay(context,
+                    "Alles klar, ich bleibe hier stehen. Sag Bescheid, wenn ich dich weiterführen soll.");
         } else if (outcome == null) {
             SpeechManager.getInstance().systemSay(context,
                     "Ich kann dich gerade nicht dorthin bringen.");
