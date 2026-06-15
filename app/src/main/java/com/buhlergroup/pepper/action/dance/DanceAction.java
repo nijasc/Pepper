@@ -26,6 +26,7 @@ public class DanceAction extends Action {
     private static final long MIN_PLAY_MS = 5000;
 
     private final DanceRepository repository = new DanceRepository();
+    private final Object audioLock = new Object();
     private MediaPlayer mediaPlayer;
 
     @Override
@@ -63,14 +64,14 @@ public class DanceAction extends Action {
             Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 
-            boolean audioPlaying = dance.previewUrl != null
-                    && startAudioUrl(dance.previewUrl, dance.audioStartMs);
+            MediaPlayer player = dance.previewUrl != null
+                    ? startAudioUrl(dance.previewUrl, dance.audioStartMs) : null;
 
             animationFuture = animate.async().run();
             QiFutures.consume(animationFuture, TAG, "dance animation");
 
-            long clipMs = audioPlaying && mediaPlayer != null
-                    ? mediaPlayer.getDuration() - dance.audioStartMs : dance.durationMs;
+            long clipMs = player != null
+                    ? player.getDuration() - dance.audioStartMs : dance.durationMs;
             if (clipMs <= 0) {
                 clipMs = dance.durationMs;
             }
@@ -101,11 +102,10 @@ public class DanceAction extends Action {
         }
     }
 
-    private boolean startAudioUrl(String url, long startMs) {
+    private MediaPlayer startAudioUrl(String url, long startMs) {
         stopAudio();
         try {
             MediaPlayer player = new MediaPlayer();
-            mediaPlayer = player;
             player.setAudioStreamType(AudioManager.STREAM_MUSIC);
             player.setDataSource(url);
             player.prepare();
@@ -113,11 +113,14 @@ public class DanceAction extends Action {
                 player.seekTo((int) startMs);
             }
             player.start();
-            return true;
+            synchronized (audioLock) {
+                mediaPlayer = player;
+            }
+            return player;
         } catch (Exception e) {
             Log.w(TAG, "Preview playback failed: " + e.getMessage());
             stopAudio();
-            return false;
+            return null;
         }
     }
 
@@ -130,9 +133,9 @@ public class DanceAction extends Action {
             if (audioRes == 0) {
                 audioRes = R.raw.wyoming;
             }
-            startAudioResource(context, audioRes);
+            MediaPlayer player = startAudioResource(context, audioRes);
 
-            long clipMs = mediaPlayer != null ? mediaPlayer.getDuration() : 0;
+            long clipMs = player != null ? player.getDuration() : 0;
             if (clipMs <= 0) {
                 clipMs = 15000;
             }
@@ -153,17 +156,24 @@ public class DanceAction extends Action {
         }
     }
 
-    private void startAudioResource(QiContext context, int resId) {
+    private MediaPlayer startAudioResource(QiContext context, int resId) {
         stopAudio();
-        mediaPlayer = MediaPlayer.create(context, resId);
-        if (mediaPlayer != null) {
-            mediaPlayer.start();
+        MediaPlayer player = MediaPlayer.create(context, resId);
+        synchronized (audioLock) {
+            mediaPlayer = player;
         }
+        if (player != null) {
+            player.start();
+        }
+        return player;
     }
 
     private void stopAudio() {
-        MediaPlayer player = mediaPlayer;
-        mediaPlayer = null;
+        MediaPlayer player;
+        synchronized (audioLock) {
+            player = mediaPlayer;
+            mediaPlayer = null;
+        }
         if (player != null) {
             try {
                 if (player.isPlaying()) {
