@@ -270,8 +270,8 @@ public final class AnimationGenerator {
                 + "one looping dance motif - no Markdown, no prose.\n\n"
                 + "Schema: {\"frameStep\":F,\"curves\":{\"JOINT\":[v0,v1,...],...}}\n"
                 + "- The animation runs at 25 fps. Each number in a joint's array is a keyframe; consecutive "
-                + "keyframes are F frames apart (F between 6 and 14, smaller = faster beats). Frame 0 is the "
-                + "first value.\n"
+                + "keyframes are F frames apart (F between 12 and 20, larger = slower and calmer; prefer the "
+                + "calmer end so the dance flows). Frame 0 is the first value.\n"
                 + "- Give EVERY joint array the SAME length N (use 8 to 14 - more keys means richer, smoother "
                 + "motion). The first and last value of each array MUST be equal so the motif loops seamlessly. "
                 + "The motif is repeated automatically and returned to neutral - do NOT author the repeats or "
@@ -313,7 +313,7 @@ public final class AnimationGenerator {
     }
 
     private String buildDanceXml(JSONObject plan, int targetSeconds) throws Exception {
-        int frameStep = Math.max(4, Math.min(25, plan.optInt("frameStep", 10)));
+        int frameStep = Math.max(10, Math.min(25, plan.optInt("frameStep", 16)));
         JSONObject curves = plan.getJSONObject("curves");
         JSONArray names = curves.names();
 
