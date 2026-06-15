@@ -18,6 +18,8 @@ public final class ITunesSearch {
 
     private static final String TAG = "ITunesSearch";
     private static final String SEARCH_URL = "https://itunes.apple.com/search";
+    private static final int MAX_ATTEMPTS = 3;
+    private static final long INITIAL_BACKOFF_MS = 500L;
 
     public static final class Result {
         public final String trackId;
@@ -59,13 +61,45 @@ public final class ITunesSearch {
     }
 
     private String fetch(String urlString) throws IOException {
-        HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
+        IOException last = null;
+        long backoff = INITIAL_BACKOFF_MS;
+        for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                return fetchOnce(urlString);
+            } catch (RetryableException e) {
+                last = e;
+                Log.w(TAG, "iTunes attempt " + attempt + "/" + MAX_ATTEMPTS
+                        + " failed: " + e.getMessage());
+                if (attempt < MAX_ATTEMPTS) {
+                    sleep(backoff);
+                    backoff *= 2;
+                }
+            }
+        }
+        throw last != null ? last : new IOException("iTunes ist nicht erreichbar.");
+    }
+
+    private String fetchOnce(String urlString) throws IOException {
+        HttpURLConnection connection;
+        try {
+            connection = (HttpURLConnection) new URL(urlString).openConnection();
+        } catch (IOException e) {
+            throw new RetryableException(e.getMessage(), e);
+        }
         connection.setConnectTimeout(8000);
         connection.setReadTimeout(12000);
         connection.setRequestProperty("User-Agent", "PepperDance/1.0");
         try {
-            int code = connection.getResponseCode();
+            int code;
+            try {
+                code = connection.getResponseCode();
+            } catch (IOException e) {
+                throw new RetryableException("Verbindung fehlgeschlagen: " + e.getMessage(), e);
+            }
             if (code != HttpURLConnection.HTTP_OK) {
+                if (code >= 500 || code == 429) {
+                    throw new RetryableException("iTunes-Suche fehlgeschlagen (HTTP " + code + ").");
+                }
                 throw new IOException("iTunes-Suche fehlgeschlagen (HTTP " + code + ").");
             }
             StringBuilder content = new StringBuilder();
@@ -75,10 +109,30 @@ public final class ITunesSearch {
                 while ((line = reader.readLine()) != null) {
                     content.append(line);
                 }
+            } catch (IOException e) {
+                throw new RetryableException("Lesefehler: " + e.getMessage(), e);
             }
             return content.toString();
         } finally {
             connection.disconnect();
+        }
+    }
+
+    private void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static final class RetryableException extends IOException {
+        RetryableException(String message) {
+            super(message);
+        }
+
+        RetryableException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 }
