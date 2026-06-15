@@ -33,13 +33,13 @@ public final class AnimationGenerator {
 
     public String generateValidated(Context context, String command, int targetSeconds) {
         int seconds = Math.min(MAX_SECONDS, Math.max(0, targetSeconds));
-        return generate(context, gestureSystemPrompt(seconds), "Movement request: " + command);
+        return generate(context, gestureSystemPrompt(seconds), "Movement request: " + command, false);
     }
 
     public String generateValidatedDance(Context context, String songName, int seconds) {
         int target = Math.min(MAX_SECONDS, Math.max(8, seconds));
         return generate(context, danceSystemPrompt(target),
-                "Choreograph a full-body dance for this song: " + songName);
+                "Choreograph a full-body dance for this song: " + songName, true);
     }
 
     public static final class SongPlan {
@@ -112,7 +112,8 @@ public final class AnimationGenerator {
         return new SongPlan(query, Math.max(0, Math.min(15, startSeconds)));
     }
 
-    private String generate(Context context, String systemPrompt, String userBase) {
+    private String generate(Context context, String systemPrompt, String userBase,
+                            boolean normalizeBody) {
         openAi.setC(context);
         String lastValidationError = null;
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -128,7 +129,7 @@ public final class AnimationGenerator {
                     error = "not parseable: " + e.getMessage();
                 }
                 if (error == null) {
-                    return postProcess(doc, qianim);
+                    return postProcess(doc, qianim, normalizeBody);
                 }
                 Log.w(TAG, "Attempt " + attempt + " invalid: " + error);
                 lastValidationError = error;
@@ -141,9 +142,12 @@ public final class AnimationGenerator {
         return null;
     }
 
-    private String postProcess(Document doc, String original) {
+    private String postProcess(Document doc, String original, boolean normalizeBody) {
         try {
             QianimLooper.expand(doc);
+            if (normalizeBody) {
+                QianimPostProcessor.normalizeBodyJoints(doc);
+            }
             QianimPostProcessor.ensureTangents(doc);
             return XmlUtils.serialize(doc);
         } catch (Exception e) {
@@ -195,8 +199,13 @@ public final class AnimationGenerator {
                 + "- Author ONE musical motif of 4-8 seconds (100-200 frames) and set repeatCycles so that "
                 + "motif length times repeatCycles is close to the target duration. For a signature dance the "
                 + "motif IS one full pass of that dance's move sequence.\n"
-                + "- This is a DANCE: move several joints together (arms, head, hips) in a lively rhythm with "
-                + "regularly spaced beats (a keyframe roughly every 8-15 frames).\n"
+                + "- This is a DANCE: move several joints together in a lively rhythm with regularly "
+                + "spaced beats (a keyframe roughly every 8-15 frames).\n"
+                + "- BALANCE: Pepper must never lose balance. Put the energy in the upper body - the arms, "
+                + "wrists, hands and head may move fast, wide and sharply. Keep the lower body gentle and "
+                + "centred near neutral: HipRoll within [-0.15,0.15], HipPitch within [-0.20,0.20], KneePitch "
+                + "within [-0.10,0.10], and move those three smoothly with small steps. Never swing the hips "
+                + "or knees hard or far.\n"
                 + "- The motif must start and end on exactly the same pose (every moving joint has identical "
                 + "values at frame 0 and at the last frame), so repetitions chain seamlessly.\n"
                 + "- Make that shared start/end pose an engaged dance stance WITHIN the groove (arms in motion), "

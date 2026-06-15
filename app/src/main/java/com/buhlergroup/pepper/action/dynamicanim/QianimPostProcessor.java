@@ -6,8 +6,10 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TreeMap;
 
 public final class QianimPostProcessor {
@@ -15,7 +17,42 @@ public final class QianimPostProcessor {
     private static final String EDITOR_NS = "http://www.aldebaran.com/animation/editor";
     private static final float SAFETY_MARGIN = 0.02f;
 
+    private static final Map<String, Float> BODY_AMPLITUDE = new HashMap<>();
+
+    static {
+        BODY_AMPLITUDE.put("HipRoll", 0.15f);
+        BODY_AMPLITUDE.put("HipPitch", 0.20f);
+        BODY_AMPLITUDE.put("KneePitch", 0.10f);
+    }
+
     private QianimPostProcessor() {
+    }
+
+    public static void normalizeBodyJoints(Document doc) {
+        NodeList curves = doc.getElementsByTagName("ActuatorCurve");
+        for (int i = 0; i < curves.getLength(); i++) {
+            Element curve = (Element) curves.item(i);
+            Float amplitude = BODY_AMPLITUDE.get(curve.getAttribute("actuator"));
+            if (amplitude == null) {
+                continue;
+            }
+            NodeList keys = curve.getElementsByTagName("Key");
+            for (int k = 0; k < keys.getLength(); k++) {
+                Node keyNode = keys.item(k);
+                if (!(keyNode instanceof Element)) {
+                    continue;
+                }
+                Element key = (Element) keyNode;
+                Float value = parseFloat(key.getAttribute("value"));
+                if (value == null) {
+                    continue;
+                }
+                float clamped = Math.max(-amplitude, Math.min(amplitude, value));
+                if (clamped != value) {
+                    key.setAttribute("value", String.format(Locale.US, "%.6f", clamped));
+                }
+            }
+        }
     }
 
     public static void ensureTangents(Document doc) {
