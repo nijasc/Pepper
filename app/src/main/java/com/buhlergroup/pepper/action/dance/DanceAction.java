@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action.dance;
 
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.util.Log;
 
@@ -17,18 +18,12 @@ import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
 
 public class DanceAction extends Action {
 
     private static final String TAG = "Dance";
     private static final long MAX_PLAY_MS = 35000;
     private static final long MIN_PLAY_MS = 5000;
-    private static final int DEFAULT_INTRO_SKIP_SEC = 15;
-    private static final int MIN_INTRO_SKIP_SEC = 10;
-    private static final int MAX_INTRO_SKIP_SEC = 30;
-    private static final int MIN_AUDIO_TAIL_SEC = 12;
 
     private final DanceRepository repository = new DanceRepository();
     private MediaPlayer mediaPlayer;
@@ -68,21 +63,26 @@ public class DanceAction extends Action {
             Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 
-            DancePlayerController.get().play(playbackIds(dance), introSkipSeconds(dance.durationMs));
+            boolean audioPlaying = dance.previewUrl != null && startAudioUrl(dance.previewUrl);
 
             animationFuture = animate.async().run();
             QiFutures.consume(animationFuture, TAG, "dance animation");
 
-            long playMs = Math.max(MIN_PLAY_MS, Math.min(MAX_PLAY_MS, dance.durationMs));
+            long clipMs = audioPlaying && mediaPlayer != null
+                    ? mediaPlayer.getDuration() : dance.durationMs;
+            if (clipMs <= 0) {
+                clipMs = dance.durationMs;
+            }
+            long playMs = Math.max(MIN_PLAY_MS, Math.min(MAX_PLAY_MS, clipMs));
             sleep(playMs);
 
-            DancePlayerController.get().stop();
+            stopAudio();
             if (!animationFuture.isDone()) {
                 animationFuture.requestCancellation();
             }
         } catch (Exception e) {
             Log.w(TAG, "Dance playback failed: " + e.getMessage());
-            DancePlayerController.get().stop();
+            stopAudio();
             if (animationFuture != null && !animationFuture.isDone()) {
                 animationFuture.requestCancellation();
             }
@@ -90,22 +90,21 @@ public class DanceAction extends Action {
         }
     }
 
-    private List<String> playbackIds(DanceEntity dance) {
-        if (dance.fallbackVideoIds != null && !dance.fallbackVideoIds.isEmpty()) {
-            return dance.fallbackVideoIds;
+    private boolean startAudioUrl(String url) {
+        stopAudio();
+        try {
+            MediaPlayer player = new MediaPlayer();
+            mediaPlayer = player;
+            player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            player.setDataSource(url);
+            player.prepare();
+            player.start();
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "Preview playback failed: " + e.getMessage());
+            stopAudio();
+            return false;
         }
-        return Collections.singletonList(dance.youtubeId);
-    }
-
-    private int introSkipSeconds(long durationMs) {
-        if (durationMs <= 0) {
-            return DEFAULT_INTRO_SKIP_SEC;
-        }
-        long durationSec = durationMs / 1000L;
-        long skip = Math.round(durationSec * 0.18);
-        skip = Math.max(MIN_INTRO_SKIP_SEC, Math.min(MAX_INTRO_SKIP_SEC, skip));
-        long latest = Math.max(0, durationSec - MIN_AUDIO_TAIL_SEC);
-        return (int) Math.min(skip, latest);
     }
 
     private void playFallback(QiContext context) {
@@ -175,7 +174,7 @@ public class DanceAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Makes Pepper dance to a song. The user can name any song or artist; Pepper fetches the "
-                + "music from YouTube and performs a generated choreography to it.";
+        return "Makes Pepper dance to a song. The user can name any song or artist; Pepper plays a "
+                + "music preview and performs a generated choreography to it.";
     }
 }

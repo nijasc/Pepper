@@ -6,20 +6,18 @@ import android.util.Log;
 import com.buhlergroup.pepper.action.dance.data.DanceDao;
 import com.buhlergroup.pepper.action.dance.data.DanceDatabase;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
-import com.buhlergroup.pepper.action.dance.youtube.YoutubeSearch;
+import com.buhlergroup.pepper.action.dance.itunes.ITunesSearch;
 import com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 public final class DanceRepository {
 
     private static final String TAG = "Dance";
-    private static final int MAX_VERIFIED = 4;
 
     private final AnimationGenerator generator = new AnimationGenerator();
 
@@ -28,21 +26,22 @@ public final class DanceRepository {
         File danceDir = danceDir(context);
 
         String songName = normalizeSongName(query);
+        SongSource source = resolveSource(songName);
+
         DanceEntity bySong = dao.findBySongName(songName);
         if (bySong != null) {
             if (bySong.qianimPath != null && new File(bySong.qianimPath).exists()) {
                 Log.i(TAG, "Reusing dance for " + songName);
+                bySong.previewUrl = source.previewUrl;
                 return bySong;
             }
             dao.deleteById(bySong.youtubeId);
         }
 
-        SongSource source = resolveSource(songName);
-
         DanceEntity existing = dao.findById(source.sourceId);
         if (existing != null && existing.qianimPath != null
                 && new File(existing.qianimPath).exists()) {
-            existing.fallbackVideoIds = source.videoIds;
+            existing.previewUrl = source.previewUrl;
             return existing;
         }
 
@@ -59,48 +58,28 @@ public final class DanceRepository {
         DanceEntity entity = new DanceEntity(
                 source.sourceId, songName, qianimFile.getAbsolutePath(),
                 durationMs, false, System.currentTimeMillis());
-        entity.fallbackVideoIds = source.videoIds;
+        entity.previewUrl = source.previewUrl;
         dao.insert(entity);
-        Log.i(TAG, "Created dance for " + songName + " from YouTube " + source.sourceId);
+        Log.i(TAG, "Created dance for " + songName + " from iTunes " + source.sourceId);
         return entity;
     }
 
     private static final class SongSource {
         final String sourceId;
+        final String previewUrl;
         final long durationMs;
-        final List<String> videoIds;
 
-        SongSource(String sourceId, long durationMs, List<String> videoIds) {
+        SongSource(String sourceId, String previewUrl, long durationMs) {
             this.sourceId = sourceId;
+            this.previewUrl = previewUrl;
             this.durationMs = durationMs;
-            this.videoIds = videoIds;
         }
     }
 
     private SongSource resolveSource(String songName) throws Exception {
-        YoutubeSearch youtube = new YoutubeSearch();
-        List<YoutubeSearch.Result> candidates = youtube.search(songName);
-
-        List<String> verifiedIds = new ArrayList<>();
-        YoutubeSearch.Result primary = null;
-        for (YoutubeSearch.Result candidate : candidates) {
-            if (!youtube.exists(candidate.videoId)) {
-                continue;
-            }
-            if (primary == null) {
-                primary = candidate;
-            }
-            verifiedIds.add(candidate.videoId);
-            if (verifiedIds.size() >= MAX_VERIFIED) {
-                break;
-            }
-        }
-        if (primary == null) {
-            throw new Exception("Kein abspielbares Video für die Suche gefunden.");
-        }
-        Log.i(TAG, "Selected '" + primary.title + "' (" + primary.videoId + ") with "
-                + (verifiedIds.size() - 1) + " backup(s)");
-        return new SongSource(primary.videoId, primary.durationMs, verifiedIds);
+        ITunesSearch.Result track = new ITunesSearch().search(songName);
+        Log.i(TAG, "Selected '" + track.title + "' (" + track.trackId + ")");
+        return new SongSource(track.trackId, track.previewUrl, track.durationMs);
     }
 
     private String sanitizeFileName(String value) {

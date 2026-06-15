@@ -7,8 +7,6 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-import java.util.List;
-
 @Entity(tableName = "dances")
 public class DanceEntity {
 
@@ -35,7 +33,7 @@ public class DanceEntity {
 
     @Ignore
     @Nullable
-    public List<String> fallbackVideoIds;
+    public String previewUrl;
 
     public DanceEntity(@NonNull String youtubeId, @NonNull String songName,
                        @Nullable String qianimPath, long durationMs,
