@@ -256,7 +256,9 @@ public class RaffleJoinView extends FrameLayout {
                 if (value.isEmpty()) {
                     return R.string.raffle_join_phone_required;
                 }
-                return value.matches("[+]?[0-9\\s()\\-]{7,20}")
+                String digits = value.replaceAll("\\D", "");
+                boolean validChars = value.matches("[+0-9\\s()\\-]+");
+                return validChars && digits.length() >= 7 && digits.length() <= 15
                         ? null : R.string.raffle_join_phone_invalid;
             default:
                 return null;
