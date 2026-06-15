@@ -104,6 +104,24 @@ public class QuizView extends FrameLayout {
         this.inputEnabled = enabled;
     }
 
+    public void revealAnswer(int correctIndex, int chosenIndex) {
+        post(() -> {
+            inputEnabled = false;
+            for (int i = 0; i < optionsContainer.getChildCount(); i++) {
+                View child = optionsContainer.getChildAt(i);
+                if (i == correctIndex) {
+                    child.setBackgroundResource(R.drawable.bg_pill_teal);
+                    child.setAlpha(1f);
+                } else if (i == chosenIndex) {
+                    child.setBackgroundResource(R.drawable.bg_pill_red);
+                    child.setAlpha(1f);
+                } else {
+                    child.setAlpha(0.4f);
+                }
+            }
+        });
+    }
+
     private void onOption(int index) {
         if (!inputEnabled) {
             return;
