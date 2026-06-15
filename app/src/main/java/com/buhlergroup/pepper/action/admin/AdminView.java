@@ -36,6 +36,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.buhlergroup.pepper.PepperApplication;
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.attract.AttractController;
+import com.buhlergroup.pepper.action.attract.AttractSettings;
 import com.buhlergroup.pepper.action.camera.CameraSettings;
 import com.buhlergroup.pepper.action.camera.WifiCameraManager;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
@@ -93,6 +95,7 @@ public class AdminView extends FrameLayout {
     private static final int PANEL_CAMERA = 9;
     private static final int PANEL_STATUS = 10;
     private static final int PANEL_STATS = 11;
+    private static final int PANEL_ATTRACT = 12;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final StringBuilder entered = new StringBuilder();
@@ -112,6 +115,10 @@ public class AdminView extends FrameLayout {
     private View statusPanel;
     private View statsPanel;
     private TextView statsText;
+    private View attractPanel;
+    private CheckBox attractEnabled;
+    private EditText attractIdle;
+    private EditText attractGreet;
     private TextView statusWifi;
     private TextView statusOpenAi;
     private TextView statusBattery;
@@ -201,6 +208,10 @@ public class AdminView extends FrameLayout {
         statusPanel = findViewById(R.id.adminStatusPanel);
         statsPanel = findViewById(R.id.adminStatsPanel);
         statsText = findViewById(R.id.adminStatsText);
+        attractPanel = findViewById(R.id.adminAttractPanel);
+        attractEnabled = findViewById(R.id.attractEnabled);
+        attractIdle = findViewById(R.id.attractIdle);
+        attractGreet = findViewById(R.id.attractGreet);
         statusWifi = findViewById(R.id.statusWifi);
         statusOpenAi = findViewById(R.id.statusOpenAi);
         statusBattery = findViewById(R.id.statusBattery);
@@ -284,6 +295,10 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminStats).setOnClickListener(v -> showStats());
         findViewById(R.id.adminStatsExport).setOnClickListener(v -> exportStats());
         findViewById(R.id.adminStatsBack).setOnClickListener(v -> showPanel(PANEL_MENU));
+        findViewById(R.id.adminAttract).setOnClickListener(v -> showAttract());
+        findViewById(R.id.attractSave).setOnClickListener(v -> saveAttract());
+        findViewById(R.id.attractTest).setOnClickListener(v -> testAttract());
+        findViewById(R.id.adminAttractBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.cameraTest).setOnClickListener(v -> testCamera());
         findViewById(R.id.cameraSave).setOnClickListener(v -> saveCamera());
         findViewById(R.id.adminCameraBack).setOnClickListener(v -> showPanel(PANEL_MENU));
@@ -423,6 +438,7 @@ public class AdminView extends FrameLayout {
         cameraPanel.setVisibility(which == PANEL_CAMERA ? VISIBLE : GONE);
         statusPanel.setVisibility(which == PANEL_STATUS ? VISIBLE : GONE);
         statsPanel.setVisibility(which == PANEL_STATS ? VISIBLE : GONE);
+        attractPanel.setVisibility(which == PANEL_ATTRACT ? VISIBLE : GONE);
     }
 
     private void showLanguage() {
@@ -960,6 +976,34 @@ public class AdminView extends FrameLayout {
             getContext().startActivity(chooser);
         } catch (Exception e) {
             Toast.makeText(getContext(), R.string.raffle_email_chooser, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showAttract() {
+        attractEnabled.setChecked(AttractSettings.isEnabled(getContext()));
+        attractIdle.setText(String.valueOf(AttractSettings.getIdleMinutes(getContext())));
+        attractGreet.setText(String.valueOf(AttractSettings.getGreetSeconds(getContext())));
+        showPanel(PANEL_ATTRACT);
+    }
+
+    private void saveAttract() {
+        int idle = parseIntOr(attractIdle, AttractSettings.DEFAULT_IDLE_MINUTES);
+        int greet = parseIntOr(attractGreet, AttractSettings.DEFAULT_GREET_SECONDS);
+        AttractSettings.save(getContext(), attractEnabled.isChecked(), idle, greet);
+        Toast.makeText(getContext(), R.string.attract_saved, Toast.LENGTH_SHORT).show();
+    }
+
+    private void testAttract() {
+        saveAttract();
+        hide();
+        AttractController.get().forceStart();
+    }
+
+    private int parseIntOr(EditText field, int fallback) {
+        try {
+            return Integer.parseInt(field.getText().toString().trim());
+        } catch (NumberFormatException e) {
+            return fallback;
         }
     }
 

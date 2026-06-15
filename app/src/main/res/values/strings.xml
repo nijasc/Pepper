@@ -171,6 +171,12 @@
     <string name="stats_export">Exportieren</string>
     <string name="stats_share_title">Pepper Tagesreport</string>
     <string name="selfie_no_wifi">Kein WLAN – QR-Code zum Herunterladen gerade nicht verfügbar.</string>
+    <string name="admin_attract">Attract-Modus</string>
+    <string name="attract_enabled">Attract-Modus aktiv</string>
+    <string name="attract_idle_label">Leerlauf bis Attract (Minuten)</string>
+    <string name="attract_greet_label">Begrüßungs-Intervall (Sekunden)</string>
+    <string name="attract_test">Jetzt testen</string>
+    <string name="attract_saved">Attract-Einstellungen gespeichert.</string>
     <string name="status_refresh">Aktualisieren</string>
     <string name="status_wifi_connected">WLAN: verbunden (%1$s)</string>
     <string name="status_wifi_disconnected">WLAN: getrennt</string>

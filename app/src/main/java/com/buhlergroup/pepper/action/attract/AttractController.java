@@ -18,8 +18,6 @@ import java.util.List;
 public final class AttractController {
 
     private static final String TAG = "AttractController";
-    private static final long IDLE_MS = 120000;
-    private static final long GREET_INTERVAL_MS = 45000;
 
     private static final AttractController INSTANCE = new AttractController();
 
@@ -56,6 +54,16 @@ public final class AttractController {
     }
 
     public void tick(QiContext context, boolean overlayOpen, boolean busy) {
+        if (context == null) {
+            return;
+        }
+        if (!AttractSettings.isEnabled(context)) {
+            lastInteractionMs = SystemClock.elapsedRealtime();
+            if (active) {
+                stopAttract();
+            }
+            return;
+        }
         if (overlayOpen || busy) {
             lastInteractionMs = SystemClock.elapsedRealtime();
             if (active) {
@@ -63,7 +71,8 @@ public final class AttractController {
             }
             return;
         }
-        if (!active && SystemClock.elapsedRealtime() - lastInteractionMs > IDLE_MS) {
+        long idleMs = AttractSettings.getIdleMinutes(context) * 60_000L;
+        if (!active && SystemClock.elapsedRealtime() - lastInteractionMs > idleMs) {
             startAttract();
         }
         if (active) {
@@ -71,11 +80,16 @@ public final class AttractController {
         }
     }
 
+    public void forceStart() {
+        startAttract();
+    }
+
     private void maybeGreet(QiContext context) {
         if (context == null || greeting) {
             return;
         }
-        if (SystemClock.elapsedRealtime() - lastGreetMs < GREET_INTERVAL_MS) {
+        long greetMs = AttractSettings.getGreetSeconds(context) * 1000L;
+        if (SystemClock.elapsedRealtime() - lastGreetMs < greetMs) {
             return;
         }
         greeting = true;

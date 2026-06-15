@@ -276,6 +276,24 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
+            <LinearLayout android:id="@+id/adminAttract" style="@style/AdminMenuTile">
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@string/admin_attract"
+                    android:src="@drawable/ic_admin_history" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:text="@string/admin_attract"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
             <LinearLayout android:id="@+id/adminStats" style="@style/AdminMenuTile">
                 <ImageView
                     android:layout_width="48dp"
@@ -1064,6 +1082,86 @@
             style="@style/AdminMenuButton"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
+            android:text="@string/admin_back" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adminAttractPanel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/admin_attract"
+            android:textColor="@color/white"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <CheckBox
+            android:id="@+id/attractEnabled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/attract_enabled"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/attract_idle_label"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/attractIdle"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="#88FFFFFF" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/attract_greet_label"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/attractGreet"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="#88FFFFFF" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/attractSave"
+            style="@style/AdminMenuButton"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:text="@string/raffle_save" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/attractTest"
+            style="@style/AdminMenuButton"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:text="@string/attract_test" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminAttractBack"
+            style="@style/AdminMenuButton"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
             android:text="@string/admin_back" />
     </LinearLayout>
 
