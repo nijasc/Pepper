@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.text.InputType;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -69,6 +70,8 @@ import java.util.zip.ZipOutputStream;
 public class AdminView extends FrameLayout {
 
     private static final String TAG = "AdminView";
+    private static final int MAX_PIN_ATTEMPTS = 5;
+    private static final long PIN_LOCKOUT_MS = 60000;
     private static final int PANEL_PIN = 0;
     private static final int PANEL_MENU = 1;
     private static final int PANEL_DEVLOG = 2;
@@ -82,6 +85,8 @@ public class AdminView extends FrameLayout {
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final StringBuilder entered = new StringBuilder();
+    private int pinAttempts = 0;
+    private long pinLockoutUntil = 0;
 
     private View pinPanel;
     private View menuPanel;
@@ -273,7 +278,11 @@ public class AdminView extends FrameLayout {
     public void open() {
         post(() -> {
             resetEntry();
-            pinError.setVisibility(INVISIBLE);
+            if (isPinLocked()) {
+                showLockoutMessage();
+            } else {
+                pinError.setVisibility(INVISIBLE);
+            }
             showPanel(PANEL_PIN);
             setVisibility(VISIBLE);
             bringToFront();
@@ -296,6 +305,10 @@ public class AdminView extends FrameLayout {
     }
 
     private void onDigit(int digit) {
+        if (isPinLocked()) {
+            showLockoutMessage();
+            return;
+        }
         if (entered.length() >= 4) {
             return;
         }
@@ -321,12 +334,33 @@ public class AdminView extends FrameLayout {
 
     private void checkPin() {
         if (AdminSettings.getPin(getContext()).contentEquals(entered)) {
+            pinAttempts = 0;
+            pinLockoutUntil = 0;
             resetEntry();
             showPanel(PANEL_MENU);
         } else {
-            pinError.setVisibility(VISIBLE);
             resetEntry();
+            pinAttempts++;
+            if (pinAttempts >= MAX_PIN_ATTEMPTS) {
+                pinAttempts = 0;
+                pinLockoutUntil = SystemClock.elapsedRealtime() + PIN_LOCKOUT_MS;
+                showLockoutMessage();
+            } else {
+                pinError.setText(R.string.admin_pin_error);
+                pinError.setVisibility(VISIBLE);
+            }
         }
+    }
+
+    private boolean isPinLocked() {
+        return SystemClock.elapsedRealtime() < pinLockoutUntil;
+    }
+
+    private void showLockoutMessage() {
+        long remaining = Math.max(0, pinLockoutUntil - SystemClock.elapsedRealtime());
+        int seconds = (int) Math.ceil(remaining / 1000.0);
+        pinError.setText(getContext().getString(R.string.admin_pin_locked, seconds));
+        pinError.setVisibility(VISIBLE);
     }
 
     private void updateDots() {
