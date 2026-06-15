@@ -74,6 +74,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private HistoryManager historyManager;
     private Button stopFollowButton;
     private Button adminButton;
+    private View homeTiles;
     private Holder backgroundMovementHolder;
     private TextView languageLabel;
     private volatile boolean listening;
@@ -118,6 +119,13 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         AdminController.get().attachView(adminView);
         adminButton = findViewById(R.id.adminButton);
         adminButton.setOnClickListener(v -> AdminController.get().open());
+
+        homeTiles = findViewById(R.id.homeTiles);
+        findViewById(R.id.tileDance).setOnClickListener(v -> runTileAction("DanceAction"));
+        findViewById(R.id.tileSelfie).setOnClickListener(v -> runTileAction("SelfieAction"));
+        findViewById(R.id.tileMemory).setOnClickListener(v -> runTileAction("MemoryGameAction"));
+        findViewById(R.id.tileRaffle).setOnClickListener(v -> runTileAction("JoinRaffleAction"));
+        findViewById(R.id.tileHighFive).setOnClickListener(v -> runTileAction("HighFiveAction"));
 
         NavigationView navigationView = findViewById(R.id.navigationView);
         NavigationController.get().attachView(navigationView);
@@ -350,6 +358,29 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         if (listenPending && !listening && !isOverlayOpen()) {
             listenToSpeech();
         }
+    }
+
+    private void runTileAction(String actionName) {
+        if (processing) {
+            return;
+        }
+        QiContext qiContext = RobotContext.get();
+        if (qiContext == null || executionHandler == null) {
+            return;
+        }
+        AttractController.get().notifyInteraction();
+        Thread thread = new Thread(() -> {
+            processing = true;
+            try {
+                executionHandler.runAction(qiContext, actionName, "");
+            } catch (Exception e) {
+                Log.e("Mainactivity", "Tile action failed: " + e.getMessage());
+            } finally {
+                processing = false;
+            }
+        }, "tile-action");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void tickAttract() {

@@ -175,6 +175,17 @@ public class ActionHandler {
         }
     }
 
+    public void runAction(QiContext context, String actionName, String input) {
+        Action action = actionsByName.get(actionName);
+        if (action == null) {
+            Log.w(this.getClass().getSimpleName(), "Unknown tile action: " + actionName);
+            return;
+        }
+        Log.i(this.getClass().getSimpleName(), "Tile action: " + actionName);
+        historyManager.addDeveloper("Action started (tile): " + actionName, action);
+        action.execute(context, input == null ? "" : input);
+    }
+
     private void handleLegacy(QiContext context, String input) {
         long intentStart = System.currentTimeMillis();
         Action intent = intentEngine.getIntent(input);
