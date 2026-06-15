@@ -1,5 +1,7 @@
 package com.buhlergroup.pepper.action.raffle;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -16,6 +18,7 @@ public class WinnerView extends FrameLayout {
 
     private TextView titleView;
     private TextView nameView;
+    private ObjectAnimator suspenseAnimator;
 
     public WinnerView(Context context) {
         super(context);
@@ -70,18 +73,43 @@ public class WinnerView extends FrameLayout {
             nameView.setText("…");
             setVisibility(VISIBLE);
             bringToFront();
+            startSuspenseAnimation();
         });
     }
 
     public void revealWinner(String name) {
         post(() -> {
+            stopSuspenseAnimation();
             titleView.setText(R.string.winner_title);
             nameView.setText(name);
+            nameView.setScaleX(0.4f);
+            nameView.setScaleY(0.4f);
+            nameView.animate().scaleX(1f).scaleY(1f).setDuration(450).start();
         });
     }
 
     public void hide() {
-        post(() -> setVisibility(GONE));
+        post(() -> {
+            stopSuspenseAnimation();
+            setVisibility(GONE);
+        });
+    }
+
+    private void startSuspenseAnimation() {
+        stopSuspenseAnimation();
+        suspenseAnimator = ObjectAnimator.ofFloat(titleView, "alpha", 1f, 0.3f);
+        suspenseAnimator.setDuration(500);
+        suspenseAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        suspenseAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        suspenseAnimator.start();
+    }
+
+    private void stopSuspenseAnimation() {
+        if (suspenseAnimator != null) {
+            suspenseAnimator.cancel();
+            suspenseAnimator = null;
+        }
+        titleView.setAlpha(1f);
     }
 
     private int dp(int value) {

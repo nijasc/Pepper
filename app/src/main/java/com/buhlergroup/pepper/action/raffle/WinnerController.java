@@ -59,6 +59,15 @@ public final class WinnerController {
             notifyState(true);
             try {
                 board.showSuspense();
+                say(context, "Achtung, jetzt wird es spannend! Trommelwirbel, bitte!");
+                say(context, "Und der Gewinner unserer Verlosung ist…");
+                Thread.sleep(1000);
+                say(context, "Drei…");
+                Thread.sleep(600);
+                say(context, "Zwei…");
+                Thread.sleep(600);
+                say(context, "Eins…");
+                Thread.sleep(400);
                 board.revealWinner(winnerName);
                 say(context, "Herzlichen Glückwunsch, " + winnerName + "!");
                 Thread.sleep(6000);
