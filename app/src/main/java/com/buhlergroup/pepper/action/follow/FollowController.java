@@ -123,6 +123,7 @@ public final class FollowController {
         Move activeMove = Move.STOP;
         long lastGoToAtMs = 0L;
         int misses = 0;
+        boolean lostTarget = false;
 
         try {
             Frame robotFrame = context.getActuation().robotFrame();
@@ -143,7 +144,10 @@ public final class FollowController {
 
                 Human human = selectHuman(context, robotFrame, trackValid ? trackFrame : null);
                 if (human == null) {
-                    if (++misses >= MAX_MISSES) break;
+                    if (++misses >= MAX_MISSES) {
+                        lostTarget = true;
+                        break;
+                    }
                     Thread.sleep(LOOP_PAUSE_MS);
                     continue;
                 }
@@ -207,6 +211,11 @@ public final class FollowController {
                 }
 
                 Thread.sleep(LOOP_PAUSE_MS);
+            }
+
+            if (lostTarget && gen == generation && wantFollow) {
+                sayQuietly(context,
+                        "Ich habe dich leider aus den Augen verloren und bleibe jetzt hier stehen.");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
