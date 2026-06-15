@@ -5,6 +5,7 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -85,7 +86,35 @@ public class WinnerView extends FrameLayout {
             nameView.setScaleX(0.4f);
             nameView.setScaleY(0.4f);
             nameView.animate().scaleX(1f).scaleY(1f).setDuration(450).start();
+            launchConfetti();
         });
+    }
+
+    private void launchConfetti() {
+        int width = getWidth();
+        int height = getHeight();
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+        int[] colors = {0xFFE53935, 0xFFFDD835, 0xFF43A047, 0xFF1E88E5, 0xFF8E24AA, 0xFFFB8C00};
+        int pieces = 28;
+        for (int i = 0; i < pieces; i++) {
+            View dot = new View(getContext());
+            int size = dp(10 + (i % 3) * 4);
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(size, size);
+            lp.leftMargin = (int) (Math.random() * Math.max(1, width - size));
+            lp.topMargin = -size;
+            dot.setLayoutParams(lp);
+            dot.setBackgroundColor(colors[i % colors.length]);
+            addView(dot);
+            long duration = 1800 + (long) (Math.random() * 1500);
+            dot.animate()
+                    .translationY(height + size)
+                    .rotation((float) (Math.random() * 720 - 360))
+                    .setDuration(duration)
+                    .withEndAction(() -> removeView(dot))
+                    .start();
+        }
     }
 
     public void hide() {

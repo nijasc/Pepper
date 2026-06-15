@@ -595,13 +595,14 @@ public class AdminView extends FrameLayout {
             raffleEntries.addView(empty);
         } else {
             for (RaffleEntryEntity entry : entries) {
-                raffleEntries.addView(createEntryRow(entry));
+                boolean isWinner = raffle.winnerId != null && raffle.winnerId == entry.id;
+                raffleEntries.addView(createEntryRow(entry, isWinner));
             }
         }
         showPanel(PANEL_RAFFLE);
     }
 
-    private View createEntryRow(RaffleEntryEntity entry) {
+    private View createEntryRow(RaffleEntryEntity entry, boolean isWinner) {
         LinearLayout row = new LinearLayout(getContext());
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
@@ -617,13 +618,20 @@ public class AdminView extends FrameLayout {
         thumb.setVisibility(GONE);
         row.addView(thumb);
 
-        StringBuilder sb = new StringBuilder(entry.name).append(" · ").append(entry.email);
+        StringBuilder sb = new StringBuilder();
+        if (isWinner) {
+            sb.append("🏆 ");
+        }
+        sb.append(entry.name).append(" · ").append(entry.email);
         if (entry.phone != null && !entry.phone.isEmpty()) {
             sb.append(" · ").append(entry.phone);
         }
         TextView text = new TextView(getContext());
         text.setText(sb.toString());
-        text.setTextColor(0xFFFFFFFF);
+        text.setTextColor(isWinner ? 0xFFFFD54F : 0xFFFFFFFF);
+        if (isWinner) {
+            text.setTypeface(text.getTypeface(), android.graphics.Typeface.BOLD);
+        }
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
         text.setLayoutParams(textParams);
