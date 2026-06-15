@@ -20,10 +20,15 @@ public class CareerAction extends Action {
     public void execute(QiContext context, String input) {
         SupportedLanguage lang = SpeechManager.getInstance().currentLanguage();
         String url = Env.get(context, CAREER_URL_KEY, "").trim();
-        SpeechManager.getInstance().systemSay(context, answer(lang, !url.isEmpty()));
-        if (!url.isEmpty()) {
+        boolean hasQr = isValidUrl(url);
+        SpeechManager.getInstance().systemSay(context, answer(lang, hasQr));
+        if (hasQr) {
             showQr(context, lang, url);
         }
+    }
+
+    private boolean isValidUrl(String url) {
+        return url.startsWith("http://") || url.startsWith("https://");
     }
 
     private void showQr(QiContext context, SupportedLanguage lang, String url) {
