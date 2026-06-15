@@ -36,6 +36,7 @@ import com.buhlergroup.pepper.action.camera.WifiCameraManager;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
+import com.buhlergroup.pepper.action.raffle.RaffleSettings;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
@@ -117,6 +118,7 @@ public class AdminView extends FrameLayout {
     private Button raffleEndDateButton;
     private CheckBox raffleRequiresSelfie;
     private CheckBox raffleRequiresPhone;
+    private EditText raffleRetentionDays;
     private TextView raffleCreateError;
     private Button raffleCreateSave;
     private long raffleEndDateMillis;
@@ -193,6 +195,7 @@ public class AdminView extends FrameLayout {
         raffleEndDateButton = findViewById(R.id.raffleEndDate);
         raffleRequiresSelfie = findViewById(R.id.raffleRequiresSelfie);
         raffleRequiresPhone = findViewById(R.id.raffleRequiresPhone);
+        raffleRetentionDays = findViewById(R.id.raffleRetentionDays);
         raffleCreateError = findViewById(R.id.raffleCreateError);
         raffleCreateSave = findViewById(R.id.raffleCreateSave);
         raffleOverviewTitle = findViewById(R.id.adminRaffleTitle);
@@ -410,6 +413,7 @@ public class AdminView extends FrameLayout {
         raffleDescription.setText("");
         raffleRequiresSelfie.setChecked(false);
         raffleRequiresPhone.setChecked(false);
+        raffleRetentionDays.setText(String.valueOf(RaffleSettings.getRetentionDays(getContext())));
         raffleEndDateMillis = 0L;
         raffleEndDateButton.setText(R.string.raffle_end_date);
         raffleCreateError.setVisibility(GONE);
@@ -463,6 +467,7 @@ public class AdminView extends FrameLayout {
         boolean requiresSelfie = raffleRequiresSelfie.isChecked();
         boolean requiresPhone = raffleRequiresPhone.isChecked();
         long endDate = raffleEndDateMillis;
+        RaffleSettings.setRetentionDays(getContext(), parseRetentionDays());
         raffleCreateSave.setEnabled(false);
         dbExecutor.submit(() -> {
             long id = RaffleRepository.get(getContext()).createRaffle(
@@ -478,6 +483,14 @@ public class AdminView extends FrameLayout {
                 }
             });
         });
+    }
+
+    private int parseRetentionDays() {
+        try {
+            return Math.max(0, Integer.parseInt(raffleRetentionDays.getText().toString().trim()));
+        } catch (NumberFormatException e) {
+            return RaffleSettings.DEFAULT_RETENTION_DAYS;
+        }
     }
 
     private void openRaffle() {

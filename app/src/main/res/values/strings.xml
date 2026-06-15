@@ -146,4 +146,5 @@
     <string name="raffle_delete">Verlosung löschen</string>
     <string name="raffle_delete_title">Verlosung löschen?</string>
     <string name="raffle_delete_message">Die Verlosung und ALLE Teilnehmerdaten (inkl. Selfies) endgültig löschen? Das kann nicht rückgängig gemacht werden.</string>
+    <string name="raffle_retention_label">Teilnehmerdaten automatisch löschen nach Abschluss (Tage):</string>
 </resources>

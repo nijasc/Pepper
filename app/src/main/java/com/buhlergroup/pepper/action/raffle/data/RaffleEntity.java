@@ -33,6 +33,9 @@ public class RaffleEntity {
     @ColumnInfo(name = "created_at")
     public long createdAt;
 
+    @ColumnInfo(name = "finished_at")
+    public long finishedAt;
+
     @Nullable
     public Long winnerId;
 

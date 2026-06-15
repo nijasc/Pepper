@@ -10,7 +10,7 @@ import androidx.room.TypeConverters;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {RaffleEntity.class, RaffleEntryEntity.class}, version = 2)
+@Database(entities = {RaffleEntity.class, RaffleEntryEntity.class}, version = 3)
 @TypeConverters(RaffleConverters.class)
 public abstract class RaffleDatabase extends RoomDatabase {
 
@@ -20,6 +20,13 @@ public abstract class RaffleDatabase extends RoomDatabase {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE raffles ADD COLUMN winnerId INTEGER");
+        }
+    };
+
+    static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE raffles ADD COLUMN finished_at INTEGER NOT NULL DEFAULT 0");
         }
     };
 
@@ -35,7 +42,7 @@ public abstract class RaffleDatabase extends RoomDatabase {
                                     context.getApplicationContext(),
                                     RaffleDatabase.class,
                                     "raffle.db")
-                            .addMigrations(MIGRATION_1_2)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                             .build();
                 }
             }

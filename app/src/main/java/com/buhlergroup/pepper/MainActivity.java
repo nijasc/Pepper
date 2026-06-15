@@ -45,6 +45,7 @@ import com.buhlergroup.pepper.action.memory.MemoryGameController;
 import com.buhlergroup.pepper.action.memory.MemoryGameView;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinView;
+import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieView;
 import com.buhlergroup.pepper.lang.LanguageManager;
@@ -131,6 +132,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         initSpeech();
         lastListenStartMs = SystemClock.elapsedRealtime();
         watchdogHandler.postDelayed(speechWatchdog, SPEECH_WATCHDOG_INTERVAL_MS);
+        RaffleRepository.purgeExpiredAsync(this);
 
         DanceLibraryController.get().setVoiceRequester(() -> runOnUiThread(() -> {
             if (intent != null && intent.resolveActivity(getPackageManager()) != null) {

@@ -1,6 +1,7 @@
 package com.buhlergroup.pepper.action.raffle;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.buhlergroup.pepper.action.raffle.data.RaffleDao;
 import com.buhlergroup.pepper.action.raffle.data.RaffleDatabase;
@@ -11,10 +12,13 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class RaffleRepository {
 
     private static volatile RaffleRepository instance;
+    private static final ExecutorService maintenanceExecutor = Executors.newSingleThreadExecutor();
 
     private final Context appContext;
     private final RaffleDao raffleDao;
@@ -81,7 +85,30 @@ public final class RaffleRepository {
     }
 
     public void finishRaffle(long raffleId) {
-        raffleDao.setStatus(raffleId, RaffleStatus.FINISHED);
+        raffleDao.setFinished(raffleId, System.currentTimeMillis());
+    }
+
+    public static void purgeExpiredAsync(Context context) {
+        Context app = context.getApplicationContext();
+        maintenanceExecutor.submit(() -> {
+            try {
+                get(app).purgeExpired();
+            } catch (Exception e) {
+                Log.w("RaffleRepository", "purgeExpired failed: " + e.getMessage());
+            }
+        });
+    }
+
+    public void purgeExpired() {
+        int days = RaffleSettings.getRetentionDays(appContext);
+        if (days <= 0) {
+            return;
+        }
+        long cutoff = System.currentTimeMillis() - days * 24L * 60L * 60L * 1000L;
+        List<RaffleEntity> expired = raffleDao.getFinishedBefore(cutoff);
+        for (RaffleEntity raffle : expired) {
+            deleteRaffleCompletely(raffle.id);
+        }
     }
 
     public long addEntry(long raffleId, String name, String email, String phone, String selfieId) {
