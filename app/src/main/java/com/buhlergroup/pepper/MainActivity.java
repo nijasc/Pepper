@@ -313,6 +313,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             int visibility = overlayOpen ? View.GONE : View.VISIBLE;
             adminButton.setVisibility(visibility);
             languageLabel.setVisibility(visibility);
+            homeTiles.setVisibility(visibility);
         });
         maybeResumeListening();
     }
