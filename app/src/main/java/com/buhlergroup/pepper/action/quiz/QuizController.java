@@ -109,6 +109,14 @@ public final class QuizController {
     }
 
     private List<QuizQuestion> loadQuestions(QiContext context, SupportedLanguage lang) {
+        List<QuizQuestion> generated = QuizGenerator.generate(context, lang, QUESTION_COUNT);
+        if (generated != null && !generated.isEmpty()) {
+            if (generated.size() > QUESTION_COUNT) {
+                return generated.subList(0, QUESTION_COUNT);
+            }
+            return generated;
+        }
+        Log.i(TAG, "Using local fallback quiz questions");
         return QuizQuestions.fallback(lang, QUESTION_COUNT);
     }
 

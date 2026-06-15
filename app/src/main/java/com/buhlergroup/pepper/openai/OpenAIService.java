@@ -93,6 +93,26 @@ public class OpenAIService {
         return "Etwas ist unerwartet schief gelaufen.";
     }
 
+    public String generateText(String instructions, String userInput, int maxTokens) throws IOException {
+        List<Map<String, String>> input = new java.util.ArrayList<>();
+        Map<String, String> userEntry = new HashMap<>();
+        userEntry.put("role", "user");
+        userEntry.put("content", userInput);
+        input.add(userEntry);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", ModelSelector.modelFor(ModelSelector.ModelTask.GENERATION));
+        body.put("input", input);
+        body.put("instructions", instructions);
+        body.put("max_output_tokens", maxTokens);
+        Map<String, Object> reasoning = new HashMap<>();
+        reasoning.put("effort", "low");
+        body.put("reasoning", reasoning);
+
+        String res = sendOpenAiRequest("/responses", body, RESPONSE_TIMEOUT_MS);
+        return parseOutput(res);
+    }
+
     public String extractLanguageTag(String text) {
         if (text == null) {
             lastLanguageTag = null;
