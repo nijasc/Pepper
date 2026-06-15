@@ -514,28 +514,69 @@ public final class NavigationManager {
     }
 
     private void autoScanRotate(QiContext c) {
-        Thread rotator = new Thread(() -> {
-            int steps = 6;
-            double angle = Math.toRadians(60);
-            for (int i = 0; i < steps && scanning; i++) {
-                try {
-                    Frame robotFrame = c.getActuation().robotFrame();
-                    Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, angle);
-                    FreeFrame target = c.getMapping().makeFreeFrame();
-                    target.update(robotFrame, t, 0L);
-                    Future<Void> goToFuture = GoToBuilder.with(c)
-                            .withFrame(target.frame()).build().async().run();
-                    rotateFuture = goToFuture;
-                    awaitGoTo(goToFuture, () -> scanning);
-                } catch (Exception e) {
-                    Log.w(TAG, "autoScanRotate step failed: " + e.getMessage());
-                    break;
+        Thread explorer = new Thread(() -> {
+            try {
+                rotationSweep(c);
+                double[][] offsets = {
+                        {SCAN_RADIUS_M, 0.0},
+                        {0.0, SCAN_RADIUS_M},
+                        {0.0, -SCAN_RADIUS_M}
+                };
+                for (double[] offset : offsets) {
+                    if (!scanning) {
+                        break;
+                    }
+                    if (driveToOriginOffset(c, offset[0], offset[1])) {
+                        rotationSweep(c);
+                    }
                 }
+            } catch (Exception e) {
+                Log.w(TAG, "autoScanExplore failed: " + e.getMessage());
+            } finally {
+                rotateFuture = null;
             }
-            rotateFuture = null;
-        }, "scan-rotator");
-        rotator.setDaemon(true);
-        rotator.start();
+        }, "scan-explorer");
+        explorer.setDaemon(true);
+        explorer.start();
+    }
+
+    private void rotationSweep(QiContext c) {
+        double angle = 2.0 * Math.PI / SCAN_ROTATION_STEPS;
+        for (int i = 0; i < SCAN_ROTATION_STEPS && scanning; i++) {
+            try {
+                Frame robotFrame = c.getActuation().robotFrame();
+                Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, angle);
+                FreeFrame target = c.getMapping().makeFreeFrame();
+                target.update(robotFrame, t, 0L);
+                Future<Void> goToFuture = GoToBuilder.with(c)
+                        .withFrame(target.frame()).build().async().run();
+                rotateFuture = goToFuture;
+                awaitGoTo(goToFuture, () -> scanning);
+            } catch (Exception e) {
+                Log.w(TAG, "rotationSweep step failed: " + e.getMessage());
+                break;
+            }
+        }
+    }
+
+    private boolean driveToOriginOffset(QiContext c, double dx, double dy) {
+        FreeFrame origin = scanOrigin;
+        if (origin == null) {
+            return false;
+        }
+        try {
+            Transform t = TransformBuilder.create().from2DTransform(dx, dy, 0.0);
+            FreeFrame target = c.getMapping().makeFreeFrame();
+            target.update(origin.frame(), t, 0L);
+            Future<Void> goToFuture = GoToBuilder.with(c)
+                    .withFrame(target.frame()).build().async().run();
+            rotateFuture = goToFuture;
+            awaitGoTo(goToFuture, () -> scanning);
+            return scanning;
+        } catch (Exception e) {
+            Log.w(TAG, "driveToOriginOffset failed: " + e.getMessage());
+            return false;
+        }
     }
 
     private void cancelRotation() {
