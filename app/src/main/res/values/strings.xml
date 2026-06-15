@@ -167,6 +167,9 @@
     <string name="winner_suspense">Und der Gewinner ist…</string>
     <string name="raffle_no_replacement">Kein weiterer Teilnehmer zum Nachrücken.</string>
     <string name="admin_status">Status</string>
+    <string name="admin_stats">Statistik</string>
+    <string name="stats_export">Exportieren</string>
+    <string name="stats_share_title">Pepper Tagesreport</string>
     <string name="status_refresh">Aktualisieren</string>
     <string name="status_wifi_connected">WLAN: verbunden (%1$s)</string>
     <string name="status_wifi_disconnected">WLAN: getrennt</string>

@@ -53,6 +53,7 @@ import com.buhlergroup.pepper.action.selfie.SelfieSettings;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 import com.buhlergroup.pepper.net.Connectivity;
+import com.buhlergroup.pepper.stats.Stats;
 import com.buhlergroup.pepper.openai.history.HistoryEntry;
 import com.buhlergroup.pepper.openai.history.HistoryRole;
 
@@ -68,6 +69,7 @@ import java.util.List;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -90,6 +92,7 @@ public class AdminView extends FrameLayout {
     private static final int PANEL_RAFFLE = 8;
     private static final int PANEL_CAMERA = 9;
     private static final int PANEL_STATUS = 10;
+    private static final int PANEL_STATS = 11;
 
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private final StringBuilder entered = new StringBuilder();
@@ -107,6 +110,8 @@ public class AdminView extends FrameLayout {
     private View rafflePanel;
     private View cameraPanel;
     private View statusPanel;
+    private View statsPanel;
+    private TextView statsText;
     private TextView statusWifi;
     private TextView statusOpenAi;
     private TextView statusBattery;
@@ -193,6 +198,8 @@ public class AdminView extends FrameLayout {
         rafflePanel = findViewById(R.id.adminRafflePanel);
         cameraPanel = findViewById(R.id.adminCameraPanel);
         statusPanel = findViewById(R.id.adminStatusPanel);
+        statsPanel = findViewById(R.id.adminStatsPanel);
+        statsText = findViewById(R.id.adminStatsText);
         statusWifi = findViewById(R.id.statusWifi);
         statusOpenAi = findViewById(R.id.statusOpenAi);
         statusBattery = findViewById(R.id.statusBattery);
@@ -272,6 +279,9 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminStatus).setOnClickListener(v -> showStatus());
         findViewById(R.id.statusRefresh).setOnClickListener(v -> showStatus());
         findViewById(R.id.adminStatusBack).setOnClickListener(v -> showPanel(PANEL_MENU));
+        findViewById(R.id.adminStats).setOnClickListener(v -> showStats());
+        findViewById(R.id.adminStatsExport).setOnClickListener(v -> exportStats());
+        findViewById(R.id.adminStatsBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.cameraTest).setOnClickListener(v -> testCamera());
         findViewById(R.id.cameraSave).setOnClickListener(v -> saveCamera());
         findViewById(R.id.adminCameraBack).setOnClickListener(v -> showPanel(PANEL_MENU));
@@ -410,6 +420,7 @@ public class AdminView extends FrameLayout {
         rafflePanel.setVisibility(which == PANEL_RAFFLE ? VISIBLE : GONE);
         cameraPanel.setVisibility(which == PANEL_CAMERA ? VISIBLE : GONE);
         statusPanel.setVisibility(which == PANEL_STATUS ? VISIBLE : GONE);
+        statsPanel.setVisibility(which == PANEL_STATS ? VISIBLE : GONE);
     }
 
     private void showLanguage() {
@@ -947,6 +958,54 @@ public class AdminView extends FrameLayout {
             getContext().startActivity(chooser);
         } catch (Exception e) {
             Toast.makeText(getContext(), R.string.raffle_email_chooser, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showStats() {
+        statsText.setText(buildStatsReport());
+        showPanel(PANEL_STATS);
+    }
+
+    private String buildStatsReport() {
+        String date = Stats.today();
+        Map<String, Integer> day = Stats.forDay(getContext(), date);
+        StringBuilder sb = new StringBuilder("Tagesreport " + date + "\n\n");
+        sb.append("Interaktionen: ").append(value(day, Stats.INTERACTIONS)).append('\n');
+        sb.append("Selfies: ").append(value(day, Stats.SELFIES)).append('\n');
+        sb.append("Verlosungs-Beitritte: ").append(value(day, Stats.RAFFLE_JOINS)).append('\n');
+        sb.append("Fehler: ").append(value(day, Stats.ERRORS)).append("\n\n");
+        sb.append("Aktionen:\n");
+        boolean anyAction = false;
+        for (Map.Entry<String, Integer> entry : day.entrySet()) {
+            if (entry.getKey().startsWith(Stats.ACTION_PREFIX)) {
+                anyAction = true;
+                sb.append("  ").append(entry.getKey().substring(Stats.ACTION_PREFIX.length()))
+                        .append(": ").append(entry.getValue()).append('\n');
+            }
+        }
+        if (!anyAction) {
+            sb.append("  –\n");
+        }
+        return sb.toString();
+    }
+
+    private int value(Map<String, Integer> day, String key) {
+        Integer v = day.get(key);
+        return v != null ? v : 0;
+    }
+
+    private void exportStats() {
+        String report = buildStatsReport();
+        Intent share = new Intent(Intent.ACTION_SEND);
+        share.setType("text/plain");
+        share.putExtra(Intent.EXTRA_SUBJECT, getContext().getString(R.string.stats_share_title));
+        share.putExtra(Intent.EXTRA_TEXT, report);
+        Intent chooser = Intent.createChooser(share, getContext().getString(R.string.stats_export));
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            getContext().startActivity(chooser);
+        } catch (Exception e) {
+            Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
         }
     }
 

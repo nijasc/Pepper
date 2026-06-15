@@ -276,6 +276,24 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
+            <LinearLayout android:id="@+id/adminStats" style="@style/AdminMenuTile">
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:contentDescription="@string/admin_stats"
+                    android:src="@drawable/ic_admin_devlog" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:text="@string/admin_stats"
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
             <LinearLayout android:id="@+id/adminStatus" style="@style/AdminMenuTile">
                 <ImageView
                     android:layout_width="48dp"
@@ -1035,6 +1053,51 @@
             style="@style/AdminMenuButton"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="16dp"
+            android:text="@string/admin_back" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adminStatsPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/admin_stats"
+            android:textColor="@color/white"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:id="@+id/adminStatsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#DDFFFFFF"
+                android:textSize="18sp" />
+        </ScrollView>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminStatsExport"
+            style="@style/AdminMenuButton"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:text="@string/stats_export" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminStatsBack"
+            style="@style/AdminMenuButton"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
             android:text="@string/admin_back" />
     </LinearLayout>
 
