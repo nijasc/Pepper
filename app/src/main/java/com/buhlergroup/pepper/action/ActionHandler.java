@@ -29,12 +29,19 @@ import com.buhlergroup.pepper.net.Connectivity;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ActionHandler {
+    private enum CombinedResult {
+        HANDLED,
+        NOT_HANDLED,
+        NETWORK_ERROR
+    }
+
     private static final List<Action> actions = new ArrayList<>();
     private final Map<String, Action> actionsByName = new HashMap<>();
     private final IntentEngine intentEngine;
@@ -66,9 +73,15 @@ public class ActionHandler {
 
         ThinkingController.get().start(context);
         try {
-            if (!handleCombined(context, input)) {
-                handleLegacy(context, input);
+            CombinedResult result = handleCombined(context, input);
+            if (result == CombinedResult.HANDLED) {
+                return;
             }
+            if (result == CombinedResult.NETWORK_ERROR) {
+                announceOffline(context);
+                return;
+            }
+            handleLegacy(context, input);
         } finally {
             ThinkingController.get().stop();
         }
@@ -79,11 +92,11 @@ public class ActionHandler {
                 "Ich habe gerade keine Verbindung. Bitte versuche es gleich noch einmal.");
     }
 
-    private boolean handleCombined(QiContext context, String input) {
+    private CombinedResult handleCombined(QiContext context, String input) {
+        routingService.setC(context);
         final Action[] routed = new Action[1];
         final boolean[] spokeAny = new boolean[1];
         try {
-            routingService.setC(context);
             String full = routingService.getResponseStreaming(historyManager, context, input,
                     new OpenAIService.StreamListener() {
                         @Override
@@ -113,18 +126,22 @@ public class ActionHandler {
                 historyManager.addDeveloper(
                         "Action started: " + target.getClass().getSimpleName(), target);
                 target.execute(context, input);
-                return true;
+                return CombinedResult.HANDLED;
             }
             if (full != null && !full.trim().isEmpty()) {
                 historyManager.addUser(input);
                 historyManager.addAssistant(full.trim(), actionsByName.get("SayAction"));
-                return true;
+                return CombinedResult.HANDLED;
             }
-            return spokeAny[0];
+            return spokeAny[0] ? CombinedResult.HANDLED : CombinedResult.NOT_HANDLED;
+        } catch (IOException e) {
+            Log.w(this.getClass().getSimpleName(),
+                    "Combined turn failed with network error: " + e.getMessage());
+            return spokeAny[0] ? CombinedResult.HANDLED : CombinedResult.NETWORK_ERROR;
         } catch (Exception e) {
             Log.w(this.getClass().getSimpleName(),
                     "Combined turn failed, falling back to intent engine: " + e.getMessage());
-            return spokeAny[0];
+            return spokeAny[0] ? CombinedResult.HANDLED : CombinedResult.NOT_HANDLED;
         }
     }
 
