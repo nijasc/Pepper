@@ -48,11 +48,11 @@ public final class AnimationGenerator {
                 messages.add(message("user", "Song: " + songName));
 
                 Map<String, Object> body = new HashMap<>();
-                body.put("model", ModelSelector.FAST);
+                body.put("model", MODEL);
                 body.put("messages", messages);
-                body.put("max_tokens", 900);
+                body.put("reasoning_effort", "low");
 
-                String response = openAi.sendOpenAiRequest("/chat/completions", body, 30000);
+                String response = openAi.sendOpenAiRequest("/chat/completions", body, 60000);
                 String content = new JSONObject(response)
                         .getJSONArray("choices")
                         .getJSONObject(0)
@@ -214,17 +214,22 @@ public final class AnimationGenerator {
                 + "- The animation runs at 25 fps. Each number in a joint's array is a keyframe; consecutive "
                 + "keyframes are F frames apart (F between 6 and 14, smaller = faster beats). Frame 0 is the "
                 + "first value.\n"
-                + "- Give EVERY joint array the SAME length N (use 6 to 10). The first and last value of each "
-                + "array MUST be equal so the motif loops seamlessly. The motif is repeated automatically and "
-                + "returned to neutral - do NOT author the repeats or the return.\n"
-                + "- This is a DANCE: drive several joints together on the beat. Put the energy in the UPPER body "
-                + "(arms, wrists, hands, head) - they may move fast, wide and sharply. Keep the lower body gentle "
-                + "for balance and use small smooth steps there.\n"
+                + "- Give EVERY joint array the SAME length N (use 8 to 14 - more keys means richer, smoother "
+                + "motion). The first and last value of each array MUST be equal so the motif loops seamlessly. "
+                + "The motif is repeated automatically and returned to neutral - do NOT author the repeats or "
+                + "the return.\n"
+                + "- Make it a REAL choreography, not a wiggle: every keyframe should be a distinct, deliberate "
+                + "pose that flows musically into the next. Use big, expressive arm shapes (reaches, pumps, "
+                + "claps, waves, circles), contrast the left and right arms, and add head and wrist accents on "
+                + "the beat. Use the FULL arm range so the moves read clearly from across a room. Put the energy "
+                + "in the UPPER body (arms, wrists, hands, head) - they may move fast, wide and sharply. Keep "
+                + "the lower body gentle for balance and use small smooth steps there.\n"
                 + "- SIGNATURE MOVES: If the song has a famous dance (Macarena = arms out, palms up, hands to "
                 + "opposite shoulders, hands behind head, hands to hips; Watch Me = the whip and the nae-nae; "
                 + "Y.M.C.A. = spell Y M C A with the arms; Gangnam Style = overhead lasso arm), recreate its "
-                + "characteristic moves in order with the arms and head so it is recognisable. Otherwise invent "
-                + "a groove fitting the song.\n"
+                + "characteristic moves faithfully and in order with the arms and head so it is instantly "
+                + "recognisable. Otherwise invent an original groove that genuinely fits the song's mood and "
+                + "tempo.\n"
                 + "- Use ONLY these joints, keep every value inside the given range (radians; hands 0..1):\n"
                 + "  HeadYaw [-2.08,2.08], HeadPitch [-0.70,0.63], LShoulderPitch [-2.08,2.08], "
                 + "RShoulderPitch [-2.08,2.08], LShoulderRoll [0.01,1.56], RShoulderRoll [-1.56,-0.01], "
