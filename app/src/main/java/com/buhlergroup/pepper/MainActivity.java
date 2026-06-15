@@ -28,6 +28,7 @@ import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayS
 import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
 import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.buhlergroup.pepper.action.ActionHandler;
+import com.buhlergroup.pepper.action.attract.AttractController;
 import com.buhlergroup.pepper.action.follow.FollowController;
 import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
@@ -83,6 +84,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         @Override
         public void run() {
             checkSpeechWatchdog();
+            tickAttract();
             watchdogHandler.postDelayed(this, SPEECH_WATCHDOG_INTERVAL_MS);
         }
     };
@@ -214,6 +216,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 executionHandler = new ActionHandler(languageManager, historyManager);
             }
             if (!said.isEmpty()) {
+                AttractController.get().notifyInteraction();
                 processing = true;
                 try {
                     executionHandler.handleInput(qiContext, said);
@@ -280,14 +283,18 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         Log.i("MainActivity", "Permission");
     }
 
-    private void updateHomeControls() {
-        boolean overlayOpen = AdminController.get().isOpen()
+    private boolean homeOverlayOpen() {
+        return AdminController.get().isOpen()
                 || SelfieController.get().isRunning()
                 || RaffleJoinController.get().isBusy()
                 || NavigationController.get().isOpen()
                 || DanceLibraryController.get().isOpen()
                 || HoldController.get().isActive()
                 || WinnerController.get().isActive();
+    }
+
+    private void updateHomeControls() {
+        boolean overlayOpen = homeOverlayOpen();
         DialogueController.get().setSuppressed(overlayOpen);
         runOnUiThread(() -> {
             int visibility = overlayOpen ? View.GONE : View.VISIBLE;
@@ -338,6 +345,10 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         if (listenPending && !listening && !isOverlayOpen()) {
             listenToSpeech();
         }
+    }
+
+    private void tickAttract() {
+        AttractController.get().tick(RobotContext.get(), homeOverlayOpen(), processing || listening);
     }
 
     private void checkSpeechWatchdog() {
