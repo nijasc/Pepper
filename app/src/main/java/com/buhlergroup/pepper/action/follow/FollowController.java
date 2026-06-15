@@ -243,9 +243,12 @@ public final class FollowController {
             requestCancel(lookAtFuture);
             requestCancel(listenFuture);
             releaseQuietly(holder);
-            if (gen == generation) {
-                sessionRunning = false;
-                setWantFollow(false);
+            synchronized (this) {
+                if (gen == generation) {
+                    sessionRunning = false;
+                    loopThread = null;
+                    setWantFollow(false);
+                }
             }
         }
     }
