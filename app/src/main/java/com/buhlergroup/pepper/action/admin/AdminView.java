@@ -117,6 +117,7 @@ public class AdminView extends FrameLayout {
     private TextView detailDate;
     private Button detailFavorite;
     private SelfieEntity currentDetail;
+    private boolean detailServerHeld = false;
 
     private EditText raffleTitle;
     private EditText raffleDescription;
@@ -291,6 +292,7 @@ public class AdminView extends FrameLayout {
 
     public void hide() {
         AdminController.get().markClosed();
+        releaseDetailServer();
         post(() -> setVisibility(GONE));
     }
 
@@ -923,7 +925,15 @@ public class AdminView extends FrameLayout {
         devLogScroll.post(() -> devLogScroll.fullScroll(View.FOCUS_DOWN));
     }
 
+    private void releaseDetailServer() {
+        if (detailServerHeld) {
+            SelfieController.get().releaseServer();
+            detailServerHeld = false;
+        }
+    }
+
     private void showGallery() {
+        releaseDetailServer();
         showPanel(PANEL_GALLERY);
         galleryEmpty.setVisibility(GONE);
         setExportEnabled(false);
@@ -1010,6 +1020,10 @@ public class AdminView extends FrameLayout {
     }
 
     private void showDetail(SelfieEntity selfie) {
+        if (!detailServerHeld) {
+            SelfieController.get().acquireServer(getContext());
+            detailServerHeld = true;
+        }
         currentDetail = selfie;
         showPanel(PANEL_DETAIL);
         detailNumber.setText("#" + selfie.number);
@@ -1040,7 +1054,6 @@ public class AdminView extends FrameLayout {
     }
 
     private Bitmap buildSelfieQr(SelfieEntity selfie) {
-        SelfieController.get().ensureServerStarted(getContext());
         String ip = NetworkUtils.localIp(getContext());
         if (ip == null) {
             return null;

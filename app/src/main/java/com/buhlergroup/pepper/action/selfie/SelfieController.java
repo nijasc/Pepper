@@ -53,6 +53,7 @@ public final class SelfieController {
     private volatile LocalImageServer server;
     private volatile boolean running = false;
     private volatile StateListener stateListener;
+    private int qrViewers = 0;
 
     private SelfieController() {
     }
@@ -84,11 +85,34 @@ public final class SelfieController {
         this.view = null;
     }
 
-    public void stopServer() {
+    public synchronized void stopServer() {
+        qrViewers = 0;
         LocalImageServer current = server;
         if (current != null) {
             current.stop();
             server = null;
+        }
+    }
+
+    public synchronized void acquireServer(Context context) {
+        qrViewers++;
+        try {
+            ensureServer(SelfieRepository.get(context).imagesDir());
+        } catch (IOException e) {
+            Log.w(TAG, "Could not start image server: " + e.getMessage());
+        }
+    }
+
+    public synchronized void releaseServer() {
+        if (qrViewers > 0) {
+            qrViewers--;
+        }
+        if (qrViewers == 0) {
+            LocalImageServer current = server;
+            if (current != null) {
+                current.stop();
+                server = null;
+            }
         }
     }
 
@@ -113,6 +137,7 @@ public final class SelfieController {
 
         running = true;
         notifyState(true);
+        boolean serverAcquired = false;
         try {
             if (NavigationManager.get().hasFotostand(context)) {
                 say(context, "Komm mit, ich fahre uns kurz zum Fotostand.");
@@ -141,13 +166,14 @@ public final class SelfieController {
             Bitmap composed = addOverlay(context, photo);
             SelfieEntity entity = SelfieRepository.get(context).save(toJpeg(composed));
 
-            ensureServer(SelfieRepository.get(context).imagesDir());
             String ip = NetworkUtils.localIp(context);
             if (ip == null) {
                 say(context, "Ich bin gerade nicht mit dem WLAN verbunden, deshalb kann ich das Selfie nicht teilen.");
                 board.hide();
                 return null;
             }
+            acquireServer(context);
+            serverAcquired = true;
 
             String url = "http://" + ip + ":" + SERVER_PORT + "/" + entity.filename
                     + "?token=" + tokenFor(entity.filename);
@@ -176,6 +202,8 @@ public final class SelfieController {
             }
             board.setOnCloseListener(null);
             board.hide();
+            releaseServer();
+            serverAcquired = false;
             if (offerRaffle) {
                 offerRaffleJoin(context, entity);
             }
@@ -185,18 +213,13 @@ public final class SelfieController {
             say(context, "Da ist etwas schiefgelaufen mit dem Selfie.");
             board.hide();
         } finally {
+            if (serverAcquired) {
+                releaseServer();
+            }
             running = false;
             notifyState(false);
         }
         return null;
-    }
-
-    public void ensureServerStarted(Context context) {
-        try {
-            ensureServer(SelfieRepository.get(context).imagesDir());
-        } catch (IOException e) {
-            Log.w(TAG, "Could not start image server: " + e.getMessage());
-        }
     }
 
     public int serverPort() {
