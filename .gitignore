@@ -22,3 +22,5 @@ keystore.properties
 *.keystore
 *.lol
 logcat*.txt
+log.log
+response.json
