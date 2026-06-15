@@ -92,11 +92,25 @@
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/raffleJoinBack"
+                android:id="@+id/raffleJoinCancel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="12dp"
                 android:background="@drawable/bg_pill_red"
+                android:paddingLeft="36dp"
+                android:paddingTop="14dp"
+                android:paddingRight="36dp"
+                android:paddingBottom="14dp"
+                android:text="@string/raffle_join_cancel"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/raffleJoinBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="12dp"
+                android:background="@drawable/bg_pill_teal"
                 android:paddingLeft="36dp"
                 android:paddingTop="14dp"
                 android:paddingRight="36dp"

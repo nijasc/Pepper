@@ -46,6 +46,7 @@ public class RaffleJoinView extends FrameLayout {
     private TextView errorView;
     private TextView confirmView;
     private EditText input;
+    private Button cancelButton;
     private Button backButton;
     private Button nextButton;
 
@@ -88,9 +89,11 @@ public class RaffleJoinView extends FrameLayout {
         errorView = findViewById(R.id.raffleJoinError);
         confirmView = findViewById(R.id.raffleJoinConfirm);
         input = findViewById(R.id.raffleJoinInput);
+        cancelButton = findViewById(R.id.raffleJoinCancel);
         backButton = findViewById(R.id.raffleJoinBack);
         nextButton = findViewById(R.id.raffleJoinNext);
 
+        cancelButton.setOnClickListener(v -> onCancel());
         backButton.setOnClickListener(v -> onBack());
         nextButton.setOnClickListener(v -> onNext());
         consentCheck.setOnCheckedChangeListener((button, checked) -> {
@@ -130,7 +133,8 @@ public class RaffleJoinView extends FrameLayout {
         consentText.setText(R.string.raffle_consent_notice);
         consentCheck.setText(R.string.raffle_consent_checkbox);
         consentCheck.setChecked(false);
-        backButton.setText(R.string.raffle_join_cancel);
+        cancelButton.setVisibility(VISIBLE);
+        backButton.setVisibility(GONE);
         nextButton.setText(R.string.raffle_consent_continue);
         nextButton.setEnabled(false);
         nextButton.setAlpha(0.4f);
@@ -223,22 +227,18 @@ public class RaffleJoinView extends FrameLayout {
         }
     }
 
+    private void onCancel() {
+        Listener l = listener;
+        if (l != null) {
+            l.onCancel();
+        }
+    }
+
     private void onBack() {
-        if (consentPhase) {
-            Listener l = listener;
-            if (l != null) {
-                l.onCancel();
-            }
+        if (consentPhase || index == 0) {
             return;
         }
         store(steps[index], input.getText().toString().trim());
-        if (index == 0) {
-            Listener l = listener;
-            if (l != null) {
-                l.onCancel();
-            }
-            return;
-        }
         index--;
         animateAndApply(false);
         Listener l = listener;
@@ -305,7 +305,13 @@ public class RaffleJoinView extends FrameLayout {
         input.setSelection(input.getText().length());
         errorView.setVisibility(GONE);
         progressView.setText(getContext().getString(R.string.raffle_join_progress, index + 1, steps.length));
-        backButton.setText(index == 0 ? R.string.raffle_join_cancel : R.string.admin_back);
+        cancelButton.setVisibility(VISIBLE);
+        if (index == 0) {
+            backButton.setVisibility(GONE);
+        } else {
+            backButton.setVisibility(VISIBLE);
+            backButton.setText(R.string.admin_back);
+        }
         nextButton.setText(index == steps.length - 1 ? R.string.raffle_join_finish : R.string.raffle_join_next);
         nextButton.setEnabled(true);
         nextButton.setAlpha(1f);
