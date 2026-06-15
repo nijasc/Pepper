@@ -1,0 +1,90 @@
+package com.buhlergroup.pepper.action.raffle;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.Gravity;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+
+import com.buhlergroup.pepper.R;
+
+public class WinnerView extends FrameLayout {
+
+    private TextView titleView;
+    private TextView nameView;
+
+    public WinnerView(Context context) {
+        super(context);
+        init(context);
+    }
+
+    public WinnerView(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
+        init(context);
+    }
+
+    public WinnerView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init(context);
+    }
+
+    private void init(Context context) {
+        setBackgroundColor(ContextCompat.getColor(context, R.color.game_overlay));
+        setClickable(true);
+        setFocusable(true);
+
+        LinearLayout card = new LinearLayout(context);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setGravity(Gravity.CENTER);
+        FrameLayout.LayoutParams cardParams = new FrameLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        cardParams.gravity = Gravity.CENTER;
+        card.setLayoutParams(cardParams);
+
+        titleView = new TextView(context);
+        titleView.setTextColor(ContextCompat.getColor(context, R.color.buhler_teal));
+        titleView.setTextSize(40f);
+        titleView.setGravity(Gravity.CENTER);
+        card.addView(titleView);
+
+        nameView = new TextView(context);
+        nameView.setTextColor(ContextCompat.getColor(context, R.color.white));
+        nameView.setTextSize(72f);
+        nameView.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        nameParams.topMargin = dp(24);
+        nameView.setLayoutParams(nameParams);
+        card.addView(nameView);
+
+        addView(card);
+    }
+
+    public void showSuspense() {
+        post(() -> {
+            titleView.setText(R.string.winner_suspense);
+            nameView.setText("…");
+            setVisibility(VISIBLE);
+            bringToFront();
+        });
+    }
+
+    public void revealWinner(String name) {
+        post(() -> {
+            titleView.setText(R.string.winner_title);
+            nameView.setText(name);
+        });
+    }
+
+    public void hide() {
+        post(() -> setVisibility(GONE));
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+}

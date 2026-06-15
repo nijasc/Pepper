@@ -163,4 +163,6 @@
     <string name="selfie_retention_title">Selfies automatisch löschen</string>
     <string name="selfie_retention_hint">Tage (0 = nie)</string>
     <string name="selfie_retention_saved">Aufbewahrung gespeichert.</string>
+    <string name="winner_title">🏆 Die Gewinnerin oder der Gewinner</string>
+    <string name="winner_suspense">Und der Gewinner ist…</string>
 </resources>

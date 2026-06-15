@@ -827,9 +827,22 @@ public class AdminView extends FrameLayout {
             return;
         }
         dbExecutor.submit(() -> {
-            RaffleRepository.get(getContext()).pickWinner(id);
-            post(this::openRaffle);
+            RaffleEntryEntity winner = RaffleRepository.get(getContext()).pickWinner(id);
+            post(() -> celebrateWinner(winner));
         });
+    }
+
+    private void celebrateWinner(RaffleEntryEntity winner) {
+        if (winner == null) {
+            openRaffle();
+            return;
+        }
+        hide();
+        com.aldebaran.qi.sdk.QiContext qc =
+                com.buhlergroup.pepper.action.dance.RobotContext.get();
+        if (qc != null) {
+            com.buhlergroup.pepper.action.raffle.WinnerController.get().celebrate(qc, winner.name);
+        }
     }
 
     private void sendWinnerEmail() {

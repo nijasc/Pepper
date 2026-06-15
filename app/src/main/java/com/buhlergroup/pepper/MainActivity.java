@@ -46,6 +46,8 @@ import com.buhlergroup.pepper.action.memory.MemoryGameView;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinView;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
+import com.buhlergroup.pepper.action.raffle.WinnerController;
+import com.buhlergroup.pepper.action.raffle.WinnerView;
 import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.action.selfie.SelfieView;
@@ -123,12 +125,16 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         HoldView holdView = findViewById(R.id.holdView);
         HoldController.get().attachView(holdView);
 
+        WinnerView winnerView = findViewById(R.id.winnerView);
+        WinnerController.get().attachView(winnerView);
+
         AdminController.get().setAdminStateListener(open -> updateHomeControls());
         SelfieController.get().setStateListener(active -> updateHomeControls());
         RaffleJoinController.get().setStateListener(active -> updateHomeControls());
         NavigationController.get().setStateListener(open -> updateHomeControls());
         DanceLibraryController.get().setStateListener(open -> updateHomeControls());
         HoldController.get().setStateListener(active -> updateHomeControls());
+        WinnerController.get().setStateListener(active -> updateHomeControls());
 
         initSpeech();
         lastListenStartMs = SystemClock.elapsedRealtime();
@@ -164,6 +170,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         DanceLibraryController.get().detachView();
         HoldController.get().setStateListener(null);
         HoldController.get().detachView();
+        WinnerController.get().setStateListener(null);
+        WinnerController.get().detachView();
         watchdogHandler.removeCallbacks(speechWatchdog);
         QiSDK.unregister(this);
         recognizer.cancel();
@@ -278,7 +286,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 || RaffleJoinController.get().isBusy()
                 || NavigationController.get().isOpen()
                 || DanceLibraryController.get().isOpen()
-                || HoldController.get().isActive();
+                || HoldController.get().isActive()
+                || WinnerController.get().isActive();
         DialogueController.get().setSuppressed(overlayOpen);
         runOnUiThread(() -> {
             int visibility = overlayOpen ? View.GONE : View.VISIBLE;
@@ -308,7 +317,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 || HoldController.get().isActive()
                 || AdminController.get().isOpen()
                 || NavigationController.get().isOpen()
-                || DanceLibraryController.get().isOpen();
+                || DanceLibraryController.get().isOpen()
+                || WinnerController.get().isActive();
     }
 
     private void startSpeechRecognition() {
