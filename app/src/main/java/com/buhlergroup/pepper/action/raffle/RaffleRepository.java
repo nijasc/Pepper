@@ -23,13 +23,21 @@ public final class RaffleRepository {
     private static volatile RaffleRepository instance;
     private static final ExecutorService maintenanceExecutor = Executors.newSingleThreadExecutor();
 
+    public enum JoinResult {
+        SUCCESS,
+        NOT_ACTIVE,
+        DUPLICATE_EMAIL,
+        DUPLICATE_PHONE
+    }
+
     private final Context appContext;
+    private final RaffleDatabase database;
     private final RaffleDao raffleDao;
     private final RaffleEntryDao entryDao;
 
     private RaffleRepository(Context context) {
         this.appContext = context.getApplicationContext();
-        RaffleDatabase database = RaffleDatabase.get(context);
+        this.database = RaffleDatabase.get(context);
         this.raffleDao = database.raffleDao();
         this.entryDao = database.raffleEntryDao();
     }
@@ -118,6 +126,34 @@ public final class RaffleRepository {
         RaffleEntryEntity entry = new RaffleEntryEntity(raffleId, name, email, phone, selfieId,
                 System.currentTimeMillis());
         return entryDao.insert(entry);
+    }
+
+    public JoinResult joinRaffle(long raffleId, String name, String email, String phone,
+                                 boolean requiresPhone, String selfieId) {
+        final JoinResult[] result = {JoinResult.NOT_ACTIVE};
+        database.runInTransaction(() -> {
+            RaffleEntity raffle = raffleDao.findById(raffleId);
+            if (raffle == null || raffle.status != RaffleStatus.ACTIVE) {
+                result[0] = JoinResult.NOT_ACTIVE;
+                return;
+            }
+            if (raffle.endDate > 0 && raffle.endDate < System.currentTimeMillis()) {
+                result[0] = JoinResult.NOT_ACTIVE;
+                return;
+            }
+            if (entryDao.countByEmail(raffleId, email) > 0) {
+                result[0] = JoinResult.DUPLICATE_EMAIL;
+                return;
+            }
+            if (requiresPhone && phone != null && entryDao.countByPhone(raffleId, phone) > 0) {
+                result[0] = JoinResult.DUPLICATE_PHONE;
+                return;
+            }
+            entryDao.insert(new RaffleEntryEntity(raffleId, name, email, phone, selfieId,
+                    System.currentTimeMillis()));
+            result[0] = JoinResult.SUCCESS;
+        });
+        return result[0];
     }
 
     public List<RaffleEntryEntity> getEntries(long raffleId) {

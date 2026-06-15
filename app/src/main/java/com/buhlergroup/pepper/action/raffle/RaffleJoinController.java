@@ -145,9 +145,27 @@ public final class RaffleJoinController {
                 selfieId = selfie.id;
             }
 
-            repo.addEntry(raffle.id, name, email, phone.isEmpty() ? null : phone, selfieId);
-            say(context, "Super, " + name + "! Du bist jetzt dabei. Viel Glück bei der Verlosung!");
-            board.showConfirmation(name, done::countDown);
+            RaffleRepository.JoinResult result = repo.joinRaffle(raffle.id, name, email,
+                    phone.isEmpty() ? null : phone, raffle.requiresPhone, selfieId);
+            switch (result) {
+                case SUCCESS:
+                    say(context, "Super, " + name + "! Du bist jetzt dabei. Viel Glück bei der Verlosung!");
+                    board.showConfirmation(name, done::countDown);
+                    break;
+                case DUPLICATE_EMAIL:
+                    say(context, "Mit dieser E-Mail bist du bereits eingetragen.");
+                    board.goToStep(RaffleJoinView.STEP_EMAIL, R.string.raffle_join_duplicate);
+                    break;
+                case DUPLICATE_PHONE:
+                    say(context, "Mit dieser Telefonnummer bist du bereits eingetragen.");
+                    board.goToStep(RaffleJoinView.STEP_PHONE, R.string.raffle_join_phone_duplicate);
+                    break;
+                case NOT_ACTIVE:
+                default:
+                    say(context, "Die Verlosung ist gerade nicht mehr aktiv.");
+                    done.countDown();
+                    break;
+            }
         });
     }
 
