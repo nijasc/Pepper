@@ -11,6 +11,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -115,9 +117,10 @@ public class DanceLibraryView extends FrameLayout {
                     0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
             row.addView(label);
 
-            row.addView(pill("▶  " + getContext().getString(R.string.dance_play),
-                    R.drawable.bg_pill_teal, v -> playDance(dance)));
-            row.addView(pill("⋯", R.drawable.bg_pill_teal, v -> showOverflow(v, dance)));
+            row.addView(iconButton(R.drawable.ic_play, R.drawable.bg_pill_teal,
+                    getContext().getString(R.string.dance_play), v -> playDance(dance)));
+            row.addView(iconButton(R.drawable.ic_more_vert, R.drawable.bg_pill_teal,
+                    getContext().getString(R.string.dance_more), v -> showOverflow(v, dance)));
             list.addView(row);
         }
     }
@@ -283,22 +286,22 @@ public class DanceLibraryView extends FrameLayout {
                 .show();
     }
 
-    private TextView pill(String text, int bgRes, OnClickListener onClick) {
-        TextView pill = new TextView(getContext());
-        pill.setText(text);
-        pill.setTextColor(ContextCompat.getColor(getContext(), R.color.white));
-        pill.setTextSize(15);
-        pill.setGravity(Gravity.CENTER);
-        pill.setBackgroundResource(bgRes);
-        pill.setPadding(dp(18), dp(10), dp(18), dp(10));
-        pill.setClickable(true);
-        pill.setFocusable(true);
-        pill.setOnClickListener(onClick);
+    private ImageButton iconButton(int iconRes, int bgRes, String description, OnClickListener onClick) {
+        ImageButton button = new ImageButton(getContext());
+        button.setImageResource(iconRes);
+        button.setBackgroundResource(bgRes);
+        button.setColorFilter(ContextCompat.getColor(getContext(), R.color.white));
+        button.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        button.setContentDescription(description);
+        button.setPadding(dp(20), dp(12), dp(20), dp(12));
+        button.setClickable(true);
+        button.setFocusable(true);
+        button.setOnClickListener(onClick);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         params.setMarginStart(dp(8));
-        pill.setLayoutParams(params);
-        return pill;
+        button.setLayoutParams(params);
+        return button;
     }
 
     private int dp(int value) {
