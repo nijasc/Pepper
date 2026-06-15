@@ -34,6 +34,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -305,10 +309,12 @@ public final class SelfieController {
                     latch.countDown();
                 });
         if (canRetake) {
-            say(context, "Tippe auf Speichern, wenn es dir gefällt, oder auf Nochmal für ein neues Foto.");
+            say(context, "Sag «Passt» oder tippe auf Speichern, wenn es dir gefällt – "
+                    + "oder sag «Nochmal» für ein neues Foto.");
         } else {
             say(context, "Das ist unser letzter Versuch, ich speichere dieses Foto.");
         }
+        Future<ListenResult> voice = startPreviewVoiceListener(context, ref, latch, canRetake);
         try {
             if (!latch.await(PREVIEW_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
                 ref.compareAndSet(null, PreviewDecision.TIMEOUT);
@@ -316,9 +322,55 @@ public final class SelfieController {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             ref.compareAndSet(null, PreviewDecision.TIMEOUT);
+        } finally {
+            if (voice != null && !voice.isDone()) {
+                voice.requestCancellation();
+            }
         }
         PreviewDecision decision = ref.get();
         return decision == null ? PreviewDecision.TIMEOUT : decision;
+    }
+
+    private Future<ListenResult> startPreviewVoiceListener(QiContext context,
+            AtomicReference<PreviewDecision> ref, CountDownLatch latch, boolean canRetake) {
+        try {
+            List<String> texts = new ArrayList<>(Arrays.asList(
+                    "passt", "speichern", "ja", "perfekt", "super", "behalten", "save", "yes"));
+            if (canRetake) {
+                texts.addAll(Arrays.asList("nochmal", "noch mal", "noch einmal", "neu",
+                        "wiederholen", "again", "retake"));
+            }
+            PhraseSet phrases = PhraseSetBuilder.with(context)
+                    .withTexts(texts.toArray(new String[0])).build();
+            Listen listen = ListenBuilder.with(context).withPhraseSet(phrases).build();
+            Future<ListenResult> future = listen.async().run();
+            future.thenConsume(f -> {
+                if (f.isCancelled() || f.hasError()) {
+                    return;
+                }
+                ListenResult result = f.get();
+                if (result == null || result.getHeardPhrase() == null) {
+                    return;
+                }
+                String heard = result.getHeardPhrase().getText().toLowerCase(Locale.ROOT);
+                if (heard.isEmpty()) {
+                    return;
+                }
+                ref.compareAndSet(null,
+                        isRetakePhrase(heard) ? PreviewDecision.RETAKE : PreviewDecision.SAVE);
+                latch.countDown();
+            });
+            return future;
+        } catch (Exception e) {
+            Log.w(TAG, "preview voice listener failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private boolean isRetakePhrase(String heard) {
+        return heard.contains("noch") || heard.contains("neu")
+                || heard.contains("wiederhol") || heard.contains("again")
+                || heard.contains("retake");
     }
 
     private Bitmap capture(QiContext context) {
