@@ -1,5 +1,7 @@
 package com.buhlergroup.pepper.action.dance;
 
+import java.util.List;
+
 public final class DancePlayerController {
 
     private static final DancePlayerController INSTANCE = new DancePlayerController();
@@ -21,10 +23,10 @@ public final class DancePlayerController {
         this.view = null;
     }
 
-    public void play(String videoId) {
+    public void play(List<String> videoIds, int startSeconds) {
         DancePlayerView current = view;
         if (current != null) {
-            current.play(videoId);
+            current.play(videoIds, startSeconds);
         }
     }
 

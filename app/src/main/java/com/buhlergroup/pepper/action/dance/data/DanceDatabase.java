@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {DanceEntity.class}, version = 2)
+@Database(entities = {DanceEntity.class}, version = 3)
 public abstract class DanceDatabase extends RoomDatabase {
 
     private static volatile DanceDatabase instance;
@@ -18,6 +18,21 @@ public abstract class DanceDatabase extends RoomDatabase {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE dances ADD COLUMN preview_url TEXT");
+        }
+    };
+
+    private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `dances_new` (`youtube_id` TEXT NOT NULL, "
+                    + "`song_name` TEXT NOT NULL, `qianim_path` TEXT, `duration_ms` INTEGER NOT NULL, "
+                    + "`favorite` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, "
+                    + "PRIMARY KEY(`youtube_id`))");
+            database.execSQL("INSERT INTO `dances_new` (`youtube_id`, `song_name`, `qianim_path`, "
+                    + "`duration_ms`, `favorite`, `created_at`) SELECT `youtube_id`, `song_name`, "
+                    + "`qianim_path`, `duration_ms`, `favorite`, `created_at` FROM `dances`");
+            database.execSQL("DROP TABLE `dances`");
+            database.execSQL("ALTER TABLE `dances_new` RENAME TO `dances`");
         }
     };
 
@@ -31,7 +46,7 @@ public abstract class DanceDatabase extends RoomDatabase {
                                     context.getApplicationContext(),
                                     DanceDatabase.class,
                                     "dances.db")
-                            .addMigrations(MIGRATION_1_2)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                             .build();
                 }
             }
