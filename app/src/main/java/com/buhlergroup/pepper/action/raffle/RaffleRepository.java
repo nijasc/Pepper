@@ -8,6 +8,7 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryDao;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
+import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 
 import java.util.List;
 
@@ -15,10 +16,12 @@ public final class RaffleRepository {
 
     private static volatile RaffleRepository instance;
 
+    private final Context appContext;
     private final RaffleDao raffleDao;
     private final RaffleEntryDao entryDao;
 
     private RaffleRepository(Context context) {
+        this.appContext = context.getApplicationContext();
         RaffleDatabase database = RaffleDatabase.get(context);
         this.raffleDao = database.raffleDao();
         this.entryDao = database.raffleEntryDao();
@@ -89,6 +92,23 @@ public final class RaffleRepository {
 
     public List<RaffleEntryEntity> getEntries(long raffleId) {
         return entryDao.getEntries(raffleId);
+    }
+
+    public void deleteEntry(RaffleEntryEntity entry) {
+        if (entry == null) {
+            return;
+        }
+        entryDao.deleteById(entry.id);
+        deleteSelfieIfOrphaned(entry.selfieId);
+    }
+
+    private void deleteSelfieIfOrphaned(String selfieId) {
+        if (selfieId == null || selfieId.isEmpty()) {
+            return;
+        }
+        if (entryDao.countBySelfieId(selfieId) == 0) {
+            SelfieRepository.get(appContext).delete(selfieId);
+        }
     }
 
     public int countEntries(long raffleId) {

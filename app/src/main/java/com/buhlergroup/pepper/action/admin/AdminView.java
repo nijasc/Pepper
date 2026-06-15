@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.ActivityNotFoundException;
@@ -566,7 +567,21 @@ public class AdminView extends FrameLayout {
         TextView text = new TextView(getContext());
         text.setText(sb.toString());
         text.setTextColor(0xFFFFFFFF);
+        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        text.setLayoutParams(textParams);
         row.addView(text);
+
+        Button deleteButton = new Button(getContext());
+        deleteButton.setText(R.string.raffle_entry_delete);
+        deleteButton.setTextColor(0xFFFFFFFF);
+        deleteButton.setBackgroundResource(R.drawable.bg_pill_red);
+        LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        deleteParams.setMarginStart(dp(8));
+        deleteButton.setLayoutParams(deleteParams);
+        deleteButton.setOnClickListener(v -> confirmDeleteEntry(entry));
+        row.addView(deleteButton);
 
         if (entry.selfieId != null && !entry.selfieId.isEmpty()) {
             dbExecutor.submit(() -> {
@@ -587,6 +602,22 @@ public class AdminView extends FrameLayout {
             });
         }
         return row;
+    }
+
+    private void confirmDeleteEntry(RaffleEntryEntity entry) {
+        new AlertDialog.Builder(getContext())
+                .setTitle(R.string.raffle_entry_delete_title)
+                .setMessage(getContext().getString(R.string.raffle_entry_delete_message, entry.name))
+                .setNegativeButton(R.string.admin_back, null)
+                .setPositiveButton(R.string.raffle_entry_delete, (d, w) -> deleteEntry(entry))
+                .show();
+    }
+
+    private void deleteEntry(RaffleEntryEntity entry) {
+        dbExecutor.submit(() -> {
+            RaffleRepository.get(getContext()).deleteEntry(entry);
+            post(this::openRaffle);
+        });
     }
 
     private void finishCurrentRaffle() {

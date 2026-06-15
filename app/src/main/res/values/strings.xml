@@ -140,4 +140,7 @@
     <string name="raffle_consent_notice">Für die Teilnahme speichern wir deinen Namen, deine E-Mail-Adresse und – falls angegeben – deine Telefonnummer und ein Selfie. Wir nutzen diese Daten nur zur Durchführung der Verlosung und löschen sie kurz nach deren Abschluss. Die Teilnahme ist freiwillig.\n\nTo enter, we store your name, e-mail address and – if provided – your phone number and a selfie. We use this data only to run the raffle and delete it shortly after it ends. Participation is voluntary.</string>
     <string name="raffle_consent_checkbox">Ich stimme der Verarbeitung meiner Daten zu. · I consent to the processing of my data.</string>
     <string name="raffle_consent_continue">Weiter · Continue</string>
+    <string name="raffle_entry_delete">Löschen</string>
+    <string name="raffle_entry_delete_title">Teilnehmer löschen?</string>
+    <string name="raffle_entry_delete_message">Alle Daten von %1$s (inkl. Selfie) endgültig löschen?</string>
 </resources>

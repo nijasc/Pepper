@@ -27,6 +27,12 @@ public interface RaffleEntryDao {
     @Query("SELECT DISTINCT selfie_id FROM raffle_entries WHERE selfie_id IS NOT NULL")
     List<String> getLinkedSelfieIds();
 
+    @Query("SELECT COUNT(*) FROM raffle_entries WHERE selfie_id = :selfieId")
+    int countBySelfieId(String selfieId);
+
+    @Query("DELETE FROM raffle_entries WHERE id = :entryId")
+    void deleteById(long entryId);
+
     @Query("SELECT * FROM raffle_entries WHERE raffle_id = :raffleId ORDER BY RANDOM() LIMIT 1")
     RaffleEntryEntity getRandomEntry(long raffleId);
 
