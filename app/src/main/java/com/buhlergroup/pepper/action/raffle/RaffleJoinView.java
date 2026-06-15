@@ -6,6 +6,7 @@ import android.util.AttributeSet;
 import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -182,6 +183,7 @@ public class RaffleJoinView extends FrameLayout {
     public void hide() {
         post(() -> {
             this.listener = null;
+            hideKeyboard();
             setVisibility(GONE);
             input.setText("");
         });
@@ -307,6 +309,26 @@ public class RaffleJoinView extends FrameLayout {
         nextButton.setText(index == steps.length - 1 ? R.string.raffle_join_finish : R.string.raffle_join_next);
         nextButton.setEnabled(true);
         nextButton.setAlpha(1f);
+        focusInput();
+    }
+
+    private void focusInput() {
+        input.post(() -> {
+            input.requestFocus();
+            InputMethodManager imm = (InputMethodManager)
+                    getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm = (InputMethodManager)
+                getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(getWindowToken(), 0);
+        }
     }
 
     private void animateAndApply(boolean forward) {
