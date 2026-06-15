@@ -308,7 +308,11 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         if (requestCode == SPEECH_EVENT) {
             if (resultCode == RESULT_OK && data != null) {
-                said = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS).get(0);
+                ArrayList<String> results =
+                        data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (results != null && !results.isEmpty()) {
+                    said = results.get(0);
+                }
             }
         } else if (requestCode == DANCE_EDIT_SPEECH_EVENT) {
             if (resultCode == RESULT_OK && data != null) {
