@@ -64,6 +64,13 @@ public class DanceLibraryView extends FrameLayout {
         post(() -> setVisibility(GONE));
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        executor.shutdownNow();
+        heavyExecutor.shutdownNow();
+    }
+
     private void refresh() {
         executor.execute(() -> {
             try {

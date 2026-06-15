@@ -60,7 +60,7 @@ public final class NavigationManager {
 
     private static final NavigationManager INSTANCE = new NavigationManager();
 
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private volatile ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private volatile QiContext qiContext;
     private volatile Holder holder;
@@ -88,6 +88,19 @@ public final class NavigationManager {
         return INSTANCE;
     }
 
+    private synchronized void submit(Runnable task) {
+        if (executor == null || executor.isShutdown()) {
+            executor = Executors.newSingleThreadExecutor();
+        }
+        executor.execute(task);
+    }
+
+    private synchronized void shutdownExecutor() {
+        if (executor != null) {
+            executor.shutdown();
+        }
+    }
+
     public void setQiContext(QiContext context) {
         this.qiContext = context;
     }
@@ -101,6 +114,7 @@ public final class NavigationManager {
         cancelLocalize();
         cancelMapping();
         releaseAbilities();
+        shutdownExecutor();
         localized = false;
         qiContext = null;
     }
@@ -122,7 +136,7 @@ public final class NavigationManager {
     }
 
     public void startScan(Callback<Void> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             if (c == null) {
                 cb.onError("Roboter ist nicht bereit.");
@@ -150,7 +164,7 @@ public final class NavigationManager {
         scanning = false;
         cancelRotation();
         cancelActiveGoTo();
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             LocalizeAndMap lam = currentMapping;
             if (c == null || lam == null) {
@@ -186,7 +200,7 @@ public final class NavigationManager {
     }
 
     public void listScans(Callback<List<RoomScanEntity>> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             if (c == null) {
                 cb.onError("Roboter ist nicht bereit.");
@@ -201,7 +215,7 @@ public final class NavigationManager {
     }
 
     public void deleteScan(RoomScanEntity scan, Callback<Void> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             if (c == null) {
                 cb.onError("Roboter ist nicht bereit.");
@@ -224,7 +238,7 @@ public final class NavigationManager {
     }
 
     public void localize(RoomScanEntity scan, Callback<Boolean> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             if (c == null) {
                 cb.onError("Roboter ist nicht bereit.");
@@ -277,7 +291,7 @@ public final class NavigationManager {
     }
 
     public void saveWaypoint(String name, String type, Callback<WaypointEntity> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             RoomScanEntity scan = activeScan;
             if (c == null || scan == null || !localized) {
@@ -300,7 +314,7 @@ public final class NavigationManager {
     }
 
     public void listWaypoints(Callback<List<WaypointEntity>> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             RoomScanEntity scan = activeScan;
             if (c == null || scan == null) {
@@ -316,7 +330,7 @@ public final class NavigationManager {
     }
 
     public void deleteWaypoint(WaypointEntity wp, Callback<Void> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             if (c == null) {
                 cb.onError("Roboter ist nicht bereit.");
@@ -332,7 +346,7 @@ public final class NavigationManager {
     }
 
     public void goToWaypoint(WaypointEntity wp, Callback<Void> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             if (c == null || !localized) {
                 cb.onError("Pepper ist noch nicht lokalisiert.");
@@ -385,7 +399,7 @@ public final class NavigationManager {
     }
 
     public void getRobotPose(Callback<double[]> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             QiContext c = qiContext;
             if (c == null || !localized) {
                 cb.onError("Pepper ist noch nicht lokalisiert.");
@@ -401,7 +415,7 @@ public final class NavigationManager {
     }
 
     public void getMapBitmap(Callback<Bitmap> cb) {
-        executor.execute(() -> {
+        submit(() -> {
             ExplorationMap map = activeMap;
             if (map == null) {
                 cb.onError("Noch keine Karte vorhanden. Erst scannen oder aktivieren.");
