@@ -176,6 +176,11 @@
     <string name="status_battery">Akku: %1$d %%</string>
     <string name="status_battery_unknown">Akku: unbekannt</string>
     <string name="status_uptime">Laufzeit: %1$s</string>
+    <string name="tile_dance">Tanzen</string>
+    <string name="tile_selfie">Selfie</string>
+    <string name="tile_memory">Memory</string>
+    <string name="tile_raffle">Verlosung</string>
+    <string name="tile_highfive">High Five</string>
     <string-array name="attract_suggestions">
         <item>Frag mich nach einem Tanz! 💃</item>
         <item>Lust auf ein Selfie? 📸</item>
