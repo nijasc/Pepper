@@ -8,6 +8,7 @@ import androidx.annotation.Nullable;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.util.IOUtils;
+import com.buhlergroup.pepper.BuildConfig;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
@@ -39,6 +40,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 
 public class OpenAIService {
 
+    private static final String TAG = "OpenAIService";
     private static final int MAX_OUTPUT_TOKENS = 600;
     private static final int RESPONSE_TIMEOUT_MS = 60000;
     private static final String URL = "https://api.openai.com/v1";
@@ -402,10 +404,11 @@ public class OpenAIService {
             con.setDoOutput(true);
 
             String json = objectMapper.writeValueAsString(body);
-            Map<String, Object> f = body;
-            f.remove("instructions");
-            String js = objectMapper.writeValueAsString(f);
-            Log.i("OPENREQ", js);
+            if (BuildConfig.DEBUG) {
+                Map<String, Object> f = body;
+                f.remove("instructions");
+                Log.i("OPENREQ", objectMapper.writeValueAsString(f));
+            }
 
             try (OutputStream os = con.getOutputStream()) {
                 byte[] input = json.getBytes(StandardCharsets.UTF_8);
@@ -430,7 +433,9 @@ public class OpenAIService {
             content.append(line);
         }
         in.close();
-        System.out.println("OpenAI Response: " + content);
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "OpenAI Response: " + content);
+        }
         return content.toString();
     }
 
