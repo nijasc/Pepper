@@ -25,6 +25,8 @@ import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.action.volume.ChangeVolumeAction;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.lang.SupportedLanguage;
+import com.buhlergroup.pepper.lang.SystemMessages;
 import com.buhlergroup.pepper.net.Connectivity;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
@@ -49,10 +51,12 @@ public class ActionHandler {
     private final Map<String, Action> actionsByName = new HashMap<>();
     private final IntentEngine intentEngine;
     private final HistoryManager historyManager;
+    private final LanguageManager languageManager;
     private final OpenAIService routingService;
 
     public ActionHandler(LanguageManager languageManager, HistoryManager historyManager) {
         this.historyManager = historyManager;
+        this.languageManager = languageManager;
         initActions(languageManager);
         this.intentEngine = new IntentEngine(actions, historyManager);
         this.routingService = new OpenAIService(actions);
@@ -91,8 +95,8 @@ public class ActionHandler {
     }
 
     private void announceOffline(QiContext context) {
-        SpeechManager.getInstance().say(context,
-                "Ich habe gerade keine Verbindung. Bitte versuche es gleich noch einmal.");
+        SupportedLanguage lang = languageManager.getCurrent();
+        SpeechManager.getInstance().say(context, SystemMessages.offline(lang));
     }
 
     private CombinedResult handleCombined(QiContext context, String input) {
@@ -178,7 +182,8 @@ public class ActionHandler {
         Log.i("LATENCY", "getIntent took " + (intentEnd - intentStart) + "ms");
         if (intent == null) {
             Log.w(this.getClass().getSimpleName(), "No intent resolved for input: " + input);
-            SpeechManager.getInstance().systemSay(context, "Entschuldige, das habe ich gerade nicht verstanden.");
+            SpeechManager.getInstance().say(context,
+                    SystemMessages.notUnderstood(languageManager.getCurrent()));
             return;
         }
         Log.i(this.getClass().getSimpleName(), "Found intent: " + intent.getClass().getSimpleName());
