@@ -14,7 +14,7 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class SaxophoneAction extends Action {
 
-    private MediaPlayer mediaPlayer = new MediaPlayer();
+    private static final long MAX_PLAY_MS = 35000;
 
     @Override
     public void execute(QiContext context, String input) {
@@ -29,20 +29,27 @@ public class SaxophoneAction extends Action {
                 .build();
 
         QiFutures.consume(animate.async().run(), "Saxophone", "Animation");
-        playMedia(context, R.raw.saxophone_song);
 
-        try {
-            Thread.sleep(15000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        MediaPlayer player = MediaPlayer.create(context, R.raw.saxophone_song);
+        if (player == null) {
+            return;
         }
-        mediaPlayer.stop();
-    }
-
-    private void playMedia(QiContext context, int mediaResource) {
-        mediaPlayer.reset();
-        mediaPlayer = MediaPlayer.create(context, mediaResource);
-        mediaPlayer.start();
+        try {
+            player.start();
+            long duration = player.getDuration();
+            long playMs = duration > 0 ? Math.min(duration, MAX_PLAY_MS) : MAX_PLAY_MS;
+            Thread.sleep(playMs);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            try {
+                if (player.isPlaying()) {
+                    player.stop();
+                }
+            } catch (Exception ignored) {
+            }
+            player.release();
+        }
     }
 
     @Override
