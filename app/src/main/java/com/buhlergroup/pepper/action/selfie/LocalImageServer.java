@@ -22,10 +22,12 @@ public final class LocalImageServer {
 
     private static final String TAG = "Selfie";
 
+    private static final int MAX_WORKER_THREADS = 4;
+
     private final File rootDir;
     private final int port;
     private final String secret;
-    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private final ExecutorService executor = Executors.newFixedThreadPool(MAX_WORKER_THREADS);
 
     private volatile ServerSocket serverSocket;
     private volatile boolean running = false;
