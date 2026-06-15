@@ -39,6 +39,10 @@ public interface RaffleEntryDao {
     @Query("SELECT * FROM raffle_entries WHERE raffle_id = :raffleId ORDER BY RANDOM() LIMIT 1")
     RaffleEntryEntity getRandomEntry(long raffleId);
 
+    @Query("SELECT * FROM raffle_entries WHERE raffle_id = :raffleId AND id != :excludeId "
+            + "ORDER BY RANDOM() LIMIT 1")
+    RaffleEntryEntity getRandomEntryExcluding(long raffleId, long excludeId);
+
     @Query("SELECT * FROM raffle_entries WHERE id = :entryId LIMIT 1")
     RaffleEntryEntity findEntry(long entryId);
 

@@ -248,7 +248,7 @@ public class AdminView extends FrameLayout {
         raffleCloseButton.setOnClickListener(v -> closeCurrentRaffle());
         raffleDeleteButton.setOnClickListener(v -> confirmDeleteRaffle());
         raffleDrawButton.setOnClickListener(v -> drawWinner());
-        raffleRedrawButton.setOnClickListener(v -> drawWinner());
+        raffleRedrawButton.setOnClickListener(v -> redrawWinner());
         raffleEmailButton.setOnClickListener(v -> sendWinnerEmail());
         findViewById(R.id.adminRaffleBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminCamera).setOnClickListener(v -> showCamera());
@@ -837,6 +837,25 @@ public class AdminView extends FrameLayout {
         dbExecutor.submit(() -> {
             RaffleEntryEntity winner = RaffleRepository.get(getContext()).pickWinner(id);
             post(() -> celebrateWinner(winner));
+        });
+    }
+
+    private void redrawWinner() {
+        long id = currentRaffleId;
+        if (id <= 0) {
+            return;
+        }
+        dbExecutor.submit(() -> {
+            RaffleEntryEntity winner = RaffleRepository.get(getContext()).pickReplacementWinner(id);
+            post(() -> {
+                if (winner == null) {
+                    Toast.makeText(getContext(), R.string.raffle_no_replacement,
+                            Toast.LENGTH_SHORT).show();
+                    openRaffle();
+                } else {
+                    celebrateWinner(winner);
+                }
+            });
         });
     }
 

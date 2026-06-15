@@ -234,6 +234,19 @@ public final class RaffleRepository {
         return entry;
     }
 
+    public RaffleEntryEntity pickReplacementWinner(long raffleId) {
+        RaffleEntity raffle = raffleDao.findById(raffleId);
+        Long exclude = raffle != null ? raffle.winnerId : null;
+        RaffleEntryEntity entry = exclude != null
+                ? entryDao.getRandomEntryExcluding(raffleId, exclude)
+                : entryDao.getRandomEntry(raffleId);
+        if (entry == null) {
+            return null;
+        }
+        raffleDao.setWinner(raffleId, entry.id);
+        return entry;
+    }
+
     public RaffleEntryEntity getWinner(long raffleId) {
         RaffleEntity raffle = raffleDao.findById(raffleId);
         if (raffle == null || raffle.winnerId == null) {
