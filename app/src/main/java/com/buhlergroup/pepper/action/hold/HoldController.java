@@ -20,7 +20,6 @@ import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
 import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.aldebaran.qi.sdk.object.touch.TouchSensor;
 import com.buhlergroup.pepper.R;
-import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 
@@ -35,7 +34,7 @@ public final class HoldController {
 
     private static final String TAG = "HoldMyBeer";
     private static final long LOOP_PAUSE_MS = 200;
-    private static final long WAIT_FOR_OBJECT_MS = 30000;
+    private static final long WAIT_FOR_OBJECT_MS = 15000;
     private static final long MAX_HOLD_MS = 10 * 60 * 1000;
     private static final long OVERTIME_PROMPT_INTERVAL_MS = 30000;
     private static final long[] ESCALATION_AT_MS = {60000, 180000, 300000};
@@ -205,7 +204,6 @@ public final class HoldController {
     private void runSession(QiContext context, int gen) {
         Holder holder = null;
         TouchSensor sensor = null;
-        Future<Void> poseFuture = null;
         Future<ListenResult> listenFuture = null;
         SupportedLanguage lang = language();
         boolean english = lang == SupportedLanguage.ENGLISH;
@@ -256,9 +254,6 @@ public final class HoldController {
             while (alive(gen) && !releaseRequested) {
                 long elapsed = System.currentTimeMillis() - holdStart;
                 setTimer(formatElapsed(elapsed));
-                if (poseFuture == null || poseFuture.isDone()) {
-                    poseFuture = startPoseLoop(context);
-                }
                 if (listenFuture == null || listenFuture.isDone()) {
                     listenFuture = startStopListener(context);
                 }
@@ -280,11 +275,19 @@ public final class HoldController {
                 return;
             }
 
-            requestCancel(poseFuture);
-            poseFuture = null;
+            showView(english ? "Careful — I'm letting go now!" : "Achtung – ich lasse jetzt los!",
+                    null, false);
             sayQuietly(context, english
-                    ? "Hold on tight. I'm letting go in 3, 2, 1."
-                    : "Gut festhalten. Ich lasse los in 3, 2, 1.");
+                    ? "Hold on tight. I'm letting go in five seconds."
+                    : "Gut festhalten. Ich lasse in fünf Sekunden los.");
+            for (int countdown = 5; countdown >= 1 && alive(gen); countdown--) {
+                setTimer(String.valueOf(countdown));
+                sayQuietly(context, String.valueOf(countdown));
+                Thread.sleep(1000);
+            }
+            if (!alive(gen)) {
+                return;
+            }
             runAnimation(context, R.raw.hold_release);
 
             int count = incrementHeldCount(context);
@@ -300,7 +303,6 @@ public final class HoldController {
         } catch (Exception e) {
             Log.w(TAG, "Hold session ended: " + e.getMessage());
         } finally {
-            requestCancel(poseFuture);
             requestCancel(listenFuture);
             removeTouchSensor(sensor);
             releaseQuietly(holder);
@@ -338,23 +340,6 @@ public final class HoldController {
         try {
             sensor.removeAllOnStateChangedListeners();
         } catch (Exception ignored) {
-        }
-    }
-
-    private Future<Void> startPoseLoop(QiContext context) {
-        try {
-            Animation animation = AnimationBuilder.with(context)
-                    .withResources(R.raw.hold_pose_loop)
-                    .build();
-            Animate animate = AnimateBuilder.with(context)
-                    .withAnimation(animation)
-                    .build();
-            Future<Void> future = animate.async().run();
-            QiFutures.consume(future, TAG, "hold pose loop");
-            return future;
-        } catch (Exception e) {
-            Log.w(TAG, "Hold pose loop failed: " + e.getMessage());
-            return null;
         }
     }
 
