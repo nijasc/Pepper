@@ -500,6 +500,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="32dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -526,12 +527,6 @@
                 android:textSize="15sp" />
         </ScrollView>
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminDevLogBack"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:text="@string/admin_back" />
     </LinearLayout>
 
     <LinearLayout
@@ -540,6 +535,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -586,12 +582,6 @@
             android:layout_marginTop="12dp"
             android:text="@string/selfie_retention_button" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminGalleryBack"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:text="@string/admin_back" />
     </LinearLayout>
 
     <LinearLayout
@@ -601,6 +591,7 @@
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:padding="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <ImageView
@@ -683,11 +674,6 @@
                 android:textSize="18sp" />
         </LinearLayout>
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminDetailBack"
-            style="@style/AdminMenuButton"
-            android:layout_marginTop="10dp"
-            android:text="@string/admin_back" />
     </LinearLayout>
 
     <LinearLayout
@@ -726,11 +712,6 @@
             style="@style/AdminMenuButton"
             android:text="@string/lang_english" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminLangBack"
-            style="@style/AdminMenuButton"
-            android:layout_marginTop="24dp"
-            android:text="@string/admin_back" />
     </LinearLayout>
 
     <LinearLayout
@@ -739,6 +720,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -763,12 +745,6 @@
                 android:orientation="vertical" />
         </ScrollView>
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminHistoryBack"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:text="@string/admin_back" />
     </LinearLayout>
 
     <LinearLayout
@@ -777,6 +753,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -914,18 +891,6 @@
                 android:textColor="@color/white"
                 android:textSize="18sp" />
 
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/raffleCreateBack"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_pill_teal"
-                android:paddingLeft="40dp"
-                android:paddingTop="14dp"
-                android:paddingRight="40dp"
-                android:paddingBottom="14dp"
-                android:text="@string/admin_back"
-                android:textColor="@color/white"
-                android:textSize="18sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -935,6 +900,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -1081,18 +1047,6 @@
                 android:textSize="18sp"
                 android:visibility="gone" />
 
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/adminRaffleBack"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_pill_teal"
-                android:paddingLeft="40dp"
-                android:paddingTop="14dp"
-                android:paddingRight="40dp"
-                android:paddingBottom="14dp"
-                android:text="@string/admin_back"
-                android:textColor="@color/white"
-                android:textSize="18sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -1185,12 +1139,6 @@
                 android:textSize="16sp" />
         </LinearLayout>
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminCameraBack"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
-            android:text="@string/admin_back" />
     </LinearLayout>
 
     <LinearLayout
@@ -1265,12 +1213,6 @@
             android:layout_marginTop="12dp"
             android:text="@string/attract_test" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminAttractBack"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:text="@string/admin_back" />
     </LinearLayout>
 
     <LinearLayout
@@ -1279,6 +1221,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -1309,13 +1252,6 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="12dp"
             android:text="@string/stats_export" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminStatsBack"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:text="@string/admin_back" />
     </LinearLayout>
 
     <LinearLayout
@@ -1374,11 +1310,38 @@
             android:layout_marginTop="24dp"
             android:text="@string/status_refresh" />
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adminHeader"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/admin_header_height"
+        android:layout_gravity="top"
+        android:background="@color/admin_card_muted"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="@dimen/space_l"
+        android:paddingRight="@dimen/space_l"
+        android:visibility="gone">
+
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminStatusBack"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
+            android:id="@+id/adminHeaderBack"
+            style="@style/AdminPrimaryButton"
             android:text="@string/admin_back" />
+
+        <TextView
+            android:id="@+id/adminHeaderTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="@dimen/space_l"
+            android:textColor="@color/text_primary"
+            android:textSize="@dimen/text_heading"
+            android:textStyle="bold" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminHeaderClose"
+            style="@style/AdminPrimaryButton"
+            android:text="@string/admin_close" />
     </LinearLayout>
 </merge>

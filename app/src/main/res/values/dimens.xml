@@ -18,6 +18,7 @@
     <!-- Admin shape / sizing tokens -->
     <dimen name="radius_card">16dp</dimen>
     <dimen name="admin_header_height">64dp</dimen>
+    <dimen name="admin_content_top">76dp</dimen>
     <dimen name="admin_tile_width">150dp</dimen>
     <dimen name="admin_tile_height">132dp</dimen>
     <dimen name="admin_tile_icon">44dp</dimen>

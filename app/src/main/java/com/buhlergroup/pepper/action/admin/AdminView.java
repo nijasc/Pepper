@@ -128,6 +128,9 @@ public class AdminView extends FrameLayout {
     private View statsPanel;
     private TextView statsText;
     private View attractPanel;
+    private View adminHeader;
+    private TextView adminHeaderTitle;
+    private int currentPanel = PANEL_PIN;
     private CheckBox attractEnabled;
     private EditText attractIdle;
     private EditText attractGreet;
@@ -277,51 +280,45 @@ public class AdminView extends FrameLayout {
         cameraEnabled = findViewById(R.id.cameraEnabled);
         cameraStatus = findViewById(R.id.cameraStatus);
 
+        adminHeader = findViewById(R.id.adminHeader);
+        adminHeaderTitle = findViewById(R.id.adminHeaderTitle);
+        findViewById(R.id.adminHeaderBack).setOnClickListener(v -> goBack());
+        findViewById(R.id.adminHeaderClose).setOnClickListener(v -> hide());
+
         wireKeypad();
         findViewById(R.id.adminPinCancel).setOnClickListener(v -> hide());
         findViewById(R.id.adminClose).setOnClickListener(v -> hide());
         findViewById(R.id.adminClearHistory).setOnClickListener(v -> onClearHistory());
         findViewById(R.id.adminDevLogs).setOnClickListener(v -> showDevLog());
-        findViewById(R.id.adminDevLogBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminSelfies).setOnClickListener(v -> showGallery());
-        findViewById(R.id.adminGalleryBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         exportAllButton.setOnClickListener(v -> onExportAll());
         findViewById(R.id.adminSelfieRetention).setOnClickListener(v -> showSelfieRetentionDialog());
-        findViewById(R.id.adminDetailBack).setOnClickListener(v -> showGallery());
         detailFavorite.setOnClickListener(v -> toggleFavorite());
         findViewById(R.id.adminDetailDelete).setOnClickListener(v -> deleteCurrent());
         findViewById(R.id.adminLanguage).setOnClickListener(v -> showLanguage());
         findViewById(R.id.adminLangDe).setOnClickListener(v -> setLanguage(SupportedLanguage.GERMAN));
         findViewById(R.id.adminLangEn).setOnClickListener(v -> setLanguage(SupportedLanguage.ENGLISH));
-        findViewById(R.id.adminLangBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminHistory).setOnClickListener(v -> showHistory());
-        findViewById(R.id.adminHistoryBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminRaffle).setOnClickListener(v -> openRaffle());
         findViewById(R.id.raffleDescriptionDone).setOnClickListener(this::hideKeyboard);
         raffleEndDateButton.setOnClickListener(v -> pickEndDate());
         raffleCreateSave.setOnClickListener(v -> onSaveRaffle());
-        findViewById(R.id.raffleCreateBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         raffleFinishButton.setOnClickListener(v -> finishCurrentRaffle());
         raffleCloseButton.setOnClickListener(v -> closeCurrentRaffle());
         raffleDeleteButton.setOnClickListener(v -> confirmDeleteRaffle());
         raffleDrawButton.setOnClickListener(v -> drawWinner());
         raffleRedrawButton.setOnClickListener(v -> redrawWinner());
         raffleEmailButton.setOnClickListener(v -> sendWinnerEmail());
-        findViewById(R.id.adminRaffleBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminCamera).setOnClickListener(v -> showCamera());
         findViewById(R.id.adminStatus).setOnClickListener(v -> showStatus());
         findViewById(R.id.statusRefresh).setOnClickListener(v -> showStatus());
-        findViewById(R.id.adminStatusBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminStats).setOnClickListener(v -> showStats());
         findViewById(R.id.adminStatsExport).setOnClickListener(v -> exportStats());
-        findViewById(R.id.adminStatsBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminAttract).setOnClickListener(v -> showAttract());
         findViewById(R.id.attractSave).setOnClickListener(v -> saveAttract());
         findViewById(R.id.attractTest).setOnClickListener(v -> testAttract());
-        findViewById(R.id.adminAttractBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.cameraTest).setOnClickListener(v -> testCamera());
         findViewById(R.id.cameraSave).setOnClickListener(v -> saveCamera());
-        findViewById(R.id.adminCameraBack).setOnClickListener(v -> showPanel(PANEL_MENU));
         findViewById(R.id.adminNavigation).setOnClickListener(v -> openNavigation());
         findViewById(R.id.adminDances).setOnClickListener(v -> openDanceLibrary());
         findViewById(R.id.adminDsgvo).setOnClickListener(v -> showDsgvoAccessDialog());
@@ -447,6 +444,7 @@ public class AdminView extends FrameLayout {
     }
 
     private void showPanel(int which) {
+        currentPanel = which;
         pinPanel.setVisibility(which == PANEL_PIN ? VISIBLE : GONE);
         menuPanel.setVisibility(which == PANEL_MENU ? VISIBLE : GONE);
         devLogPanel.setVisibility(which == PANEL_DEVLOG ? VISIBLE : GONE);
@@ -463,6 +461,52 @@ public class AdminView extends FrameLayout {
         dashHandler.removeCallbacks(dashRefresh);
         if (which == PANEL_MENU) {
             dashHandler.post(dashRefresh);
+        }
+        updateHeader(which);
+    }
+
+    private void updateHeader(int which) {
+        boolean show = which != PANEL_PIN && which != PANEL_MENU;
+        adminHeader.setVisibility(show ? VISIBLE : GONE);
+        if (show) {
+            adminHeaderTitle.setText(titleFor(which));
+            adminHeader.bringToFront();
+        }
+    }
+
+    private int titleFor(int which) {
+        switch (which) {
+            case PANEL_DEVLOG:
+                return R.string.admin_dev_logs;
+            case PANEL_GALLERY:
+            case PANEL_DETAIL:
+                return R.string.admin_selfies;
+            case PANEL_LANG:
+                return R.string.admin_language;
+            case PANEL_HISTORY:
+                return R.string.admin_history_view;
+            case PANEL_RAFFLE_CREATE:
+                return R.string.raffle_create_title;
+            case PANEL_RAFFLE:
+                return R.string.admin_raffle;
+            case PANEL_CAMERA:
+                return R.string.admin_camera_title;
+            case PANEL_STATUS:
+                return R.string.admin_status;
+            case PANEL_STATS:
+                return R.string.admin_stats;
+            case PANEL_ATTRACT:
+                return R.string.admin_attract;
+            default:
+                return R.string.admin_menu_title;
+        }
+    }
+
+    private void goBack() {
+        if (currentPanel == PANEL_DETAIL) {
+            showGallery();
+        } else {
+            showPanel(PANEL_MENU);
         }
     }
 
