@@ -23,6 +23,8 @@ public class WaypointMapView extends View {
     private final Paint fotostandPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint robotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint gridTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
     public WaypointMapView(Context context) {
         super(context);
@@ -47,6 +49,10 @@ public class WaypointMapView extends View {
         robotPaint.setStrokeWidth(6f);
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(28f);
+        gridPaint.setColor(0x33FFFFFF);
+        gridPaint.setStrokeWidth(1f);
+        gridTextPaint.setColor(0x99FFFFFF);
+        gridTextPaint.setTextSize(20f);
     }
 
     public void setWaypoints(List<WaypointEntity> newWaypoints) {
@@ -71,6 +77,12 @@ public class WaypointMapView extends View {
 
         canvas.drawColor(0x22000000);
 
+        double[] pose = robotPose;
+        if (waypoints.isEmpty() && pose == null) {
+            canvas.drawText("Noch keine Wegpunkte", pad, h / 2f, textPaint);
+            return;
+        }
+
         float minX = 0f;
         float maxX = 0f;
         float minY = 0f;
@@ -81,24 +93,31 @@ public class WaypointMapView extends View {
             minY = Math.min(minY, (float) wp.y);
             maxY = Math.max(maxY, (float) wp.y);
         }
-        double[] pose = robotPose;
         if (pose != null) {
             minX = Math.min(minX, (float) pose[0]);
             maxX = Math.max(maxX, (float) pose[0]);
             minY = Math.min(minY, (float) pose[1]);
             maxY = Math.max(maxY, (float) pose[1]);
         }
+        minX -= 1f;
+        maxX += 1f;
+        minY -= 1f;
+        maxY += 1f;
         float rangeX = Math.max(1f, maxX - minX);
         float rangeY = Math.max(1f, maxY - minY);
         float scale = Math.min((w - 2 * pad) / rangeX, (h - 2 * pad) / rangeY);
 
-        drawMarker(canvas, originPaint, toX(0f, minX, scale, pad), toY(0f, minY, scale, h, pad), "Start");
+        drawGrid(canvas, minX, maxX, minY, maxY, scale, pad, w, h);
+
+        drawMarker(canvas, originPaint, toX(0f, minX, scale, pad),
+                toY(0f, minY, scale, h, pad), "Start (0,0)");
 
         for (WaypointEntity wp : waypoints) {
             Paint paint = WaypointEntity.TYPE_FOTOSTAND.equals(wp.type) ? fotostandPaint : waypointPaint;
             float px = toX((float) wp.x, minX, scale, pad);
             float py = toY((float) wp.y, minY, scale, h, pad);
-            drawMarker(canvas, paint, px, py, wp.name);
+            drawMarker(canvas, paint, px, py,
+                    wp.name + " (" + fmt(wp.x) + ", " + fmt(wp.y) + ")");
         }
 
         if (pose != null) {
@@ -109,12 +128,27 @@ public class WaypointMapView extends View {
             float hx = px + (float) Math.cos(pose[2]) * headingLen;
             float hy = py - (float) Math.sin(pose[2]) * headingLen;
             canvas.drawLine(px, py, hx, hy, robotPaint);
-            canvas.drawText("Pepper", px + 20f, py - 16f, textPaint);
+            canvas.drawText("Pepper (" + fmt(pose[0]) + ", " + fmt(pose[1]) + ")",
+                    px + 20f, py - 16f, textPaint);
         }
+    }
 
-        if (waypoints.isEmpty() && pose == null) {
-            canvas.drawText("Noch keine Wegpunkte", pad, h / 2f, textPaint);
+    private void drawGrid(Canvas canvas, float minX, float maxX, float minY, float maxY,
+                          float scale, float pad, int w, int h) {
+        for (int gx = (int) Math.ceil(minX); gx <= (int) Math.floor(maxX); gx++) {
+            float px = toX(gx, minX, scale, pad);
+            canvas.drawLine(px, pad, px, h - pad, gridPaint);
+            canvas.drawText(gx + "m", px + 2f, h - pad + 22f, gridTextPaint);
         }
+        for (int gy = (int) Math.ceil(minY); gy <= (int) Math.floor(maxY); gy++) {
+            float py = toY(gy, minY, scale, h, pad);
+            canvas.drawLine(pad, py, w - pad, py, gridPaint);
+            canvas.drawText(gy + "m", 8f, py - 4f, gridTextPaint);
+        }
+    }
+
+    private String fmt(double value) {
+        return String.format(java.util.Locale.US, "%.1f", value);
     }
 
     private float toX(float worldX, float minX, float scale, float pad) {

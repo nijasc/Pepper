@@ -50,8 +50,12 @@ public final class NavigationManager {
     private static final String TAG = "Navigation";
     private static final long MAP_POLL_BASE_MS = 1000;
     private static final long MAP_POLL_MAX_MS = 8000;
-    private static final double SCAN_RADIUS_M = 1.0;
     private static final int SCAN_ROTATION_STEPS = 4;
+    private static final double RING_STEP_M = 1.2;
+    private static final double MAX_SCAN_RADIUS_M = 6.0;
+    private static final double REACH_TOLERANCE_M = 0.5;
+    private static final double[][] CORNER_DIRS = {{1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
+    private static final long LOCALIZE_TIMEOUT_MS = 40000;
 
     public interface Callback<T> {
         void onResult(T value);
@@ -163,7 +167,7 @@ public final class NavigationManager {
                 captureScanOrigin(c);
                 cb.onResult(null);
                 startMapPolling();
-                autoScanRotate(c);
+                autoScanExplore(c);
             } catch (Exception e) {
                 releaseAbilities();
                 Log.w(TAG, "startScan failed: " + e.getMessage());
@@ -294,6 +298,7 @@ public final class NavigationManager {
                         localized = false;
                     }
                 });
+                scheduleLocalizeTimeout(c, done, cb);
             } catch (Exception e) {
                 releaseAbilities();
                 Log.w(TAG, "localize failed: " + e.getMessage());
@@ -499,6 +504,25 @@ public final class NavigationManager {
         });
     }
 
+    private void scheduleLocalizeTimeout(QiContext c, AtomicBoolean done, Callback<Boolean> cb) {
+        Thread watchdog = new Thread(() -> {
+            try {
+                Thread.sleep(LOCALIZE_TIMEOUT_MS);
+            } catch (InterruptedException e) {
+                return;
+            }
+            if (done.compareAndSet(false, true)) {
+                cancelLocalize();
+                releaseAbilities();
+                localized = false;
+                cb.onError("Pepper konnte sich nicht orientieren. Bitte näher an einen "
+                        + "bekannten Bereich stellen und erneut versuchen.");
+            }
+        }, "localize-timeout");
+        watchdog.setDaemon(true);
+        watchdog.start();
+    }
+
     private void handleLocalizationLost(QiContext c) {
         localized = false;
         cancelActiveGoTo();
@@ -599,25 +623,33 @@ public final class NavigationManager {
         }
     }
 
-    private void autoScanRotate(QiContext c) {
+    private void autoScanExplore(QiContext c) {
         Thread explorer = new Thread(() -> {
             try {
                 rotationSweep(c);
-                double[][] offsets = {
-                        {SCAN_RADIUS_M, 0.0},
-                        {0.0, SCAN_RADIUS_M},
-                        {0.0, -SCAN_RADIUS_M}
-                };
-                for (double[] offset : offsets) {
-                    if (!scanning) {
-                        break;
+                double diag = 1.0 / Math.sqrt(2.0);
+                for (double radius = RING_STEP_M;
+                     radius <= MAX_SCAN_RADIUS_M && scanning; radius += RING_STEP_M) {
+                    int bounded = 0;
+                    for (double[] dir : CORNER_DIRS) {
+                        if (!scanning) {
+                            break;
+                        }
+                        double tx = dir[0] * diag * radius;
+                        double ty = dir[1] * diag * radius;
+                        if (driveToOriginOffset(c, tx, ty)) {
+                            rotationSweep(c);
+                        } else {
+                            bounded++;
+                        }
                     }
-                    if (driveToOriginOffset(c, offset[0], offset[1])) {
-                        rotationSweep(c);
+                    if (bounded == CORNER_DIRS.length) {
+                        break;
                     }
                 }
                 if (scanning) {
                     driveToOriginOffset(c, 0.0, 0.0);
+                    rotationSweep(c);
                     announceScanComplete(c);
                 }
             } catch (Exception e) {
@@ -654,25 +686,35 @@ public final class NavigationManager {
         if (origin == null) {
             return false;
         }
-        double clampedX = clampRadius(dx);
-        double clampedY = clampRadius(dy);
         try {
-            Transform t = TransformBuilder.create().from2DTransform(clampedX, clampedY, 0.0);
+            Transform t = TransformBuilder.create().from2DTransform(dx, dy, 0.0);
             FreeFrame target = c.getMapping().makeFreeFrame();
             target.update(origin.frame(), t, 0L);
             Future<Void> goToFuture = GoToBuilder.with(c)
                     .withFrame(target.frame()).build().async().run();
             rotateFuture = goToFuture;
             awaitGoTo(goToFuture, () -> scanning);
-            return scanning;
+            if (!scanning) {
+                return false;
+            }
+            return reachedOffset(c, origin, dx, dy);
         } catch (Exception e) {
             Log.w(TAG, "driveToOriginOffset failed: " + e.getMessage());
             return false;
         }
     }
 
-    private double clampRadius(double value) {
-        return Math.max(-SCAN_RADIUS_M, Math.min(SCAN_RADIUS_M, value));
+    private boolean reachedOffset(QiContext c, FreeFrame origin, double dx, double dy) {
+        try {
+            Transform robotInOrigin = c.getActuation().robotFrame()
+                    .computeTransform(origin.frame()).getTransform();
+            double rx = robotInOrigin.getTranslation().getX();
+            double ry = robotInOrigin.getTranslation().getY();
+            return Math.hypot(rx - dx, ry - dy) <= REACH_TOLERANCE_M;
+        } catch (Exception e) {
+            Log.w(TAG, "reachedOffset failed: " + e.getMessage());
+            return false;
+        }
     }
 
     private void announceScanComplete(QiContext c) {
