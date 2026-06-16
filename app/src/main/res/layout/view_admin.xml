@@ -499,7 +499,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="32dp"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:paddingBottom="32dp"
         android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
@@ -534,7 +536,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
         android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
@@ -585,7 +589,9 @@
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
         android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
@@ -714,7 +720,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
         android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
@@ -747,7 +755,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
         android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
@@ -899,7 +909,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
         android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
@@ -1230,7 +1242,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
         android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
