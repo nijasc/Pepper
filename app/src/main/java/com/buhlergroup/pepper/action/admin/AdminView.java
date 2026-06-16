@@ -364,13 +364,13 @@ public class AdminView extends FrameLayout {
     }
 
     private void openNavigation() {
-        hide();
         NavigationController.get().open();
+        hide();
     }
 
     private void openDanceLibrary() {
-        hide();
         DanceLibraryController.get().open();
+        hide();
     }
 
     private void onDigit(int digit) {
