@@ -50,6 +50,29 @@ public class OpenAIService {
     private static String cachedToken;
     private Context c;
 
+    private static final int CIRCUIT_FAILURE_THRESHOLD = 3;
+    private static final long CIRCUIT_COOLDOWN_MS = 30000;
+    private static volatile int consecutiveFailures;
+    private static volatile long circuitOpenUntilMs;
+
+    private static synchronized boolean isCircuitOpen() {
+        return System.currentTimeMillis() < circuitOpenUntilMs;
+    }
+
+    private static synchronized void recordSuccess() {
+        consecutiveFailures = 0;
+        circuitOpenUntilMs = 0;
+    }
+
+    private static synchronized void recordFailure() {
+        consecutiveFailures++;
+        if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
+            circuitOpenUntilMs = System.currentTimeMillis() + CIRCUIT_COOLDOWN_MS;
+            Log.w(TAG, "OpenAI circuit opened after " + consecutiveFailures
+                    + " consecutive failures; failing fast for " + CIRCUIT_COOLDOWN_MS + "ms");
+        }
+    }
+
     private static final Pattern LANG_TAG =
             Pattern.compile("\\[\\[\\s*lang\\s*:\\s*([A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?)\\s*\\]\\]");
     private static final Pattern ACTION_TAG =
@@ -149,6 +172,10 @@ public class OpenAIService {
         long started = System.currentTimeMillis();
         lastLanguageTag = null;
 
+        if (isCircuitOpen()) {
+            throw new IOException("OpenAI circuit open, failing fast to fallback");
+        }
+
         HttpURLConnection con = (HttpURLConnection) new URL(URL + "/responses").openConnection();
         con.setConnectTimeout(8000);
         con.setReadTimeout(30000);
@@ -158,6 +185,7 @@ public class OpenAIService {
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("Accept", "text/event-stream");
 
+        boolean failed = false;
         try {
             try (OutputStream os = con.getOutputStream()) {
                 os.write(objectMapper.writeValueAsString(body).getBytes(StandardCharsets.UTF_8));
@@ -231,8 +259,16 @@ public class OpenAIService {
             Log.i("LATENCY", "streamed response complete after "
                     + (System.currentTimeMillis() - started) + "ms");
             return ACTION_TAG.matcher(full.toString()).replaceAll("").trim();
+        } catch (IOException e) {
+            failed = true;
+            throw e;
         } finally {
             con.disconnect();
+            if (failed) {
+                recordFailure();
+            } else {
+                recordSuccess();
+            }
         }
     }
 
