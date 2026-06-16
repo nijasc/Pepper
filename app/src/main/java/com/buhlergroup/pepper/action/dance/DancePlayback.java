@@ -12,6 +12,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
+import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.io.File;
 
@@ -25,6 +26,8 @@ public final class DancePlayback {
     }
 
     public static void play(QiContext context, DanceEntity dance) throws Exception {
+        DebugLog.get().setStatus("Tanz: " + dance.songName);
+        DebugLog.get().i(TAG, "Tanz gestartet: " + dance.songName);
         String qianim = DanceRepository.readQianim(new File(dance.qianimPath));
         Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
         Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
@@ -44,6 +47,7 @@ public final class DancePlayback {
             if (animationFuture != null && !animationFuture.isDone()) {
                 animationFuture.requestCancellation();
             }
+            DebugLog.get().i(TAG, "Tanz beendet: " + dance.songName);
         }
     }
 

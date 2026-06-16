@@ -28,6 +28,7 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.config.Env;
+import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.ByteArrayOutputStream;
@@ -151,6 +152,8 @@ public final class SelfieController {
 
         running = true;
         notifyState(true);
+        DebugLog.get().setStatus("Selfie – gestartet");
+        DebugLog.get().i(TAG, "Selfie gestartet");
         boolean serverAcquired = false;
         try {
             if (NavigationManager.get().hasFotostand(context)) {
@@ -196,6 +199,8 @@ public final class SelfieController {
                     dismiss.countDown();
                 });
                 Log.i(TAG, "Selfie #" + entity.number + " at " + url);
+                DebugLog.get().setStatus("Selfie #" + entity.number + " bereit");
+                DebugLog.get().i(TAG, "Selfie #" + entity.number + " bereit");
 
                 if (wifiQr != null) {
                     say(context, "Fertig! Scanne den oberen QR-Code für dein Bild. "
@@ -233,6 +238,7 @@ public final class SelfieController {
             return entity;
         } catch (Exception e) {
             Log.e(TAG, "Selfie failed", e);
+            DebugLog.get().e(TAG, "Selfie fehlgeschlagen", e);
             say(context, "Da ist etwas schiefgelaufen mit dem Selfie.");
             board.hide();
         } finally {

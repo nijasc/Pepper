@@ -29,6 +29,7 @@ import com.buhlergroup.pepper.action.volume.ChangeVolumeAction;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
+import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SystemMessages;
 import com.buhlergroup.pepper.net.Connectivity;
 import com.buhlergroup.pepper.openai.OpenAIService;
@@ -75,10 +76,14 @@ public class ActionHandler {
         }
 
         historyManager.addDeveloper("User input captured: \"" + input + "\"");
+        DebugLog.get().setStatus("Verarbeite Eingabe: \"" + input + "\"");
+        DebugLog.get().i("ActionHandler", "User input: \"" + input + "\"");
         Stats.increment(context, Stats.INTERACTIONS);
 
         if (!Connectivity.isOnline(context)) {
             Log.w(this.getClass().getSimpleName(), "No connectivity, skipping OpenAI call");
+            DebugLog.get().setStatus("Offline – kein OpenAI-Aufruf");
+            DebugLog.get().w("ActionHandler", "Keine Verbindung, OpenAI übersprungen");
             Stats.increment(context, Stats.ERRORS);
             if (!tryKeywordFallback(context, input)) {
                 announceOffline(context);
@@ -174,6 +179,8 @@ public class ActionHandler {
             if (target != null) {
                 Log.i(this.getClass().getSimpleName(),
                         "Routed intent: " + target.getClass().getSimpleName());
+                DebugLog.get().setStatus("Aktion: " + target.getClass().getSimpleName());
+                DebugLog.get().i("ActionHandler", "Routed intent: " + target.getClass().getSimpleName());
                 historyManager.addDeveloper(
                         "Action started: " + target.getClass().getSimpleName(), target);
                 Stats.increment(context, Stats.ACTION_PREFIX + target.getClass().getSimpleName());
@@ -223,6 +230,8 @@ public class ActionHandler {
             return;
         }
         Log.i(this.getClass().getSimpleName(), "Found intent: " + intent.getClass().getSimpleName());
+        DebugLog.get().setStatus("Aktion: " + intent.getClass().getSimpleName());
+        DebugLog.get().i("ActionHandler", "Intent (Engine): " + intent.getClass().getSimpleName());
 
         historyManager.addDeveloper("Action started: " + intent.getClass().getSimpleName(), intent);
         Stats.increment(context, Stats.ACTION_PREFIX + intent.getClass().getSimpleName());

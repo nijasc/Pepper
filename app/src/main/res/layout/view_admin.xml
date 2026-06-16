@@ -317,6 +317,24 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
+                <LinearLayout android:id="@+id/adminDebug" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_debug"
+                        android:src="@drawable/ic_admin_debug" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_debug"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
+
                 <LinearLayout android:id="@+id/adminHistory" style="@style/AdminMenuTile">
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
@@ -528,6 +546,80 @@
                 android:textColor="@color/text_on_panel"
                 android:textSize="15sp" />
         </ScrollView>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adminDebugPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
+        android:paddingTop="@dimen/admin_content_top"
+        android:visibility="gone">
+
+        <CheckBox
+            android:id="@+id/debugEnabled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/debug_enabled"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/debugStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_pill_teal"
+            android:fontFamily="monospace"
+            android:padding="12dp"
+            android:textColor="@color/white"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <ScrollView
+            android:id="@+id/adminDebugScroll"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="12dp">
+
+            <TextView
+                android:id="@+id/adminDebugText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textColor="@color/text_on_panel"
+                android:textSize="13sp" />
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/debugRefresh"
+                style="@style/AdminPrimaryButton"
+                android:layout_marginEnd="@dimen/space_m"
+                android:text="@string/debug_refresh" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/debugExport"
+                style="@style/AdminPrimaryButton"
+                android:layout_marginEnd="@dimen/space_m"
+                android:text="@string/debug_export" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/debugClear"
+                style="@style/AdminPrimaryButton"
+                android:text="@string/debug_clear" />
+        </LinearLayout>
 
     </LinearLayout>
 

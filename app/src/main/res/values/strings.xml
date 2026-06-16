@@ -43,6 +43,15 @@
     <string name="admin_menu_title">Admin-Bereich</string>
     <string name="admin_clear_history">Verlauf löschen</string>
     <string name="admin_dev_logs">Dev-Logs</string>
+    <string name="admin_debug">Debug</string>
+    <string name="admin_debug_title">Debug-Modus</string>
+    <string name="debug_enabled">Debug-Modus aktiv (On-Screen Live-Log)</string>
+    <string name="debug_status_label">Status:</string>
+    <string name="debug_refresh">Aktualisieren</string>
+    <string name="debug_export">Exportieren</string>
+    <string name="debug_clear">Leeren</string>
+    <string name="debug_empty">Noch keine Debug-Einträge</string>
+    <string name="debug_export_title">Pepper Debug-Log</string>
     <string name="admin_selfies">Selfies</string>
     <string name="admin_close">Schließen</string>
     <string name="admin_back">Zurück</string>

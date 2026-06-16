@@ -127,4 +127,11 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
+    <com.buhlergroup.pepper.debug.DebugOverlayView
+        android:id="@+id/debugOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="60dp"
+        android:visibility="gone" />
+
 </FrameLayout>

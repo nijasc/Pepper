@@ -56,6 +56,8 @@ import com.buhlergroup.pepper.action.raffle.WinnerView;
 import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.action.selfie.SelfieView;
+import com.buhlergroup.pepper.debug.DebugLog;
+import com.buhlergroup.pepper.debug.DebugOverlayView;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
@@ -79,6 +81,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private Button adminButton;
     private Holder backgroundMovementHolder;
     private TextView languageLabel;
+    private DebugOverlayView debugOverlay;
     private volatile boolean listening;
     private volatile boolean listenPending;
     private volatile boolean processing;
@@ -140,6 +143,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         WinnerView winnerView = findViewById(R.id.winnerView);
         WinnerController.get().attachView(winnerView);
 
+        debugOverlay = findViewById(R.id.debugOverlay);
+
         AdminController.get().setAdminStateListener(open -> updateHomeControls());
         SelfieController.get().setStateListener(active -> updateHomeControls());
         RaffleJoinController.get().setStateListener(active -> updateHomeControls());
@@ -200,6 +205,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         s.setC(qiContext);
         s.getAuthToken(qiContext);
         Log.d("Mainactivity", "AFocus Gained");
+        DebugLog.get().setStatus("Roboter-Fokus erhalten");
+        DebugLog.get().i("MainActivity", "Roboter-Fokus erhalten");
         RobotContext.set(qiContext);
         holdBackgroundMovement(qiContext);
         NavigationManager.get().setQiContext(qiContext);
@@ -254,6 +261,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         NavigationManager.get().onFocusLost();
         releaseBackgroundMovement();
         Log.d("Mainactivity", "AFocus Lost");
+        DebugLog.get().setStatus("Roboter-Fokus verloren");
+        DebugLog.get().i("MainActivity", "Roboter-Fokus verloren");
     }
 
     private void holdBackgroundMovement(QiContext qiContext) {
@@ -309,6 +318,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private void updateHomeControls() {
         boolean overlayOpen = homeOverlayOpen();
         DialogueController.get().setSuppressed(overlayOpen);
+        if (debugOverlay != null) {
+            debugOverlay.setSuppressed(AdminController.get().isOpen());
+        }
         runOnUiThread(() -> {
             int visibility = overlayOpen ? View.GONE : View.VISIBLE;
             adminButton.setVisibility(visibility);
@@ -368,6 +380,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             if (intent != null && intent.resolveActivity(getPackageManager()) != null) {
                 listening = true;
                 lastListenStartMs = SystemClock.elapsedRealtime();
+                DebugLog.get().setStatus("Höre zu …");
+                DebugLog.get().d("MainActivity", "Spracherkennung gestartet");
                 startActivityForResult(intent, SPEECH_EVENT);
             }
         });
@@ -390,6 +404,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         long idle = SystemClock.elapsedRealtime() - lastListenStartMs;
         if (idle > SPEECH_WATCHDOG_IDLE_MS) {
             Log.w("Mainactivity", "Speech watchdog restarting recognition after " + idle + "ms idle");
+            DebugLog.get().w("MainActivity", "Watchdog startet Spracherkennung neu nach " + idle + "ms");
             listenToSpeech();
         }
     }
@@ -430,6 +445,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                         data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                 if (results != null && !results.isEmpty()) {
                     said = results.get(0);
+                    DebugLog.get().setStatus("Erkannt: \"" + said + "\"");
+                    DebugLog.get().i("MainActivity", "Sprache erkannt: \"" + said + "\"");
                 }
             }
         } else if (requestCode == DANCE_EDIT_SPEECH_EVENT) {

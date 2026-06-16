@@ -54,6 +54,7 @@ import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.action.selfie.SelfieSettings;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
+import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 import com.buhlergroup.pepper.net.Connectivity;
 import com.buhlergroup.pepper.stats.Stats;
@@ -66,6 +67,7 @@ import java.net.Socket;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -97,6 +99,7 @@ public class AdminView extends FrameLayout {
     private static final int PANEL_STATUS = 10;
     private static final int PANEL_STATS = 11;
     private static final int PANEL_ATTRACT = 12;
+    private static final int PANEL_DEBUG = 13;
 
     private static final long DASH_REFRESH_MS = 15000;
 
@@ -126,6 +129,11 @@ public class AdminView extends FrameLayout {
     private View statusPanel;
     private View statsPanel;
     private TextView statsText;
+    private View debugPanel;
+    private CheckBox debugEnabled;
+    private TextView debugStatus;
+    private TextView debugLogText;
+    private ScrollView debugLogScroll;
     private View attractPanel;
     private View adminHeader;
     private TextView adminHeaderTitle;
@@ -226,6 +234,11 @@ public class AdminView extends FrameLayout {
         statusPanel = findViewById(R.id.adminStatusPanel);
         statsPanel = findViewById(R.id.adminStatsPanel);
         statsText = findViewById(R.id.adminStatsText);
+        debugPanel = findViewById(R.id.adminDebugPanel);
+        debugEnabled = findViewById(R.id.debugEnabled);
+        debugStatus = findViewById(R.id.debugStatus);
+        debugLogText = findViewById(R.id.adminDebugText);
+        debugLogScroll = findViewById(R.id.adminDebugScroll);
         attractPanel = findViewById(R.id.adminAttractPanel);
         attractEnabled = findViewById(R.id.attractEnabled);
         attractIdle = findViewById(R.id.attractIdle);
@@ -316,6 +329,11 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.statusRefresh).setOnClickListener(v -> showStatus());
         findViewById(R.id.adminStats).setOnClickListener(v -> showStats());
         findViewById(R.id.adminStatsExport).setOnClickListener(v -> exportStats());
+        findViewById(R.id.adminDebug).setOnClickListener(v -> showDebug());
+        debugEnabled.setOnClickListener(v -> DebugLog.get().setEnabled(getContext(), debugEnabled.isChecked()));
+        findViewById(R.id.debugRefresh).setOnClickListener(v -> renderDebugLog());
+        findViewById(R.id.debugExport).setOnClickListener(v -> exportDebugLog());
+        findViewById(R.id.debugClear).setOnClickListener(v -> clearDebugLog());
         findViewById(R.id.adminAttract).setOnClickListener(v -> showAttract());
         findViewById(R.id.attractSave).setOnClickListener(v -> saveAttract());
         findViewById(R.id.cameraTest).setOnClickListener(v -> testCamera());
@@ -458,6 +476,7 @@ public class AdminView extends FrameLayout {
         cameraPanel.setVisibility(which == PANEL_CAMERA ? VISIBLE : GONE);
         statusPanel.setVisibility(which == PANEL_STATUS ? VISIBLE : GONE);
         statsPanel.setVisibility(which == PANEL_STATS ? VISIBLE : GONE);
+        debugPanel.setVisibility(which == PANEL_DEBUG ? VISIBLE : GONE);
         attractPanel.setVisibility(which == PANEL_ATTRACT ? VISIBLE : GONE);
         dashHandler.removeCallbacks(dashRefresh);
         if (which == PANEL_MENU) {
@@ -496,6 +515,8 @@ public class AdminView extends FrameLayout {
                 return R.string.admin_status;
             case PANEL_STATS:
                 return R.string.admin_stats;
+            case PANEL_DEBUG:
+                return R.string.admin_debug_title;
             case PANEL_ATTRACT:
                 return R.string.admin_attract;
             default:
@@ -1160,6 +1181,65 @@ public class AdminView extends FrameLayout {
         try {
             getContext().startActivity(chooser);
         } catch (Exception e) {
+            Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showDebug() {
+        debugEnabled.setChecked(DebugLog.get().isEnabled());
+        renderDebugLog();
+        showPanel(PANEL_DEBUG);
+    }
+
+    private void renderDebugLog() {
+        String status = DebugLog.get().getStatus();
+        debugStatus.setText(getContext().getString(R.string.debug_status_label) + " "
+                + (status.isEmpty() ? "—" : status));
+        List<String> log = DebugLog.get().snapshot();
+        if (log.isEmpty()) {
+            debugLogText.setText(R.string.debug_empty);
+        } else {
+            StringBuilder text = new StringBuilder();
+            for (String entry : log) {
+                text.append(entry).append('\n');
+            }
+            debugLogText.setText(text.toString());
+        }
+        debugLogScroll.post(() -> debugLogScroll.fullScroll(View.FOCUS_DOWN));
+    }
+
+    private void clearDebugLog() {
+        DebugLog.get().clear();
+        renderDebugLog();
+    }
+
+    private void exportDebugLog() {
+        String content = DebugLog.get().export();
+        File file = new File(getContext().getCacheDir(), "pepper_debug_log.txt");
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(content.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            Log.w(TAG, "Debug-Export fehlgeschlagen: " + e.getMessage());
+            Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        shareDebugLog(file);
+    }
+
+    private void shareDebugLog(File file) {
+        try {
+            Uri uri = FileProvider.getUriForFile(getContext(),
+                    getContext().getPackageName() + ".fileprovider", file);
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType("text/plain");
+            share.putExtra(Intent.EXTRA_SUBJECT, getContext().getString(R.string.debug_export_title));
+            share.putExtra(Intent.EXTRA_STREAM, uri);
+            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent chooser = Intent.createChooser(share, getContext().getString(R.string.debug_export));
+            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(chooser);
+        } catch (Exception e) {
+            Log.w(TAG, "Debug-Log teilen fehlgeschlagen: " + e.getMessage());
             Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
         }
     }

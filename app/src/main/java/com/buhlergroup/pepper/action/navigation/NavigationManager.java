@@ -35,6 +35,7 @@ import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.buhlergroup.pepper.action.navigation.data.NavigationDatabase;
 import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
+import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.File;
@@ -161,11 +162,14 @@ public final class NavigationManager {
                 mappingFuture = lam.async().run();
                 scanning = true;
                 captureScanOrigin(c);
+                DebugLog.get().setStatus("Raum-Scan – Start");
+                DebugLog.get().i(TAG, "Raum-Scan gestartet");
                 cb.onResult(null);
                 autoScanExplore(c);
             } catch (Exception e) {
                 releaseAbilities();
                 Log.w(TAG, "startScan failed: " + e.getMessage());
+                DebugLog.get().e(TAG, "Raum-Scan-Start fehlgeschlagen", e);
                 cb.onError("Scan konnte nicht gestartet werden.");
             }
         });
@@ -195,10 +199,13 @@ public final class NavigationManager {
 
                 activeMap = map;
                 activeScan = scan;
+                DebugLog.get().setStatus("Raum-Scan gespeichert: " + name);
+                DebugLog.get().i(TAG, "Raum-Scan gespeichert: " + name);
                 cb.onResult(scan);
                 publishMap(map);
             } catch (Exception e) {
                 Log.w(TAG, "stopAndSaveScan failed: " + e.getMessage());
+                DebugLog.get().e(TAG, "Raum-Scan speichern fehlgeschlagen", e);
                 cb.onError("Scan konnte nicht gespeichert werden.");
             } finally {
                 cancelMapping();
@@ -267,6 +274,8 @@ public final class NavigationManager {
                 localized = false;
                 activeMap = map;
                 activeScan = scan;
+                DebugLog.get().setStatus("Lokalisiere in „" + scan.name + "“ …");
+                DebugLog.get().i(TAG, "Lokalisierung gestartet: " + scan.name);
 
                 Localize localize = LocalizeBuilder.with(c).withMap(map).build();
                 AtomicBoolean done = new AtomicBoolean(false);
@@ -274,6 +283,7 @@ public final class NavigationManager {
                     if (status == LocalizationStatus.LOCALIZED) {
                         boolean recovered = done.get() && !localized;
                         localized = true;
+                        DebugLog.get().setStatus("Lokalisiert in „" + scan.name + "“");
                         if (done.compareAndSet(false, true)) {
                             cb.onResult(true);
                         } else if (recovered) {
@@ -520,6 +530,8 @@ public final class NavigationManager {
     private void handleLocalizationLost(QiContext c) {
         localized = false;
         cancelActiveGoTo();
+        DebugLog.get().setStatus("Orientierung verloren");
+        DebugLog.get().w(TAG, "Lokalisierung verloren");
         announceLocalization(c, false);
     }
 
@@ -599,6 +611,7 @@ public final class NavigationManager {
                 double diag = 1.0 / Math.sqrt(2.0);
                 for (double radius = RING_STEP_M;
                      radius <= MAX_SCAN_RADIUS_M && scanning; radius += RING_STEP_M) {
+                    DebugLog.get().setStatus("Raum-Scan – Ring " + radius + " m");
                     int bounded = 0;
                     for (double[] dir : CORNER_DIRS) {
                         if (!scanning) {
@@ -619,6 +632,7 @@ public final class NavigationManager {
                 if (scanning) {
                     driveToOriginOffset(c, 0.0, 0.0);
                     rotationSweep(c);
+                    DebugLog.get().setStatus("Raum-Scan – abgeschlossen, zurück am Start");
                     announceScanComplete(c);
                 }
             } catch (Exception e) {
@@ -634,6 +648,7 @@ public final class NavigationManager {
     private void rotationSweep(QiContext c) {
         double angle = 2.0 * Math.PI / SCAN_ROTATION_STEPS;
         for (int i = 0; i < SCAN_ROTATION_STEPS && scanning; i++) {
+            DebugLog.get().setStatus("Raum-Scan – Drehung " + (i + 1) + "/" + SCAN_ROTATION_STEPS);
             try {
                 Frame robotFrame = c.getActuation().robotFrame();
                 Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, angle);
@@ -736,6 +751,8 @@ public final class NavigationManager {
     }
 
     private void driveTo(QiContext c, WaypointEntity wp, Condition condition) {
+        DebugLog.get().setStatus("Fahre zu Wegpunkt: " + wp.name);
+        DebugLog.get().i(TAG, "Fahre zu Wegpunkt: " + wp.name);
         Mapping mapping = c.getMapping();
         Frame mapFrame = mapping.mapFrame();
         Transform t = TransformBuilder.create().from2DTransform(wp.x, wp.y, wp.theta);

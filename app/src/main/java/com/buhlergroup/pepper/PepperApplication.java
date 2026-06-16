@@ -9,6 +9,8 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.buhlergroup.pepper.debug.DebugLog;
+
 public class PepperApplication extends Application {
 
     private static final String TAG = "PepperApplication";
@@ -20,6 +22,7 @@ public class PepperApplication extends Application {
     public void onCreate() {
         super.onCreate();
         startElapsedMs = SystemClock.elapsedRealtime();
+        DebugLog.get().init(this);
         installCrashRestart();
     }
 

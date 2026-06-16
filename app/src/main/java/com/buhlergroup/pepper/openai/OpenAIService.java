@@ -14,6 +14,7 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
+import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 import com.buhlergroup.pepper.perception.EmotionReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -171,8 +172,11 @@ public class OpenAIService {
 
         long started = System.currentTimeMillis();
         lastLanguageTag = null;
+        DebugLog.get().setStatus("OpenAI – Anfrage läuft …");
+        DebugLog.get().d(TAG, "Streaming-Anfrage gestartet");
 
         if (isCircuitOpen()) {
+            DebugLog.get().w(TAG, "OpenAI-Circuit offen – schneller Fallback");
             throw new IOException("OpenAI circuit open, failing fast to fallback");
         }
 
@@ -258,9 +262,13 @@ public class OpenAIService {
             }
             Log.i("LATENCY", "streamed response complete after "
                     + (System.currentTimeMillis() - started) + "ms");
+            DebugLog.get().setStatus("OpenAI – Antwort erhalten");
+            DebugLog.get().i(TAG, "Streaming-Antwort komplett nach "
+                    + (System.currentTimeMillis() - started) + "ms");
             return ACTION_TAG.matcher(full.toString()).replaceAll("").trim();
         } catch (IOException e) {
             failed = true;
+            DebugLog.get().w(TAG, "OpenAI-Streaming fehlgeschlagen: " + e.getMessage());
             throw e;
         } finally {
             con.disconnect();

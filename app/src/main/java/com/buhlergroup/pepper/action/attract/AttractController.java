@@ -16,6 +16,7 @@ import com.aldebaran.qi.sdk.object.actuation.FreeFrame;
 import com.aldebaran.qi.sdk.object.geometry.Transform;
 import com.aldebaran.qi.sdk.object.human.Human;
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 
@@ -84,6 +85,8 @@ public final class AttractController {
         }
         active = true;
         Log.i(TAG, "Attract mode started");
+        DebugLog.get().setStatus("Attract-Modus gestartet");
+        DebugLog.get().i(TAG, "Attract-Modus gestartet");
         startRoaming(context);
     }
 
@@ -93,6 +96,8 @@ public final class AttractController {
         }
         active = false;
         Log.i(TAG, "Attract mode stopped");
+        DebugLog.get().setStatus("Attract-Modus gestoppt");
+        DebugLog.get().i(TAG, "Attract-Modus gestoppt");
         cancelGoTo();
     }
 
@@ -169,6 +174,8 @@ public final class AttractController {
         greeting = true;
         try {
             lastGreetMs = SystemClock.elapsedRealtime();
+            DebugLog.get().setStatus("Attract – begrüße Besucher");
+            DebugLog.get().i(TAG, "Attract – Besucher begrüßt");
             waveHand(context);
             SpeechManager.getInstance().say(context, greetingText());
         } catch (Exception e) {
