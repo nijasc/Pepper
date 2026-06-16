@@ -39,6 +39,8 @@ public class NavigationView extends FrameLayout {
     private View scanStopButton;
     private View waypointSaveButton;
     private ScrollView scrollRoot;
+    private View scanFullscreen;
+    private ImageView scanMap;
 
     public NavigationView(Context context) {
         super(context);
@@ -73,12 +75,17 @@ public class NavigationView extends FrameLayout {
         scanStartButton = findViewById(R.id.navScanStart);
         scanStopButton = findViewById(R.id.navScanStop);
         waypointSaveButton = findViewById(R.id.navWpSave);
+        scanFullscreen = findViewById(R.id.navScanFullscreen);
+        scanMap = findViewById(R.id.navScanMap);
 
         findViewById(R.id.navMapRefresh).setOnClickListener(v -> loadMap());
         scanStartButton.setOnClickListener(v -> startScan());
-        scanStopButton.setOnClickListener(v -> stopScan());
+        scanStopButton.setOnClickListener(v -> requestScanStop());
+        findViewById(R.id.navScanStopBig).setOnClickListener(v -> requestScanStop());
         waypointSaveButton.setOnClickListener(v -> saveWaypoint());
         findViewById(R.id.navClose).setOnClickListener(v -> NavigationController.get().close());
+
+        NavigationManager.get().setScanStopCallback(() -> post(this::requestScanStop));
     }
 
     @Override
@@ -104,6 +111,7 @@ public class NavigationView extends FrameLayout {
         NavigationManager.get().setMapUpdateListener(bitmap -> post(() -> {
             mapImage.setImageBitmap(bitmap);
             mapImage.setVisibility(VISIBLE);
+            scanMap.setImageBitmap(bitmap);
         }));
         post(() -> {
             setVisibility(VISIBLE);
@@ -172,6 +180,7 @@ public class NavigationView extends FrameLayout {
             public void onResult(Void value) {
                 post(() -> {
                     toast(R.string.nav_scan_started);
+                    enterScanFullscreen();
                     updateStatus();
                 });
             }
@@ -181,6 +190,27 @@ public class NavigationView extends FrameLayout {
                 post(() -> toastText(error));
             }
         });
+    }
+
+    private void requestScanStop() {
+        if (!NavigationManager.get().isScanning()) {
+            return;
+        }
+        exitScanFullscreen();
+        stopScan();
+    }
+
+    private void enterScanFullscreen() {
+        if (scanFullscreen != null) {
+            scanFullscreen.setVisibility(VISIBLE);
+            scanFullscreen.bringToFront();
+        }
+    }
+
+    private void exitScanFullscreen() {
+        if (scanFullscreen != null) {
+            scanFullscreen.setVisibility(GONE);
+        }
     }
 
     private void stopScan() {

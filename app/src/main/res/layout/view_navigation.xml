@@ -164,4 +164,53 @@
                 android:text="@string/nav_close" />
         </LinearLayout>
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/navScanFullscreen"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/game_overlay"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="24dp"
+            android:text="@string/nav_status_scanning"
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/navScanMap"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="24dp"
+            android:layout_marginTop="72dp"
+            android:layout_marginRight="24dp"
+            android:layout_marginBottom="128dp"
+            android:adjustViewBounds="true"
+            android:background="#11FFFFFF"
+            android:contentDescription="@string/nav_section_map"
+            android:scaleType="fitCenter" />
+
+        <TextView
+            android:id="@+id/navScanStopBig"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="40dp"
+            android:background="@drawable/bg_pill_red"
+            android:paddingLeft="56dp"
+            android:paddingTop="22dp"
+            android:paddingRight="56dp"
+            android:paddingBottom="22dp"
+            android:text="@string/nav_scan_stop"
+            android:textColor="@color/white"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+    </FrameLayout>
 </merge>

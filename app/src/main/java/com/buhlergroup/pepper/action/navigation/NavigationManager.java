@@ -59,6 +59,7 @@ public final class NavigationManager {
     private static final long INITIAL_LOCALIZE_WAIT_MS = 15000;
     private static final int GOTO_ATTEMPTS = 2;
     private static final long GOTO_RETRY_PAUSE_MS = 500;
+    private static final long SNAPSHOT_INTERVAL_MS = 1500;
 
     public interface Callback<T> {
         void onResult(T value);
@@ -95,6 +96,9 @@ public final class NavigationManager {
     private volatile Future<Void> activeGoTo;
     private volatile FreeFrame scanOrigin;
     private volatile boolean stopGuideRequested;
+    private volatile Future<ListenResult> scanStopListenFuture;
+    private volatile Runnable scanStopCallback;
+    private volatile Thread snapshotThread;
 
     private interface Condition {
         boolean shouldContinue();
@@ -127,6 +131,7 @@ public final class NavigationManager {
     public void onFocusLost() {
         scanning = false;
         scanOrigin = null;
+        cancelScanStopListener();
         cancelRotation();
         cancelActiveGoTo();
         cancelLocalize();
@@ -139,6 +144,10 @@ public final class NavigationManager {
 
     public void setMapUpdateListener(MapUpdateListener listener) {
         this.mapUpdateListener = listener;
+    }
+
+    public void setScanStopCallback(Runnable callback) {
+        this.scanStopCallback = callback;
     }
 
     public boolean isLocalized() {
@@ -176,6 +185,8 @@ public final class NavigationManager {
                 DebugLog.get().setStatus("Raum-Scan – Start");
                 DebugLog.get().i(TAG, "Raum-Scan gestartet");
                 cb.onResult(null);
+                startSnapshotLoop();
+                startScanStopListener(c);
                 autoScanExplore(c);
             } catch (Exception e) {
                 releaseAbilities();
@@ -188,6 +199,7 @@ public final class NavigationManager {
 
     public void stopAndSaveScan(String name, Callback<RoomScanEntity> cb) {
         scanning = false;
+        cancelScanStopListener();
         cancelRotation();
         cancelActiveGoTo();
         submit(() -> {
@@ -588,7 +600,7 @@ public final class NavigationManager {
         }
     }
 
-    private void publishScanSnapshot() {
+    private synchronized void publishScanSnapshot() {
         if (!scanning) {
             return;
         }
@@ -600,6 +612,59 @@ public final class NavigationManager {
             publishMap(lam.dumpMap());
         } catch (Exception e) {
             Log.d(TAG, "Map snapshot not available yet: " + e.getMessage());
+        }
+    }
+
+    private void startSnapshotLoop() {
+        Thread t = new Thread(() -> {
+            while (scanning) {
+                try {
+                    Thread.sleep(SNAPSHOT_INTERVAL_MS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+                publishScanSnapshot();
+            }
+        }, "scan-snapshot");
+        t.setDaemon(true);
+        snapshotThread = t;
+        t.start();
+    }
+
+    private void startScanStopListener(QiContext c) {
+        try {
+            PhraseSet phrases = PhraseSetBuilder.with(c)
+                    .withTexts("stopp", "stop", "halt", "halt an", "anhalten",
+                            "fertig", "stopp scan", "scan stoppen", "stopp den scan")
+                    .build();
+            Listen listen = ListenBuilder.with(c).withPhraseSet(phrases).build();
+            Future<ListenResult> future = listen.async().run();
+            scanStopListenFuture = future;
+            future.thenConsume(f -> {
+                if (f.isCancelled() || f.hasError()) {
+                    return;
+                }
+                ListenResult result = f.get();
+                if (result != null && result.getHeardPhrase() != null
+                        && !result.getHeardPhrase().getText().isEmpty() && scanning) {
+                    DebugLog.get().i(TAG, "Scan-Stop per Sprache erkannt");
+                    Runnable cb = scanStopCallback;
+                    if (cb != null) {
+                        cb.run();
+                    }
+                }
+            });
+        } catch (Exception e) {
+            Log.w(TAG, "startScanStopListener failed: " + e.getMessage());
+        }
+    }
+
+    private void cancelScanStopListener() {
+        Future<ListenResult> f = scanStopListenFuture;
+        scanStopListenFuture = null;
+        if (f != null && !f.isDone()) {
+            f.requestCancellation();
         }
     }
 
