@@ -713,6 +713,21 @@
             style="@style/AdminMenuButton"
             android:text="@string/lang_english" />
 
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminLangIt"
+            style="@style/AdminMenuButton"
+            android:text="@string/lang_italian" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminLangEs"
+            style="@style/AdminMenuButton"
+            android:text="@string/lang_spanish" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminLangFr"
+            style="@style/AdminMenuButton"
+            android:text="@string/lang_french" />
+
     </LinearLayout>
 
     <LinearLayout

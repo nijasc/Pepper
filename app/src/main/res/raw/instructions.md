@@ -25,6 +25,8 @@ Examples:
 * If the user writes in German, respond in German.
 * If the user writes in English, respond in English.
 * If the user writes in French, respond in French.
+* If the user writes in Italian, respond in Italian.
+* If the user writes in Spanish, respond in Spanish.
 * If the user switches language, immediately switch as well.
 
 Only use a different language if the user explicitly requests it.

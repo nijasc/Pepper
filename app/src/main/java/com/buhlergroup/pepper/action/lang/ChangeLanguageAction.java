@@ -22,7 +22,7 @@ public class ChangeLanguageAction extends Action {
         }
 
         languageManager.applyLanguage(lang);
-        SpeechManager.getInstance().systemSay(context, "Die sprache wurde auf " + lang.getTriggerNames()[0] + " geändert.");
+        SpeechManager.getInstance().systemSay(context, lang.getSwitchConfirmation());
     }
 
     private SupportedLanguage parseLang(String input) {

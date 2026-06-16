@@ -20,6 +20,30 @@ public enum SupportedLanguage {
             new String[]{"englisch", "english"},
             Region.UNITED_STATES,
             "Okay, I will speak English now. How can I help you?"
+    ),
+    ITALIAN(
+            "it-IT",
+            "Italiano",
+            Language.ITALIAN,
+            new String[]{"italienisch", "italian", "italiano", "italiana"},
+            Region.ITALY,
+            "Va bene, ora parlo italiano. Come posso aiutarti?"
+    ),
+    SPANISH(
+            "es-ES",
+            "Español",
+            Language.SPANISH,
+            new String[]{"spanisch", "spanish", "español", "espanol", "espagnol"},
+            Region.SPAIN,
+            "De acuerdo, ahora hablo español. ¿En qué puedo ayudarte?"
+    ),
+    FRENCH(
+            "fr-FR",
+            "Français",
+            Language.FRENCH,
+            new String[]{"französisch", "franzoesisch", "french", "français", "francais"},
+            Region.FRANCE,
+            "D'accord, je parle français maintenant. Comment puis-je t'aider?"
     );
 
     private final String abbreviation;

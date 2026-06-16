@@ -5,6 +5,9 @@
     <string name="stop_follow">STOPP</string>
     <string name="lang_german">Deutsch</string>
     <string name="lang_english">English</string>
+    <string name="lang_italian">Italiano</string>
+    <string name="lang_spanish">Español</string>
+    <string name="lang_french">Français</string>
     <string name="quiz_title">Bühler-Quiz</string>
     <string name="career_title">Karriere bei Bühler</string>
     <string name="career_hint">Scanne den QR-Code für unsere Karriereseite</string>

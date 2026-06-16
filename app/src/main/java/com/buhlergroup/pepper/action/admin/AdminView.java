@@ -298,6 +298,9 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminLanguage).setOnClickListener(v -> showLanguage());
         findViewById(R.id.adminLangDe).setOnClickListener(v -> setLanguage(SupportedLanguage.GERMAN));
         findViewById(R.id.adminLangEn).setOnClickListener(v -> setLanguage(SupportedLanguage.ENGLISH));
+        findViewById(R.id.adminLangIt).setOnClickListener(v -> setLanguage(SupportedLanguage.ITALIAN));
+        findViewById(R.id.adminLangEs).setOnClickListener(v -> setLanguage(SupportedLanguage.SPANISH));
+        findViewById(R.id.adminLangFr).setOnClickListener(v -> setLanguage(SupportedLanguage.FRENCH));
         findViewById(R.id.adminHistory).setOnClickListener(v -> showHistory());
         findViewById(R.id.adminRaffle).setOnClickListener(v -> openRaffle());
         findViewById(R.id.raffleDescriptionDone).setOnClickListener(this::hideKeyboard);
