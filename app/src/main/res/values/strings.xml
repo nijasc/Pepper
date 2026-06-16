@@ -204,7 +204,8 @@
     <string name="attract_enabled">Attract-Modus aktiv</string>
     <string name="attract_idle_label">Leerlauf bis Attract (Minuten)</string>
     <string name="attract_greet_label">Begrüßungs-Intervall (Sekunden)</string>
-    <string name="attract_test">Jetzt testen</string>
+    <string name="attract_start">Attract starten</string>
+    <string name="attract_stop">Attract stoppen</string>
     <string name="attract_saved">Attract-Einstellungen gespeichert.</string>
     <string name="dance_startpoint">Startpunkt</string>
     <string name="dance_preview_here">Ab hier vorhören</string>

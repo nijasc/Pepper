@@ -1233,7 +1233,7 @@
             style="@style/AdminMenuButton"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="12dp"
-            android:text="@string/attract_test" />
+            android:text="@string/attract_start" />
 
     </LinearLayout>
 
