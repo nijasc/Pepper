@@ -25,6 +25,7 @@ import com.aldebaran.qi.sdk.object.actuation.Localize;
 import com.aldebaran.qi.sdk.object.actuation.LocalizeAndMap;
 import com.aldebaran.qi.sdk.object.actuation.LocalizationStatus;
 import com.aldebaran.qi.sdk.object.actuation.Mapping;
+import com.aldebaran.qi.sdk.object.actuation.OrientationPolicy;
 import com.aldebaran.qi.sdk.object.conversation.Listen;
 import com.aldebaran.qi.sdk.object.conversation.ListenResult;
 import com.aldebaran.qi.sdk.object.conversation.PhraseSet;
@@ -629,11 +630,17 @@ public final class NavigationManager {
                         break;
                     }
                 }
+                boolean completed = false;
                 if (scanning) {
                     driveToOriginOffset(c, 0.0, 0.0);
-                    rotationSweep(c);
+                    completed = rotationSweep(c);
+                }
+                if (completed && scanning) {
                     DebugLog.get().setStatus("Raum-Scan – abgeschlossen, zurück am Start");
                     announceScanComplete(c);
+                } else if (scanning) {
+                    DebugLog.get().w(TAG, "Raum-Scan beendet, aber nicht vollständig durchgelaufen");
+                    DebugLog.get().setStatus("Raum-Scan – beendet (unvollständig)");
                 }
             } catch (Exception e) {
                 Log.w(TAG, "autoScanExplore failed: " + e.getMessage());
@@ -645,7 +652,7 @@ public final class NavigationManager {
         explorer.start();
     }
 
-    private void rotationSweep(QiContext c) {
+    private boolean rotationSweep(QiContext c) {
         double angle = 2.0 * Math.PI / SCAN_ROTATION_STEPS;
         for (int i = 0; i < SCAN_ROTATION_STEPS && scanning; i++) {
             DebugLog.get().setStatus("Raum-Scan – Drehung " + (i + 1) + "/" + SCAN_ROTATION_STEPS);
@@ -655,15 +662,23 @@ public final class NavigationManager {
                 FreeFrame target = c.getMapping().makeFreeFrame();
                 target.update(robotFrame, t, 0L);
                 Future<Void> goToFuture = GoToBuilder.with(c)
-                        .withFrame(target.frame()).build().async().run();
+                        .withFrame(target.frame())
+                        .withFinalOrientationPolicy(OrientationPolicy.ALIGN_X)
+                        .build().async().run();
                 rotateFuture = goToFuture;
-                awaitGoTo(goToFuture, () -> scanning);
+                if (!awaitGoTo(goToFuture, () -> scanning)) {
+                    if (scanning) {
+                        DebugLog.get().w(TAG, "Drehschritt fehlgeschlagen – Sweep abgebrochen");
+                    }
+                    return false;
+                }
                 publishScanSnapshot();
             } catch (Exception e) {
                 Log.w(TAG, "rotationSweep step failed: " + e.getMessage());
-                break;
+                return false;
             }
         }
+        return scanning;
     }
 
     private boolean driveToOriginOffset(QiContext c, double dx, double dy) {
@@ -678,8 +693,8 @@ public final class NavigationManager {
             Future<Void> goToFuture = GoToBuilder.with(c)
                     .withFrame(target.frame()).build().async().run();
             rotateFuture = goToFuture;
-            awaitGoTo(goToFuture, () -> scanning);
-            if (!scanning) {
+            boolean reached = awaitGoTo(goToFuture, () -> scanning);
+            if (!scanning || !reached) {
                 return false;
             }
             return reachedOffset(c, origin, dx, dy);
@@ -730,7 +745,7 @@ public final class NavigationManager {
         }
     }
 
-    private void awaitGoTo(Future<Void> future, Condition condition) {
+    private boolean awaitGoTo(Future<Void> future, Condition condition) {
         while (!future.isDone()) {
             if (!condition.shouldContinue()) {
                 future.requestCancellation();
@@ -744,6 +759,14 @@ public final class NavigationManager {
                 break;
             }
         }
+        if (!future.isDone() || future.isCancelled()) {
+            return false;
+        }
+        if (future.hasError()) {
+            DebugLog.get().w(TAG, "GoTo fehlgeschlagen: " + future.getError().getMessage());
+            return false;
+        }
+        return true;
     }
 
     private void driveTo(QiContext c, WaypointEntity wp) {
