@@ -49,4 +49,36 @@
                 android:text="@string/dance_close" />
         </LinearLayout>
     </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/danceLoading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CC000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <ProgressBar
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:indeterminate="true" />
+
+            <TextView
+                android:id="@+id/danceLoadingText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+        </LinearLayout>
+    </FrameLayout>
 </merge>

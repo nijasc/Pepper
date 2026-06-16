@@ -35,6 +35,8 @@ public class DanceLibraryView extends FrameLayout {
     private final ExecutorService heavyExecutor = Executors.newSingleThreadExecutor();
     private final DanceRepository repository = new DanceRepository();
     private LinearLayout list;
+    private View loadingOverlay;
+    private TextView loadingText;
 
     public DanceLibraryView(Context context) {
         super(context);
@@ -57,8 +59,22 @@ public class DanceLibraryView extends FrameLayout {
         setClickable(true);
         setFocusable(true);
         list = findViewById(R.id.danceList);
+        loadingOverlay = findViewById(R.id.danceLoading);
+        loadingText = findViewById(R.id.danceLoadingText);
         findViewById(R.id.danceCreate).setOnClickListener(v -> promptCreate());
         findViewById(R.id.danceClose).setOnClickListener(v -> DanceLibraryController.get().close());
+    }
+
+    private void showLoading(String message) {
+        post(() -> {
+            loadingText.setText(message);
+            loadingOverlay.setVisibility(VISIBLE);
+            loadingOverlay.bringToFront();
+        });
+    }
+
+    private void hideLoading() {
+        post(() -> loadingOverlay.setVisibility(GONE));
     }
 
     private void promptCreate() {
@@ -78,17 +94,21 @@ public class DanceLibraryView extends FrameLayout {
     }
 
     private void createDance(String query) {
-        toast(getContext().getString(R.string.dance_creating));
+        showLoading(getContext().getString(R.string.dance_creating));
         heavyExecutor.execute(() -> {
             try {
                 repository.getOrCreate(getContext(), query);
                 post(() -> {
+                    hideLoading();
                     toast(getContext().getString(R.string.dance_created));
                     refresh();
                 });
             } catch (Exception e) {
-                post(() -> toast(getContext().getString(R.string.dance_create_failed)
-                        + " " + e.getMessage()));
+                post(() -> {
+                    hideLoading();
+                    toast(getContext().getString(R.string.dance_create_failed)
+                            + " " + e.getMessage());
+                });
             }
         });
     }
@@ -209,16 +229,20 @@ public class DanceLibraryView extends FrameLayout {
     }
 
     public void applyAiEdit(DanceEntity dance, String instruction) {
-        toast("Bearbeite \"" + dance.songName + "\"...");
+        showLoading("Bearbeite \"" + dance.songName + "\"...");
         heavyExecutor.execute(() -> {
             try {
                 repository.aiEdit(getContext(), dance, instruction);
                 post(() -> {
+                    hideLoading();
                     toast("Tanz aktualisiert.");
                     refresh();
                 });
             } catch (Exception e) {
-                post(() -> toast("Bearbeitung fehlgeschlagen: " + e.getMessage()));
+                post(() -> {
+                    hideLoading();
+                    toast("Bearbeitung fehlgeschlagen: " + e.getMessage());
+                });
             }
         });
     }
