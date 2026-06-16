@@ -15,4 +15,16 @@
     <color name="pad_red">#FFE74C3C</color>
     <color name="pad_yellow">#FFF1C40F</color>
     <color name="pad_blue">#FF3498DB</color>
+
+    <!-- Admin design tokens -->
+    <color name="admin_card">#1A2A33</color>
+    <color name="admin_card_muted">#14202A</color>
+    <color name="text_primary">#FFFFFFFF</color>
+    <color name="text_secondary">#CCFFFFFF</color>
+    <color name="text_muted">#88FFFFFF</color>
+    <color name="text_on_panel">#DDFFFFFF</color>
+    <color name="admin_danger">#FFE74C3C</color>
+    <color name="status_ok">#FF2ECC71</color>
+    <color name="status_warn">#FFF1C40F</color>
+    <color name="status_bad">#FFE74C3C</color>
 </resources>
