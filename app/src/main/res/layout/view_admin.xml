@@ -538,19 +538,28 @@
         android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/admin_selfies"
-            android:textColor="@color/white"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminExportAll"
+                style="@style/AdminPrimaryButton"
+                android:layout_marginEnd="@dimen/space_m"
+                android:text="@string/admin_export_all" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminSelfieRetention"
+                style="@style/AdminPrimaryButton"
+                android:text="@string/selfie_retention_button" />
+        </LinearLayout>
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="@dimen/space_m">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/adminSelfieGrid"
@@ -567,20 +576,6 @@
                 android:textSize="20sp"
                 android:visibility="gone" />
         </FrameLayout>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminExportAll"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:text="@string/admin_export_all" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/adminSelfieRetention"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:text="@string/selfie_retention_button" />
 
     </LinearLayout>
 
@@ -824,6 +819,11 @@
                     android:textColor="@color/white"
                     android:textSize="18sp" />
 
+                <TextView
+                    style="@style/AdminSectionLabel"
+                    android:layout_marginTop="@dimen/space_l"
+                    android:text="@string/raffle_section_options" />
+
                 <CheckBox
                     android:id="@+id/raffleRequiresSelfie"
                     android:layout_width="wrap_content"
@@ -944,11 +944,16 @@
                 android:orientation="vertical" />
         </ScrollView>
 
+        <TextView
+            style="@style/AdminSectionLabel"
+            android:layout_marginTop="@dimen/space_l"
+            android:text="@string/raffle_section_winner" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/space_s"
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatButton
@@ -996,11 +1001,16 @@
                 android:visibility="gone" />
         </LinearLayout>
 
+        <TextView
+            style="@style/AdminSectionLabel"
+            android:layout_marginTop="@dimen/space_l"
+            android:text="@string/raffle_section_lifecycle" />
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="@dimen/space_s"
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatButton

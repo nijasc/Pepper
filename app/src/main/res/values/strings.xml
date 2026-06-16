@@ -33,6 +33,9 @@
     <string name="status_dash_disconnected">Getrennt</string>
     <string name="status_dash_ok">OK</string>
     <string name="status_dash_fail">Fehler</string>
+    <string name="raffle_section_options">Optionen</string>
+    <string name="raffle_section_winner">Gewinner</string>
+    <string name="raffle_section_lifecycle">Verlosung</string>
     <string name="admin_pin_title">Admin – PIN eingeben</string>
     <string name="admin_pin_error">Falscher PIN</string>
     <string name="admin_cancel">Abbrechen</string>
