@@ -48,8 +48,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class NavigationManager {
 
     private static final String TAG = "Navigation";
-    private static final long MAP_POLL_BASE_MS = 1000;
-    private static final long MAP_POLL_MAX_MS = 8000;
     private static final int SCAN_ROTATION_STEPS = 4;
     private static final double RING_STEP_M = 1.2;
     private static final double MAX_SCAN_RADIUS_M = 6.0;
@@ -87,7 +85,6 @@ public final class NavigationManager {
     private volatile boolean localized;
     private volatile boolean scanning;
     private volatile MapUpdateListener mapUpdateListener;
-    private volatile int pollGeneration;
     private volatile Future<Void> rotateFuture;
     private volatile Future<Void> activeGoTo;
     private volatile FreeFrame scanOrigin;
@@ -124,7 +121,6 @@ public final class NavigationManager {
     public void onFocusLost() {
         scanning = false;
         scanOrigin = null;
-        stopMapPolling();
         cancelRotation();
         cancelActiveGoTo();
         cancelLocalize();
@@ -166,7 +162,6 @@ public final class NavigationManager {
                 scanning = true;
                 captureScanOrigin(c);
                 cb.onResult(null);
-                startMapPolling();
                 autoScanExplore(c);
             } catch (Exception e) {
                 releaseAbilities();
@@ -206,7 +201,6 @@ public final class NavigationManager {
                 Log.w(TAG, "stopAndSaveScan failed: " + e.getMessage());
                 cb.onError("Scan konnte nicht gespeichert werden.");
             } finally {
-                stopMapPolling();
                 cancelMapping();
                 releaseAbilities();
                 scanOrigin = null;
@@ -571,44 +565,19 @@ public final class NavigationManager {
         }
     }
 
-    private void startMapPolling() {
-        final int gen = ++pollGeneration;
-        Thread poller = new Thread(() -> {
-            int failures = 0;
-            while (gen == pollGeneration && scanning) {
-                boolean ok = false;
-                try {
-                    LocalizeAndMap lam = currentMapping;
-                    if (lam == null) {
-                        break;
-                    }
-                    publishMap(lam.dumpMap());
-                    ok = true;
-                } catch (Exception e) {
-                    Log.d(TAG, "Map snapshot not available yet: " + e.getMessage());
-                }
-                if (ok) {
-                    failures = 0;
-                } else if (failures < 3) {
-                    failures++;
-                }
-                long sleepMs = ok
-                        ? MAP_POLL_BASE_MS
-                        : Math.min(MAP_POLL_MAX_MS, MAP_POLL_BASE_MS * (1L << failures));
-                try {
-                    Thread.sleep(sleepMs);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-            }
-        }, "map-poller");
-        poller.setDaemon(true);
-        poller.start();
-    }
-
-    private void stopMapPolling() {
-        pollGeneration++;
+    private void publishScanSnapshot() {
+        if (!scanning) {
+            return;
+        }
+        LocalizeAndMap lam = currentMapping;
+        if (lam == null) {
+            return;
+        }
+        try {
+            publishMap(lam.dumpMap());
+        } catch (Exception e) {
+            Log.d(TAG, "Map snapshot not available yet: " + e.getMessage());
+        }
     }
 
     private void captureScanOrigin(QiContext c) {
@@ -674,6 +643,7 @@ public final class NavigationManager {
                         .withFrame(target.frame()).build().async().run();
                 rotateFuture = goToFuture;
                 awaitGoTo(goToFuture, () -> scanning);
+                publishScanSnapshot();
             } catch (Exception e) {
                 Log.w(TAG, "rotationSweep step failed: " + e.getMessage());
                 break;
