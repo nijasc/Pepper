@@ -8,6 +8,7 @@ import com.buhlergroup.pepper.action.dance.data.DanceDatabase;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 import com.buhlergroup.pepper.action.dance.itunes.ITunesSearch;
 import com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator;
+import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,7 +32,8 @@ public final class DanceRepository {
     public void ensureBuiltInDances(Context context) {
         try {
             seedBuiltIn(context, BUILTIN_HULA_ID, "Hula",
-                    com.buhlergroup.pepper.R.raw.hula_dance, 0, 12000L);
+                    com.buhlergroup.pepper.R.raw.hula_dance,
+                    com.buhlergroup.pepper.R.raw.summer, 12000L);
             seedBuiltIn(context, BUILTIN_SIX_SEVEN_ID, "Six Seven",
                     com.buhlergroup.pepper.R.raw.six_seven,
                     com.buhlergroup.pepper.R.raw.wyoming, 15000L);
@@ -46,6 +48,13 @@ public final class DanceRepository {
         DanceEntity existing = dao.findById(id);
         if (existing != null && existing.qianimPath != null
                 && new File(existing.qianimPath).exists()) {
+            if (audioRawRes != 0
+                    && (existing.audioPath == null || !new File(existing.audioPath).exists())) {
+                File audio = new File(danceDir(context), id + ".mp3");
+                copyRawToFile(context, audioRawRes, audio);
+                dao.setAudioPath(id, audio.getAbsolutePath());
+                Log.i(TAG, "Backfilled audio for built-in '" + name + "'");
+            }
             return;
         }
         File target = new File(danceDir(context), id + ".qianim");
@@ -229,17 +238,38 @@ public final class DanceRepository {
             Log.i(TAG, "Playing '" + dance.songName + "' from local cache");
             return;
         }
-        if (dance.youtubeId != null && dance.youtubeId.startsWith(BUILTIN_PREFIX)) {
-            dance.previewUrl = null;
-            return;
+        if (dance.youtubeId == null || !dance.youtubeId.startsWith(BUILTIN_PREFIX)) {
+            try {
+                ITunesSearch.Result track = new ITunesSearch().search(dance.songName);
+                dance.previewUrl = track.previewUrl;
+                backfillAudioCache(context, dance, track.previewUrl);
+            } catch (Exception e) {
+                Log.w(TAG, "Could not resolve preview for '" + dance.songName + "': " + e.getMessage());
+                DebugLog.get().w(TAG,
+                        "iTunes-Preview für '" + dance.songName + "' fehlgeschlagen: " + e.getMessage());
+                dance.previewUrl = null;
+            }
         }
+        if (dance.previewUrl == null || dance.previewUrl.isEmpty()) {
+            dance.previewUrl = fallbackAudioPath(context);
+            if (dance.previewUrl != null) {
+                DebugLog.get().w(TAG, "Kein Song-Audio für '" + dance.songName + "' – nutze Fallback-Musik");
+            } else {
+                DebugLog.get().w(TAG, "Kein Audio und kein Fallback für '" + dance.songName + "'");
+            }
+        }
+    }
+
+    private String fallbackAudioPath(Context context) {
         try {
-            ITunesSearch.Result track = new ITunesSearch().search(dance.songName);
-            dance.previewUrl = track.previewUrl;
-            backfillAudioCache(context, dance, track.previewUrl);
+            File fallback = new File(danceDir(context), "fallback_audio.mp3");
+            if (!fallback.exists()) {
+                copyRawToFile(context, com.buhlergroup.pepper.R.raw.summer, fallback);
+            }
+            return fallback.getAbsolutePath();
         } catch (Exception e) {
-            Log.w(TAG, "Could not resolve preview for '" + dance.songName + "': " + e.getMessage());
-            dance.previewUrl = null;
+            Log.w(TAG, "Fallback audio unavailable: " + e.getMessage());
+            return null;
         }
     }
 

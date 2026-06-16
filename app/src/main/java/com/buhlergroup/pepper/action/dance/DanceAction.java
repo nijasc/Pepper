@@ -15,6 +15,7 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
+import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.File;
@@ -113,6 +114,9 @@ public class DanceAction extends Action {
             Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 
+            if (dance.previewUrl == null || dance.previewUrl.isEmpty()) {
+                DebugLog.get().w(TAG, "Tanz '" + dance.songName + "' ohne Audio-Quelle – kein Ton");
+            }
             MediaPlayer player = dance.previewUrl != null
                     ? startAudioUrl(dance.previewUrl, dance.audioStartMs) : null;
 
@@ -155,6 +159,10 @@ public class DanceAction extends Action {
         stopAudio();
         try {
             MediaPlayer player = new MediaPlayer();
+            player.setOnErrorListener((mp, what, extra) -> {
+                DebugLog.get().w(TAG, "MediaPlayer-Fehler what=" + what + " extra=" + extra);
+                return false;
+            });
             player.setAudioStreamType(AudioManager.STREAM_MUSIC);
             player.setDataSource(url);
             player.prepare();
@@ -166,9 +174,11 @@ public class DanceAction extends Action {
                 mediaPlayer = player;
             }
             AudioCoordinator.get().attachMusic(player);
+            DebugLog.get().i(TAG, "Musik gestartet");
             return player;
         } catch (Exception e) {
             Log.w(TAG, "Preview playback failed: " + e.getMessage());
+            DebugLog.get().w(TAG, "Audio-Wiedergabe fehlgeschlagen: " + e.getMessage());
             stopAudio();
             return null;
         }

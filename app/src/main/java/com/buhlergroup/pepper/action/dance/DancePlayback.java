@@ -52,11 +52,16 @@ public final class DancePlayback {
     }
 
     private static MediaPlayer startAudio(String url, long startMs) {
-        if (url == null) {
+        if (url == null || url.isEmpty()) {
+            DebugLog.get().w(TAG, "Keine Audio-Quelle (previewUrl leer) – kein Ton");
             return null;
         }
         try {
             MediaPlayer player = new MediaPlayer();
+            player.setOnErrorListener((mp, what, extra) -> {
+                DebugLog.get().w(TAG, "MediaPlayer-Fehler what=" + what + " extra=" + extra);
+                return false;
+            });
             player.setAudioStreamType(AudioManager.STREAM_MUSIC);
             player.setDataSource(url);
             player.prepare();
@@ -65,9 +70,11 @@ public final class DancePlayback {
             }
             player.start();
             AudioCoordinator.get().attachMusic(player);
+            DebugLog.get().i(TAG, "Musik gestartet");
             return player;
         } catch (Exception e) {
             Log.w(TAG, "Preview playback failed: " + e.getMessage());
+            DebugLog.get().w(TAG, "Audio-Wiedergabe fehlgeschlagen: " + e.getMessage());
             return null;
         }
     }
