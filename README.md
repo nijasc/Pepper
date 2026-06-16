@@ -21,6 +21,7 @@
   - [Bildschirmanzeige](#bildschirmanzeige)
   - [Emotionswahrnehmung](#emotionswahrnehmung)
   - [Attract-Modus](#attract-modus)
+- [Architektur-Diagramme](#architektur-diagramme)
 - [Funktionen (Actions)](#funktionen-actions)
   - [Sprechen (Standard)](#sprechen-standard)
   - [Tanzen](#tanzen)
@@ -84,6 +85,13 @@ Pepper hört auf Sprachbefehle. Man spricht ihn also einfach an, und er reagiert
 > **Wichtig:** Die **Spracherkennung** startet standardmässig auf Deutsch; die erste Anfrage erfolgt daher am besten auf Deutsch. Danach lässt sich die Erkennungssprache per Sprachbefehl oder im Admin-Bereich auf Englisch, Italienisch, Spanisch oder Französisch umstellen (siehe Funktion [Sprache](#sprache)). Die *gesprochene Antwort* hingegen passt sich ohnehin automatisch der erkannten Sprache an.
 
 ---
+
+## Architektur-Diagramme
+
+Die zentralen Abläufe der App sind als Mermaid-Diagramme in [`FLOWS.md`](FLOWS.md)
+dokumentiert: Boot/Startup, Sprache → Aktions-Dispatch, Navigation/Raumscan,
+Attract-Modus, Tanz-Ablauf, Hold-my-beer-Zustandsautomat sowie OpenAI-Gespräch und
+Sprachwechsel.
 
 ## Funktionsweise
 
