@@ -123,6 +123,10 @@ public class AdminView extends FrameLayout {
     private TextView statusOpenAi;
     private TextView statusBattery;
     private TextView statusUptime;
+    private TextView dashWifi;
+    private TextView dashOpenAi;
+    private TextView dashBattery;
+    private TextView dashUptime;
     private ScrollView devLogScroll;
     private ScrollView historyScroll;
     private LinearLayout historyContainer;
@@ -216,6 +220,10 @@ public class AdminView extends FrameLayout {
         statusOpenAi = findViewById(R.id.statusOpenAi);
         statusBattery = findViewById(R.id.statusBattery);
         statusUptime = findViewById(R.id.statusUptime);
+        dashWifi = findViewById(R.id.dashWifi);
+        dashOpenAi = findViewById(R.id.dashOpenAi);
+        dashBattery = findViewById(R.id.dashBattery);
+        dashUptime = findViewById(R.id.dashUptime);
         devLogScroll = findViewById(R.id.adminDevLogScroll);
         historyScroll = findViewById(R.id.adminHistoryScroll);
         historyContainer = findViewById(R.id.adminHistoryContainer);
@@ -439,6 +447,54 @@ public class AdminView extends FrameLayout {
         statusPanel.setVisibility(which == PANEL_STATUS ? VISIBLE : GONE);
         statsPanel.setVisibility(which == PANEL_STATS ? VISIBLE : GONE);
         attractPanel.setVisibility(which == PANEL_ATTRACT ? VISIBLE : GONE);
+        if (which == PANEL_MENU) {
+            refreshDashboardStatus();
+        }
+    }
+
+    private void refreshDashboardStatus() {
+        boolean online = Connectivity.isOnline(getContext());
+        dashWifi.setText(online ? R.string.status_dash_connected : R.string.status_dash_disconnected);
+        dashWifi.setTextColor(ContextCompat.getColor(getContext(),
+                online ? R.color.status_ok : R.color.status_bad));
+
+        int pct = batteryPercent();
+        if (pct < 0) {
+            dashBattery.setText("–");
+            dashBattery.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
+        } else {
+            dashBattery.setText(pct + "%");
+            int color = pct >= 30 ? R.color.status_ok : pct >= 15 ? R.color.status_warn : R.color.status_bad;
+            dashBattery.setTextColor(ContextCompat.getColor(getContext(), color));
+        }
+
+        dashUptime.setText(uptimeText());
+        dashUptime.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
+
+        dashOpenAi.setText("…");
+        dashOpenAi.setTextColor(ContextCompat.getColor(getContext(), R.color.text_muted));
+        dbExecutor.submit(() -> {
+            boolean reachable = isOpenAiReachable();
+            post(() -> {
+                dashOpenAi.setText(reachable ? R.string.status_dash_ok : R.string.status_dash_fail);
+                dashOpenAi.setTextColor(ContextCompat.getColor(getContext(),
+                        reachable ? R.color.status_ok : R.color.status_bad));
+            });
+        });
+    }
+
+    private int batteryPercent() {
+        Intent battery = getContext().registerReceiver(null,
+                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        if (battery == null) {
+            return -1;
+        }
+        int level = battery.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = battery.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        if (level < 0 || scale <= 0) {
+            return -1;
+        }
+        return Math.round(level * 100f / scale);
     }
 
     private void showLanguage() {

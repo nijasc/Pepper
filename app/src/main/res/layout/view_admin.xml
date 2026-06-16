@@ -91,300 +91,408 @@
             android:textSize="18sp" />
     </LinearLayout>
 
-    <LinearLayout
+    <ScrollView
         android:id="@+id/adminMenuPanel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="@dimen/space_xl"
         android:visibility="gone">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:text="@string/admin_menu_title"
-            android:textColor="@color/white"
-            android:textSize="30sp"
-            android:textStyle="bold" />
+            android:orientation="vertical">
 
-        <GridLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:columnCount="4">
-
-            <LinearLayout android:id="@+id/adminClearHistory" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_clear_history"
-                    android:src="@drawable/ic_admin_history_clear" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_clear_history"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
+                    style="@style/AdminTitle"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/admin_menu_title" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/adminClose"
+                    style="@style/AdminPrimaryButton"
+                    android:text="@string/admin_close" />
             </LinearLayout>
 
-            <LinearLayout android:id="@+id/adminDevLogs" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_dev_logs"
-                    android:src="@drawable/ic_admin_devlog" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_l"
+                android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_dev_logs"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
+                <LinearLayout style="@style/AdminStatusTile">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_label_wifi"
+                        android:textColor="@color/text_muted"
+                        android:textSize="@dimen/text_small" />
+
+                    <TextView
+                        android:id="@+id/dashWifi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_caption"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/AdminStatusTile">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_label_openai"
+                        android:textColor="@color/text_muted"
+                        android:textSize="@dimen/text_small" />
+
+                    <TextView
+                        android:id="@+id/dashOpenAi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_caption"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/AdminStatusTile">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_label_battery"
+                        android:textColor="@color/text_muted"
+                        android:textSize="@dimen/text_small" />
+
+                    <TextView
+                        android:id="@+id/dashBattery"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_caption"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/AdminStatusTile">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_label_uptime"
+                        android:textColor="@color/text_muted"
+                        android:textSize="@dimen/text_small" />
+
+                    <TextView
+                        android:id="@+id/dashUptime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_caption"
+                        android:textStyle="bold" />
+                </LinearLayout>
             </LinearLayout>
 
-            <LinearLayout android:id="@+id/adminSelfies" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_selfies"
-                    android:src="@drawable/ic_admin_selfies" />
+            <TextView
+                style="@style/AdminSectionLabel"
+                android:layout_marginTop="@dimen/space_xl"
+                android:text="@string/admin_group_content" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_selfies"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+            <GridLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:columnCount="3">
 
-            <LinearLayout android:id="@+id/adminLanguage" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_language"
-                    android:src="@drawable/ic_admin_language" />
+                <LinearLayout android:id="@+id/adminSelfies" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_selfies"
+                        android:src="@drawable/ic_admin_selfies" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_language"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_selfies"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
 
-            <LinearLayout android:id="@+id/adminHistory" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_history_view"
-                    android:src="@drawable/ic_admin_history" />
+                <LinearLayout android:id="@+id/adminDances" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_dances"
+                        android:src="@drawable/ic_admin_dance" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_history_view"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_dances"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
 
-            <LinearLayout android:id="@+id/adminRaffle" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_raffle"
-                    android:src="@drawable/ic_admin_raffle" />
+                <LinearLayout android:id="@+id/adminRaffle" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_raffle"
+                        android:src="@drawable/ic_admin_raffle" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_raffle"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_raffle"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
+            </GridLayout>
 
-            <LinearLayout android:id="@+id/adminCamera" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_camera"
-                    android:src="@drawable/ic_admin_camera" />
+            <TextView
+                style="@style/AdminSectionLabel"
+                android:layout_marginTop="@dimen/space_xl"
+                android:text="@string/admin_group_operations" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_camera"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+            <GridLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:columnCount="3">
 
-            <LinearLayout android:id="@+id/adminNavigation" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_navigation"
-                    android:src="@drawable/ic_admin_navigation" />
+                <LinearLayout android:id="@+id/adminStatus" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_status"
+                        android:src="@drawable/ic_admin_status" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_navigation"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_status"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
 
-            <LinearLayout android:id="@+id/adminDances" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_dances"
-                    android:src="@drawable/ic_admin_dance" />
+                <LinearLayout android:id="@+id/adminDevLogs" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_dev_logs"
+                        android:src="@drawable/ic_admin_devlog" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_dances"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_dev_logs"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
 
-            <LinearLayout android:id="@+id/adminAttract" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_attract"
-                    android:src="@drawable/ic_admin_history" />
+                <LinearLayout android:id="@+id/adminHistory" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_history_view"
+                        android:src="@drawable/ic_admin_history" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_attract"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_history_view"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
 
-            <LinearLayout android:id="@+id/adminStats" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_stats"
-                    android:src="@drawable/ic_admin_devlog" />
+                <LinearLayout android:id="@+id/adminClearHistory" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_clear_history"
+                        android:src="@drawable/ic_admin_history_clear" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_stats"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_clear_history"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
 
-            <LinearLayout android:id="@+id/adminStatus" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_status"
-                    android:src="@drawable/ic_admin_devlog" />
+                <LinearLayout android:id="@+id/adminStats" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_stats"
+                        android:src="@drawable/ic_admin_stats" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_status"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_stats"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
 
-            <LinearLayout android:id="@+id/adminChangePin" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_change_pin"
-                    android:src="@drawable/ic_admin_devlog" />
+                <LinearLayout android:id="@+id/adminAttract" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_attract"
+                        android:src="@drawable/ic_admin_attract" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_change_pin"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_attract"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
+            </GridLayout>
 
-            <LinearLayout android:id="@+id/adminDsgvo" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_dsgvo"
-                    android:src="@drawable/ic_admin_history" />
+            <TextView
+                style="@style/AdminSectionLabel"
+                android:layout_marginTop="@dimen/space_xl"
+                android:text="@string/admin_group_settings" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_dsgvo"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
+            <GridLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:columnCount="3">
 
-            <LinearLayout android:id="@+id/adminClose" style="@style/AdminMenuTile">
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:contentDescription="@string/admin_close"
-                    android:src="@drawable/ic_admin_close" />
+                <LinearLayout android:id="@+id/adminLanguage" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_language"
+                        android:src="@drawable/ic_admin_language" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center"
-                    android:maxLines="2"
-                    android:text="@string/admin_close"
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-            </LinearLayout>
-        </GridLayout>
-    </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_language"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/adminCamera" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_camera"
+                        android:src="@drawable/ic_admin_camera" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_camera"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/adminNavigation" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_navigation"
+                        android:src="@drawable/ic_admin_navigation" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_navigation"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/adminChangePin" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_change_pin"
+                        android:src="@drawable/ic_admin_pin" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_change_pin"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
+
+                <LinearLayout android:id="@+id/adminDsgvo" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_dsgvo"
+                        android:src="@drawable/ic_admin_dsgvo" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_dsgvo"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
+            </GridLayout>
+        </LinearLayout>
+    </ScrollView>
 
     <LinearLayout
         android:id="@+id/adminDevLogPanel"

@@ -22,6 +22,17 @@
     <string name="selfie_save">Speichern</string>
     <string name="selfie_retake">Nochmal</string>
     <string name="admin_button">Admin</string>
+    <string name="admin_group_content">Inhalte</string>
+    <string name="admin_group_operations">Betrieb</string>
+    <string name="admin_group_settings">Einstellungen</string>
+    <string name="status_label_wifi">WLAN</string>
+    <string name="status_label_openai">OpenAI</string>
+    <string name="status_label_battery">Akku</string>
+    <string name="status_label_uptime">Laufzeit</string>
+    <string name="status_dash_connected">Verbunden</string>
+    <string name="status_dash_disconnected">Getrennt</string>
+    <string name="status_dash_ok">OK</string>
+    <string name="status_dash_fail">Fehler</string>
     <string name="admin_pin_title">Admin – PIN eingeben</string>
     <string name="admin_pin_error">Falscher PIN</string>
     <string name="admin_cancel">Abbrechen</string>
