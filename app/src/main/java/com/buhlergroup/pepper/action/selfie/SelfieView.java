@@ -26,6 +26,7 @@ public class SelfieView extends FrameLayout {
     private TextView okayButton;
     private TextView saveButton;
     private TextView retakeButton;
+    private TextView shareRetakeButton;
     private volatile Runnable closeListener;
 
     public SelfieView(Context context) {
@@ -59,6 +60,7 @@ public class SelfieView extends FrameLayout {
         okayButton = findViewById(R.id.selfieOkay);
         saveButton = findViewById(R.id.selfieSave);
         retakeButton = findViewById(R.id.selfieRetake);
+        shareRetakeButton = findViewById(R.id.selfieShareRetake);
         okayButton.setTextColor(ContextCompat.getColor(context, R.color.white));
         okayButton.setOnClickListener(v -> {
             Runnable listener = closeListener;
@@ -94,7 +96,7 @@ public class SelfieView extends FrameLayout {
         });
     }
 
-    public void show(Bitmap photo, Bitmap qr, Bitmap wifiQr) {
+    public void show(Bitmap photo, Bitmap qr, Bitmap wifiQr, Runnable onRetake) {
         post(() -> {
             previewBlock.setVisibility(View.GONE);
             shareBlock.setVisibility(View.VISIBLE);
@@ -106,6 +108,8 @@ public class SelfieView extends FrameLayout {
             } else {
                 wifiBlock.setVisibility(View.GONE);
             }
+            shareRetakeButton.setVisibility(onRetake != null ? View.VISIBLE : View.GONE);
+            shareRetakeButton.setOnClickListener(onRetake == null ? null : v -> onRetake.run());
             setVisibility(View.VISIBLE);
             bringToFront();
         });
@@ -123,6 +127,7 @@ public class SelfieView extends FrameLayout {
             wifiQrView.setImageBitmap(null);
             saveButton.setOnClickListener(null);
             retakeButton.setOnClickListener(null);
+            shareRetakeButton.setOnClickListener(null);
             previewBlock.setVisibility(View.GONE);
             shareBlock.setVisibility(View.VISIBLE);
         });

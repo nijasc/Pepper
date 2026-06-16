@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public final class SelfieController {
@@ -163,53 +164,69 @@ public final class SelfieController {
                 say(context, "Klar, machen wir ein Selfie! Stell dich vor mich und schau in meine Augen.");
             }
 
-            Bitmap composed = captureConfirmed(context, board, externalCam);
-            if (composed == null) {
+            SelfieEntity entity = null;
+            while (true) {
+                Bitmap composed = captureConfirmed(context, board, externalCam);
+                if (composed == null) {
+                    board.hide();
+                    return null;
+                }
+
+                entity = SelfieRepository.get(context).save(toJpeg(composed));
+
+                String ip = NetworkUtils.localIp(context);
+                if (ip == null) {
+                    say(context, "Ich bin gerade nicht mit dem WLAN verbunden, deshalb kann ich das Selfie nicht teilen.");
+                    board.hide();
+                    return null;
+                }
+                acquireServer(context);
+                serverAcquired = true;
+
+                String url = downloadUrl(context, entity.filename);
+                Bitmap qr = QrGenerator.encode(url, 600);
+                Bitmap wifiQr = buildWifiQr(context);
+
+                AtomicBoolean retake = new AtomicBoolean(false);
+                CountDownLatch dismiss = new CountDownLatch(1);
+                board.setOnCloseListener(dismiss::countDown);
+                board.setStatus("Dein Selfie ist bereit!");
+                board.show(composed, qr, wifiQr, () -> {
+                    retake.set(true);
+                    dismiss.countDown();
+                });
+                Log.i(TAG, "Selfie #" + entity.number + " at " + url);
+
+                if (wifiQr != null) {
+                    say(context, "Fertig! Scanne den oberen QR-Code für dein Bild. "
+                            + "Über den unteren Code kannst du dich mit meinem WLAN verbinden. "
+                            + "Tippe auf Okay, wenn du fertig bist – oder auf Nochmal für ein neues Foto.");
+                } else {
+                    say(context, "Fertig! Scanne den QR-Code auf meinem Tablet, dann kannst du dein Selfie herunterladen. "
+                            + "Tippe auf Okay, wenn du fertig bist – oder auf Nochmal für ein neues Foto.");
+                }
+
+                try {
+                    dismiss.await(DISPLAY_MS, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                board.setOnCloseListener(null);
+                releaseServer();
+                serverAcquired = false;
+
+                if (retake.get()) {
+                    board.hide();
+                    SelfieRepository.get(context).delete(entity.id);
+                    say(context, "Kein Problem, wir machen ein neues Foto!");
+                    continue;
+                }
                 board.hide();
-                return null;
+                break;
             }
 
-            SelfieEntity entity = SelfieRepository.get(context).save(toJpeg(composed));
             com.buhlergroup.pepper.stats.Stats.increment(context,
                     com.buhlergroup.pepper.stats.Stats.SELFIES);
-
-            String ip = NetworkUtils.localIp(context);
-            if (ip == null) {
-                say(context, "Ich bin gerade nicht mit dem WLAN verbunden, deshalb kann ich das Selfie nicht teilen.");
-                board.hide();
-                return null;
-            }
-            acquireServer(context);
-            serverAcquired = true;
-
-            String url = downloadUrl(context, entity.filename);
-            Bitmap qr = QrGenerator.encode(url, 600);
-            Bitmap wifiQr = buildWifiQr(context);
-
-            CountDownLatch dismiss = new CountDownLatch(1);
-            board.setOnCloseListener(dismiss::countDown);
-            board.setStatus("Dein Selfie ist bereit!");
-            board.show(composed, qr, wifiQr);
-            Log.i(TAG, "Selfie #" + entity.number + " at " + url);
-
-            if (wifiQr != null) {
-                say(context, "Fertig! Scanne den oberen QR-Code für dein Bild. "
-                        + "Über den unteren Code kannst du dich mit meinem WLAN verbinden. "
-                        + "Tippe auf Okay, wenn du fertig bist.");
-            } else {
-                say(context, "Fertig! Scanne den QR-Code auf meinem Tablet, dann kannst du dein Selfie herunterladen. "
-                        + "Tippe auf Okay, wenn du fertig bist.");
-            }
-
-            try {
-                dismiss.await(DISPLAY_MS, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            board.setOnCloseListener(null);
-            board.hide();
-            releaseServer();
-            serverAcquired = false;
             if (offerRaffle) {
                 offerRaffleJoin(context, entity);
             }
