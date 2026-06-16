@@ -56,6 +56,9 @@ public final class NavigationManager {
     private static final double REACH_TOLERANCE_M = 0.5;
     private static final double[][] CORNER_DIRS = {{1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
     private static final long LOCALIZE_TIMEOUT_MS = 40000;
+    private static final long INITIAL_LOCALIZE_WAIT_MS = 15000;
+    private static final int GOTO_ATTEMPTS = 2;
+    private static final long GOTO_RETRY_PAUSE_MS = 500;
 
     public interface Callback<T> {
         void onResult(T value);
@@ -86,6 +89,7 @@ public final class NavigationManager {
     private volatile RoomScanEntity activeScan;
     private volatile boolean localized;
     private volatile boolean scanning;
+    private volatile boolean mappingLocalized;
     private volatile MapUpdateListener mapUpdateListener;
     private volatile Future<Void> rotateFuture;
     private volatile Future<Void> activeGoTo;
@@ -160,6 +164,12 @@ public final class NavigationManager {
                 holdAbilities(c);
                 LocalizeAndMap lam = LocalizeAndMapBuilder.with(c).build();
                 currentMapping = lam;
+                mappingLocalized = false;
+                lam.addOnStatusChangedListener(status -> {
+                    if (status == LocalizationStatus.LOCALIZED) {
+                        mappingLocalized = true;
+                    }
+                });
                 mappingFuture = lam.async().run();
                 scanning = true;
                 captureScanOrigin(c);
@@ -608,6 +618,10 @@ public final class NavigationManager {
     private void autoScanExplore(QiContext c) {
         Thread explorer = new Thread(() -> {
             try {
+                if (!awaitInitialLocalization()) {
+                    DebugLog.get().w(TAG,
+                            "Keine initiale Lokalisierung – Fahren während des Mappings evtl. nicht möglich");
+                }
                 rotationSweep(c);
                 double diag = 1.0 / Math.sqrt(2.0);
                 for (double radius = RING_STEP_M;
@@ -652,8 +666,47 @@ public final class NavigationManager {
         explorer.start();
     }
 
+    private boolean awaitInitialLocalization() {
+        DebugLog.get().setStatus("Raum-Scan – warte auf Lokalisierung");
+        long deadline = System.currentTimeMillis() + INITIAL_LOCALIZE_WAIT_MS;
+        while (scanning && !mappingLocalized && System.currentTimeMillis() < deadline) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        return mappingLocalized;
+    }
+
+    private boolean runGoTo(QiContext c, Frame targetFrame, OrientationPolicy policy) {
+        for (int attempt = 1; attempt <= GOTO_ATTEMPTS && scanning; attempt++) {
+            GoToBuilder builder = GoToBuilder.with(c).withFrame(targetFrame);
+            if (policy != null) {
+                builder = builder.withFinalOrientationPolicy(policy);
+            }
+            Future<Void> goToFuture = builder.build().async().run();
+            rotateFuture = goToFuture;
+            if (awaitGoTo(goToFuture, () -> scanning)) {
+                return true;
+            }
+            if (!scanning) {
+                return false;
+            }
+            try {
+                Thread.sleep(GOTO_RETRY_PAUSE_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        return false;
+    }
+
     private boolean rotationSweep(QiContext c) {
         double angle = 2.0 * Math.PI / SCAN_ROTATION_STEPS;
+        boolean allOk = true;
         for (int i = 0; i < SCAN_ROTATION_STEPS && scanning; i++) {
             DebugLog.get().setStatus("Raum-Scan – Drehung " + (i + 1) + "/" + SCAN_ROTATION_STEPS);
             try {
@@ -661,24 +714,20 @@ public final class NavigationManager {
                 Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, angle);
                 FreeFrame target = c.getMapping().makeFreeFrame();
                 target.update(robotFrame, t, 0L);
-                Future<Void> goToFuture = GoToBuilder.with(c)
-                        .withFrame(target.frame())
-                        .withFinalOrientationPolicy(OrientationPolicy.ALIGN_X)
-                        .build().async().run();
-                rotateFuture = goToFuture;
-                if (!awaitGoTo(goToFuture, () -> scanning)) {
+                if (runGoTo(c, target.frame(), OrientationPolicy.ALIGN_X)) {
+                    publishScanSnapshot();
+                } else {
+                    allOk = false;
                     if (scanning) {
-                        DebugLog.get().w(TAG, "Drehschritt fehlgeschlagen – Sweep abgebrochen");
+                        DebugLog.get().w(TAG, "Drehschritt " + (i + 1) + " fehlgeschlagen");
                     }
-                    return false;
                 }
-                publishScanSnapshot();
             } catch (Exception e) {
                 Log.w(TAG, "rotationSweep step failed: " + e.getMessage());
-                return false;
+                allOk = false;
             }
         }
-        return scanning;
+        return allOk && scanning;
     }
 
     private boolean driveToOriginOffset(QiContext c, double dx, double dy) {
@@ -690,11 +739,7 @@ public final class NavigationManager {
             Transform t = TransformBuilder.create().from2DTransform(dx, dy, 0.0);
             FreeFrame target = c.getMapping().makeFreeFrame();
             target.update(origin.frame(), t, 0L);
-            Future<Void> goToFuture = GoToBuilder.with(c)
-                    .withFrame(target.frame()).build().async().run();
-            rotateFuture = goToFuture;
-            boolean reached = awaitGoTo(goToFuture, () -> scanning);
-            if (!scanning || !reached) {
+            if (!runGoTo(c, target.frame(), null) || !scanning) {
                 return false;
             }
             return reachedOffset(c, origin, dx, dy);
