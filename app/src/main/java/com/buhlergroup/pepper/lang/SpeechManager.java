@@ -16,9 +16,6 @@ public class SpeechManager {
     private static LanguageManager languageManager;
 
     private SpeechManager() {
-        /*
-         * Singleton
-         */
     }
 
     public static SpeechManager getInstance() {

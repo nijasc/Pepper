@@ -17,38 +17,6 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class TestAction extends Action {
 
-    /*
-    @Override
-    public void execute(QiContext context, String input) {
-        SpeechManager.getInstance().systemSay(context, "Test - ich fahre kurz vor");
-
-        Actuation actuation = context.getActuation();
-        Mapping mapping = context.getMapping();
-
-        Frame robotFrame = actuation.robotFrame();
-        Transform transform = TransformBuilder.create().fromXTranslation(0.8);
-        FreeFrame target = mapping.makeFreeFrame();
-        target.update(robotFrame, transform, 0L);
-
-        GoTo goTo = GoToBuilder.with(context).withFrame(target.frame()).build();
-        Future<Void> moveFuture = goTo.async().run();
-        moveFuture.thenConsume(future -> {
-            if (future.isSuccess()) {
-                Log.i("TestAction", "GoTo erfolgreich");
-            } else if (future.isCancelled()) {
-                Log.w("TestAction", "GoTo abgebrochen (Focus verloren?)");
-            } else {
-                Log.e("TestAction", "GoTo Fehler", future.getError());
-            }
-        });
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-*/
-
     @Override
     public void execute(QiContext context, String input) {
         SpeechManager.getInstance().systemSay(context, "Ich drehe mich einmal im Kreis");
