@@ -24,20 +24,24 @@ public final class DanceRepository {
     private static final String TAG = "Dance";
     private static final String BUILTIN_PREFIX = "builtin_";
     private static final String BUILTIN_HULA_ID = BUILTIN_PREFIX + "hula";
+    private static final String BUILTIN_SIX_SEVEN_ID = BUILTIN_PREFIX + "six_seven";
 
     private final AnimationGenerator generator = new AnimationGenerator();
 
     public void ensureBuiltInDances(Context context) {
         try {
             seedBuiltIn(context, BUILTIN_HULA_ID, "Hula",
-                    com.buhlergroup.pepper.R.raw.hula_dance, 12000L);
+                    com.buhlergroup.pepper.R.raw.hula_dance, 0, 12000L);
+            seedBuiltIn(context, BUILTIN_SIX_SEVEN_ID, "Six Seven",
+                    com.buhlergroup.pepper.R.raw.six_seven,
+                    com.buhlergroup.pepper.R.raw.wyoming, 15000L);
         } catch (Exception e) {
             Log.w(TAG, "Could not seed built-in dances: " + e.getMessage());
         }
     }
 
-    private void seedBuiltIn(Context context, String id, String name, int rawRes, long durationMs)
-            throws IOException {
+    private void seedBuiltIn(Context context, String id, String name, int rawRes, int audioRawRes,
+            long durationMs) throws IOException {
         DanceDao dao = DanceDatabase.get(context).danceDao();
         DanceEntity existing = dao.findById(id);
         if (existing != null && existing.qianimPath != null
@@ -48,6 +52,11 @@ public final class DanceRepository {
         copyRawToFile(context, rawRes, target);
         DanceEntity entity = new DanceEntity(
                 id, name, target.getAbsolutePath(), durationMs, false, System.currentTimeMillis());
+        if (audioRawRes != 0) {
+            File audio = new File(danceDir(context), id + ".mp3");
+            copyRawToFile(context, audioRawRes, audio);
+            entity.audioPath = audio.getAbsolutePath();
+        }
         dao.insert(entity);
         Log.i(TAG, "Seeded built-in dance '" + name + "'");
     }
