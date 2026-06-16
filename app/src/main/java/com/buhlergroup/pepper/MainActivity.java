@@ -314,7 +314,26 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             adminButton.setVisibility(visibility);
             languageLabel.setVisibility(visibility);
         });
-        maybeResumeListening();
+        if (overlayOpen) {
+            stopListening();
+        } else {
+            maybeResumeListening();
+        }
+    }
+
+    private void stopListening() {
+        listenPending = true;
+        runOnUiThread(() -> {
+            boolean wasListening = listening;
+            listening = false;
+            if (wasListening) {
+                finishActivity(SPEECH_EVENT);
+            }
+            try {
+                recognizer.cancel();
+            } catch (Exception ignored) {
+            }
+        });
     }
 
     private void updateLanguageLabel(SupportedLanguage lang) {
@@ -343,7 +362,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
     private void startSpeechRecognition() {
         runOnUiThread(() -> {
-            if (listening) {
+            if (listening || isOverlayOpen()) {
                 return;
             }
             if (intent != null && intent.resolveActivity(getPackageManager()) != null) {
