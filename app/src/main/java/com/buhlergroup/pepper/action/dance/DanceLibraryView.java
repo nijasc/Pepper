@@ -15,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
+import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -37,6 +39,7 @@ public class DanceLibraryView extends FrameLayout {
     private LinearLayout list;
     private View loadingOverlay;
     private TextView loadingText;
+    private ScrollView scrollRoot;
 
     public DanceLibraryView(Context context) {
         super(context);
@@ -61,8 +64,28 @@ public class DanceLibraryView extends FrameLayout {
         list = findViewById(R.id.danceList);
         loadingOverlay = findViewById(R.id.danceLoading);
         loadingText = findViewById(R.id.danceLoadingText);
+        scrollRoot = findViewById(R.id.danceScrollRoot);
         findViewById(R.id.danceCreate).setOnClickListener(v -> promptCreate());
         findViewById(R.id.danceClose).setOnClickListener(v -> DanceLibraryController.get().close());
+    }
+
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+        super.onVisibilityChanged(changedView, visibility);
+        if (visibility == VISIBLE) {
+            applyDebugInset();
+        }
+    }
+
+    private void applyDebugInset() {
+        if (scrollRoot == null) {
+            return;
+        }
+        int side = scrollRoot.getPaddingLeft();
+        int top = DebugLog.get().isEnabled()
+                ? getResources().getDimensionPixelSize(R.dimen.debug_overlay_inset)
+                : side;
+        scrollRoot.setPadding(side, top, side, scrollRoot.getPaddingBottom());
     }
 
     private void showLoading(String message) {

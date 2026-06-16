@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,6 +21,7 @@ import androidx.core.content.ContextCompat;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
+import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.util.List;
 
@@ -36,6 +38,7 @@ public class NavigationView extends FrameLayout {
     private View scanStartButton;
     private View scanStopButton;
     private View waypointSaveButton;
+    private ScrollView scrollRoot;
 
     public NavigationView(Context context) {
         super(context);
@@ -58,6 +61,7 @@ public class NavigationView extends FrameLayout {
         setClickable(true);
         setFocusable(true);
 
+        scrollRoot = findViewById(R.id.navScrollRoot);
         statusView = findViewById(R.id.navStatus);
         scanName = findViewById(R.id.navScanName);
         waypointName = findViewById(R.id.navWpName);
@@ -75,6 +79,25 @@ public class NavigationView extends FrameLayout {
         scanStopButton.setOnClickListener(v -> stopScan());
         waypointSaveButton.setOnClickListener(v -> saveWaypoint());
         findViewById(R.id.navClose).setOnClickListener(v -> NavigationController.get().close());
+    }
+
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+        super.onVisibilityChanged(changedView, visibility);
+        if (visibility == VISIBLE) {
+            applyDebugInset();
+        }
+    }
+
+    private void applyDebugInset() {
+        if (scrollRoot == null) {
+            return;
+        }
+        int side = scrollRoot.getPaddingLeft();
+        int top = DebugLog.get().isEnabled()
+                ? getResources().getDimensionPixelSize(R.dimen.debug_overlay_inset)
+                : side;
+        scrollRoot.setPadding(side, top, side, scrollRoot.getPaddingBottom());
     }
 
     public void open() {

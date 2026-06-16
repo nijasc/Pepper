@@ -24,4 +24,7 @@
     <dimen name="admin_tile_icon">44dp</dimen>
     <dimen name="admin_pill_padding_h">28dp</dimen>
     <dimen name="admin_pill_padding_v">14dp</dimen>
+
+    <!-- Top inset reserved for the on-screen debug overlay (status box + live log) -->
+    <dimen name="debug_overlay_inset">348dp</dimen>
 </resources>
