@@ -42,11 +42,11 @@ mit, damit die Antwort natürlich wirkt. Er antwortet in der Sprache der Person.
 
 ### Tanzen
 
-Pepper tanzt zu (fast) jedem gewünschten Song. Nenne einen Titel oder Künstler,
-und Pepper studiert eine passende, fliessende Choreografie ein und tanzt zur Musik.
-Schon getanzte Lieder merkt er sich und kann sie sofort wieder abspielen – auch
-wenn das WLAN gerade schwächelt. Findet er einen neuen Song nicht, tanzt er
-freundlich einen bereits gespeicherten Tanz aus seiner Sammlung.
+Pepper tanzt zu Songs aus seiner Tanz-Sammlung. Nenne einen Titel oder Künstler,
+und er wählt einen dazu passenden gespeicherten Tanz; sonst tanzt er einen seiner
+Lieblingstänze. Die Tänze sind lokal gespeichert, daher klappt das Tanzen auch,
+wenn das WLAN gerade schwächelt. Ist die Sammlung leer, legt er einen eingebauten
+Tanz hin.
 
 > «Tanz zu Billie Jean.» · «Dance to Uptown Funk.»
 
@@ -73,7 +73,8 @@ Pepper hebt die Hand zum Einschlagen.
 
 Pepper hält kurz ein leichtes Objekt (z. B. einen Becher) in der Hand. Er gibt es
 erst zurück, wenn man ihn darum bittet («Stopp», «Danke», «Gib her») oder den
-STOP-Knopf auf dem Tablet drückt – die Hand öffnet sich nie von selbst.
+STOP-Knopf auf dem Tablet drückt; davor zählt er kurz herunter. Die Hand öffnet
+sich nie von selbst.
 
 > «Halt mal mein Bier.» · «Hold my beer.»
 

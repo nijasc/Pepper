@@ -48,6 +48,7 @@
   - [Verlosung verwalten](#verlosung-verwalten)
   - [Tanz-Bibliothek](#tanz-bibliothek)
   - [Navigation & Wegpunkte](#navigation--wegpunkte)
+  - [Debug-Modus](#debug-modus)
 - [Pepper für Entwickler](#pepper-für-entwickler)
   - [Einrichtung](#einrichtung)
     - [Systemspezifikationen](#systemspezifikationen)
@@ -169,25 +170,15 @@ Sobald Pepper eine Eingabe verarbeitet (insbesondere bei langsameren Aufrufen wi
 
 ### Historie
 
-Damit sich Pepper innerhalb eines Gesprächs an den bisherigen Verlauf erinnern kann, speichert er die letzten **10 Einträge** der Unterhaltung. Ein Eintrag ist entweder eine Eingabe des Benutzers oder eine Antwort von Pepper – bei einem gewöhnlichen Wortwechsel (Frage und Antwort) kommen also zwei Einträge hinzu, sodass die Historie in der Regel rund fünf Gesprächsrunden abdeckt.
+Pepper merkt sich die letzten **10 Gesprächseinträge** als gleitendes Fenster (ein Eintrag = eine Benutzereingabe oder eine Pepper-Antwort, also rund fünf Gesprächsrunden); ein elfter Eintrag verdrängt den ältesten. Die gesamte Historie wird bei jeder Anfrage an OpenAI mitgeschickt, damit Pepper auf zuvor Gesagtes (Namen, frühere Fragen, Kontext) Bezug nehmen kann. Sie liegt nur im Arbeitsspeicher und ist nach einem Neustart wieder leer.
 
-Wird ein elfter Eintrag hinzugefügt, wird automatisch der älteste entfernt. Die Historie verhält sich damit wie ein gleitendes Fenster: Es bleiben stets die zehn jüngsten Einträge erhalten, ältere Inhalte fallen heraus.
-
-Bei jeder Anfrage wird die gesamte Historie an OpenAI mitgeschickt. Dadurch kann Pepper auf bereits Gesagtes Bezug nehmen – etwa den Namen einer Person, eine zuvor gestellte Frage oder den allgemeinen Kontext der Unterhaltung. Ohne diese Historie würde Pepper jede Eingabe isoliert betrachten und sich an nichts erinnern.
-
-Die Historie wird ausschliesslich im Arbeitsspeicher gehalten und nicht dauerhaft gespeichert. Wird die Applikation neu gestartet, beginnt Pepper wieder mit einer leeren Historie. Das bedeutet auch: Inhalte aus früheren Sitzungen lassen sich nach einem Neustart nicht mehr abrufen.
-
-Neben den zehn Gesprächseinträgen führt der `HistoryManager` zusätzlich eine getrennte Liste technischer **Developer-Einträge** (bis zu 200), z. B. «welche Eingabe erkannt wurde» oder «welche Action gestartet wurde». Diese sind nur für Entwickler gedacht und werden im Admin-Bereich unter [Dev-Logs](#admin-bereich) angezeigt, fliessen aber nicht in die gesprochene Antwort ein.
+Zusätzlich führt der `HistoryManager` eine getrennte Liste technischer **Developer-Einträge** (bis zu 200), z. B. welche Eingabe erkannt oder welche Action gestartet wurde. Diese erscheinen im Admin-Bereich unter [Dev-Logs](#admin-bereich), fliessen aber nicht in die gesprochene Antwort ein.
 
 ### Antwortlänge
 
-Peppers gesprochene Antworten werden bewusst kurz gehalten – in der Regel höchstens zwei bis drei kurze Sätze. Das sorgt dafür, dass Pepper im Gespräch natürlich und auf den Punkt wirkt, statt in lange Monologe zu verfallen.
+Peppers gesprochene Antworten bleiben bewusst kurz – höchstens zwei bis drei kurze Sätze – damit er natürlich und auf den Punkt wirkt statt in Monologe zu verfallen. Die Begrenzung gilt für **alle** frei formulierten Antworten, auch für [Dokumentation](#dokumentation) und Systeminformationen. Statt nachträglich hart abzuschneiden, erzeugt das Modell von vornherein eine kurze, in sich vollständige Antwort: Bei umfangreichen Themen nennt Pepper den wichtigsten Punkt und bietet an, mehr zu erzählen; ausführlicher wird er nur auf ausdrückliche Nachfrage.
 
-Die Begrenzung gilt für **alle** frei formulierten Antworten, nicht nur für die Standardfunktion [Sprechen](#sprechen-standard): Auch Antworten aus der [Dokumentation](#dokumentation) und zu Systeminformationen unterliegen derselben Vorgabe.
-
-Wichtig ist, **wie** gekürzt wird: Die Antwort wird nicht nachträglich hart abgeschnitten (kein Abschneiden mitten im Satz). Stattdessen erzeugt das Modell von vornherein eine kurze, in sich vollständige Antwort. Geht es um ein umfangreiches Thema, nennt Pepper den wichtigsten Punkt und bietet an, bei Bedarf mehr zu erzählen. Nur wenn der Benutzer ausdrücklich nach mehr Details fragt, antwortet Pepper ausführlicher.
-
-Gesteuert wird dieses Verhalten zentral über den Systemprompt (`instructions.md`, Abschnitt «Length»). Da sämtliche frei formulierten Aktionen denselben Systemprompt verwenden, greift die Begrenzung automatisch überall (siehe [OpenAI-Systemprompt anpassen](#openai-systemprompt-anpassen)).
+Gesteuert wird das zentral über den Systemprompt (`instructions.md`, Abschnitt «Response Style»); da alle frei formulierten Aktionen denselben Prompt nutzen, greift die Begrenzung überall (siehe [OpenAI-Systemprompt anpassen](#openai-systemprompt-anpassen)).
 
 ### FollowMe-Mechanik
 
@@ -264,21 +255,12 @@ Beispiel (de): Hallo, wie geht es dir?
 
 ### Tanzen
 
-Pepper tanzt zu einem Lied – und zwar zu **(fast) jedem gewünschten Song**. Der Ablauf:
+Pepper tanzt auf Zuruf einen Tanz aus seiner **gespeicherten Sammlung** (`dances.db`):
 
-1. Der Benutzer nennt einen Song oder Künstler («Tanz zu Billie Jean»). Aus der Äusserung wird zunächst eine saubere Suchanfrage extrahiert.
-2. Pepper sucht das Lied über die **iTunes-Search-API** und nimmt die 30-sekündige Vorschau (`previewUrl`); diese wird **gestreamt**, nicht heruntergeladen.
-3. Eine passende **Choreografie wird von einem Sprachmodell generiert** (`ModelSelector`-Aufgabe `GENERATION`, siehe [Sprachmodelle](#sprachmodelle)). Das Modell liefert kompaktes JSON mit Gelenk-Kurven, das in eine Pepper-Animationsdatei (`.qianim`) umgewandelt, validiert und geglättet wird.
-4. Pepper spielt die Vorschau ab und bewegt sich rhythmisch dazu. Endet die Animation, wird die Musik gestoppt, damit beides synchron bleibt.
+1. Nennt der Gast einen Song oder Künstler («Tanz zu Billie Jean»), sucht Pepper in seiner Sammlung einen passenden Tanz (Namensabgleich); sonst wählt er einen seiner **Favoriten** bzw. zufällig einen gespeicherten Tanz.
+2. Er spielt das lokal zwischengespeicherte Vorschau-Audio ab und bewegt sich rhythmisch zur Choreografie. Endet die Animation, wird die Musik gestoppt, damit beides synchron bleibt.
 
-Generierte Tänze werden lokal in einer Room-Datenbank (`dances.db`) samt `.qianim`-Datei **gespeichert und wiederverwendet** – derselbe Song muss also nicht erneut einstudiert werden. Zusätzlich wird das **Vorschau-Audio lokal zwischengespeichert**, sodass gespeicherte Tänze auch ohne erneuten iTunes-Aufruf laufen – ein WLAN-Aussetzer stoppt das Tanzen nicht mehr. Verwalten lässt sich die Sammlung im Admin-Bereich (siehe [Tanz-Bibliothek](#tanz-bibliothek)).
-
-Die Choreografie wird bewusst **ruhig und fliessend** generiert und im Tempo grob an die **Stimmung** des Songs angepasst (ruhig vs. lebhaft).
-
-**Zu beachten:**
-
-- Ist iTunes vorübergehend nicht erreichbar, versucht Pepper es mit kurzem Backoff erneut. Gelingt es für einen neuen Song nicht, bietet er freundlich einen gespeicherten Tanz aus seiner Sammlung an, statt abzubrechen; erst bei leerer Sammlung tanzt er eine vorbereitete Eigen-Choreografie.
-- Es wird nur die kurze iTunes-Vorschau gespielt, nicht das komplette Lied.
+Wichtig: Die gesprochene Tanz-Funktion **erzeugt zur Laufzeit keine neuen Tänze** – neue Choreografien entstehen ausschliesslich in der [Tanz-Bibliothek](#tanz-bibliothek) im Admin-Bereich. Weil Tanz und Audio lokal gespeichert sind, läuft das Tanzen auch ohne WLAN. Ist die Sammlung leer oder schlägt das Abspielen fehl, legt Pepper einen vorbereiteten **Eigen-Tanz** hin («Six… seven!»).
 
 ```text
 Beispiel (en): Dance to Uptown Funk.
@@ -318,9 +300,9 @@ Beispiel (de): High Five.
 
 ### Hold my beer
 
-Pepper hält auf Zuruf ein leichtes Objekt (Becher, PET-Flasche, max. ca. 300 g — keine schweren Gegenstände, der Arm trägt nur etwa 0,5 kg) in der rechten Hand. Ablauf: Pepper hebt den Arm mit offener Hand, erkennt die Übergabe über den Berührungssensor am Handrücken (alternativ über den Bestätigungs-Button auf dem Tablet, falls ein leichtes Objekt den Sensor nicht auslöst), schließt die Hand und hält das Objekt mit Haltetimer auf dem Tablet und gelegentlichen Sprüchen.
+Pepper hält auf Zuruf ein leichtes Objekt (Becher, PET-Flasche, max. ca. 300 g — keine schweren Gegenstände, der Arm trägt nur etwa 0,5 kg) in der rechten Hand. Ablauf: Pepper hebt den Arm mit offener Hand und wartet rund **15 Sekunden** auf das Auflegen, erkennt die Übergabe über den Berührungssensor am Handrücken (alternativ über den Bestätigungs-Button auf dem Tablet, falls ein leichtes Objekt den Sensor nicht auslöst), schließt die Hand und hält das Objekt mit Haltetimer auf dem Tablet und gelegentlichen Sprüchen. Während des Haltens bleibt die Halte-Hand bewusst **ruhig** (keine autonomen Bewegungen), damit nichts herunterfällt.
 
-**Sicherheit:** Die Hand öffnet sich nie von selbst. Zurückgeben nur über den großen STOP-Button auf dem Tablet oder per Sprachbefehl («Stopp», «Danke», «Gib her»); danach zählt Pepper an («3, 2, 1») und öffnet erst dann die Hand. Nach 10 Minuten Maximalhaltezeit fordert Pepper aktiv zur Abnahme auf, lässt aber weiterhin nicht von selbst los. Verliert die App den Roboter-Fokus (z. B. Absturz oder App-Wechsel), endet die Session ohne Öffnungs-Animation und der Roboter fällt in den Autonomous Mode zurück — die Handmotoren können dann entspannen, das Objekt vorher abnehmen.
+**Sicherheit:** Die Hand öffnet sich nie von selbst. Zurückgeben nur über den großen STOP-Button auf dem Tablet oder per Sprachbefehl («Stopp», «Danke», «Gib her»); danach zählt Pepper **fünf Sekunden** herunter, bevor er die Hand öffnet und zurück in die Normalposition geht. Nach 10 Minuten Maximalhaltezeit fordert Pepper aktiv zur Abnahme auf, lässt aber weiterhin nicht von selbst los. Verliert die App den Roboter-Fokus (z. B. Absturz oder App-Wechsel), endet die Session ohne Öffnungs-Animation und der Roboter fällt in den Autonomous Mode zurück — die Handmotoren können dann entspannen, das Objekt vorher abnehmen.
 
 ```text
 Beispiel (en): Hold my beer.
@@ -518,6 +500,7 @@ Das Menü bündelt:
 | ------ | -------- |
 | Verlauf löschen | Leert das Gesprächsgedächtnis (`HistoryManager`). |
 | Dev-Logs | Zeigt die Entwickler-Logs chronologisch (neueste unten, Auto-Scroll). |
+| Debug | Schaltet den [Debug-Modus](#debug-modus) ein/aus und zeigt das Live-Log. |
 | Selfies | Öffnet die [Selfie-Galerie](#selfie-galerie). |
 | Sprache | Wechselt die Erkennungssprache manuell (Deutsch, Englisch, Italienisch, Spanisch, Französisch). |
 | Verlauf ansehen | Zeigt das aktuelle Gespräch als Chat-Blasen. |
@@ -539,7 +522,11 @@ Hier wird eine [Verlosung](#verlosung) angelegt (Titel, Beschreibung, Enddatum, 
 
 ### Tanz-Bibliothek
 
-Die Tanz-Bibliothek listet alle bereits einstudierten [Tänze](#tanzen) (aus `dances.db`). Pro Eintrag kann der Tanz als **Favorit** markiert (Favoriten erscheinen zuoberst), **umbenannt** oder **gelöscht** werden (entfernt auch die zugehörige `.qianim`-Datei). So lässt sich vorab eine kuratierte Auswahl bewährter Choreografien für einen Messeauftritt zusammenstellen.
+Die Tanz-Bibliothek verwaltet alle gespeicherten [Tänze](#tanzen) (aus `dances.db`) und ist der Ort, an dem **neue Tänze entstehen**:
+
+- **Erstellen:** Zu einem genannten Song sucht Pepper das Lied über die **iTunes-Search-API** (30-sekündige Vorschau, gestreamt), lässt eine passende, **ruhig-fliessende Choreografie von einem Sprachmodell generieren** (`ModelSelector`-Aufgabe `GENERATION`, siehe [Sprachmodelle](#sprachmodelle)) und wandelt das gelieferte JSON in eine validierte, geglättete `.qianim`-Datei um. Tanz und zwischengespeichertes Vorschau-Audio werden lokal gespeichert (`dances.db` + Datei); bereits vorhandene Songs werden wiederverwendet. Das Tempo wird grob an die **Stimmung** des Songs angepasst.
+- **KI-Edit:** Eine gespeicherte Choreografie oder ihr Startzeitpunkt lässt sich per natürlichsprachiger Anweisung anpassen.
+- **Verwalten:** Pro Eintrag kann der Tanz als **Favorit** markiert (Favoriten zuoberst), **umbenannt** oder **gelöscht** werden (entfernt auch die `.qianim`-Datei). Eingebaute Tänze (z. B. Hula, Six Seven) sind ab Werk vorhanden. So lässt sich vorab eine kuratierte Auswahl für einen Messeauftritt zusammenstellen.
 
 ### Navigation & Wegpunkte
 
@@ -555,6 +542,12 @@ Typischer Ablauf:
 Die `NavigationView` zeigt dazu eine **Live-Karte** (`WaypointMapView`) mit Start-Punkt, Wegpunkten (Fotostand-Punkte hervorgehoben) und Peppers aktueller Position samt Blickrichtung. Scans und Wegpunkte werden lokal in einer eigenen Room-Datenbank (`navigation.db`) gespeichert, die Karten als `.map`-Dateien im App-Verzeichnis.
 
 > **Hinweis:** Die Navigation ist als Operator-Werkzeug ausschliesslich über den Admin-Bereich erreichbar und **nicht** per Sprachbefehl auslösbar.
+
+### Debug-Modus
+
+Über die Kachel **«Debug»** lässt sich ein **Debug-Modus** ein- und ausschalten (persistiert via `DebugSettings`). Ist er aktiv, blendet Pepper auf dem Homescreen und während der Aktionen ein **On-Screen-Overlay** ein: eine **Status-Box** mit dem aktuellen Zustand (z. B. «Raum-Scan – Drehung 2/4» oder «OpenAI – Anfrage läuft …») und ein mitlaufendes, scrollendes **Live-Log**.
+
+Zentrale Stelle ist das Singleton `DebugLog` (`debug/DebugLog`), das aus dem ganzen Code mit `append()` (bzw. `d()/i()/w()/e()`) und `setStatus()` gespeist wird, einen Ringpuffer der jüngsten Einträge hält und zusätzlich nach Logcat schreibt. Im Debug-Panel lässt sich das gesammelte Log einsehen, **aktualisieren**, **leeren** und als Textdatei **exportieren** (Android-Share-Intent via `FileProvider`). Während der Admin-Bereich offen ist, wird das On-Screen-Overlay unterdrückt.
 
 ---
 
@@ -737,7 +730,8 @@ Die folgende Übersicht zeigt die wichtigsten Klassen und ihre Verantwortung –
 | `SelfieController` / `SelfieRepository` | Nimmt das [Selfie](#selfie) auf, legt das Bild ab (Room + Datei), serviert es über `LocalImageServer` und bietet nach der Aufnahme ggf. den Verlosungs-Beitritt an. |
 | `NetworkUtils` | Ermittelt die lokale WLAN-IP von Pepper (für die Download-URLs der QR-Codes). |
 | `NavigationManager` / `NavigationController` / `NavigationView` | Raumkartierung, Wegpunkte und Navigation (siehe [Navigation & Wegpunkte](#navigation--wegpunkte)); Persistenz in `navigation.db` plus `.map`-Dateien. |
-| `AdminController` / `AdminView` | Steuerung und Tablet-Oberfläche des [Admin-Bereichs](#admin-bereich) (PIN, Kachelmenü, Dev-Logs, Galerie, Verlosung inkl. Gewinnerziehung, Kamera, Navigation, Tänze). Meldet den Offen-Zustand an `MainActivity`. |
+| `AdminController` / `AdminView` | Steuerung und Tablet-Oberfläche des [Admin-Bereichs](#admin-bereich) (PIN, Kachelmenü, Dev-Logs, Debug-Modus, Galerie, Verlosung inkl. Gewinnerziehung, Kamera, Navigation, Tänze). Meldet den Offen-Zustand an `MainActivity`. |
+| `DebugLog` / `DebugOverlayView` | Zentrales Debug-Logging (`append()` / `setStatus()`) mit On-Screen-Live-Log und Status-Box; Toggle, Viewer und Export im [Admin-Bereich](#debug-modus). |
 | `RaffleRepository` / `RaffleDatabase` | Persistenz der [Verlosung](#verlosung) in einer eigenen `raffle.db` (Verlosungen + Teilnehmer-Einträge), erzwingt max. eine aktive Verlosung, den automatischen `ACTIVE`→`ENDED`-Übergang und die Gewinnerziehung. |
 | `RaffleJoinController` / `RaffleJoinView` | Schritt-für-Schritt-Beitrittsformular mit Pepper-Sprachbegleitung, Validierung, Duplikat-Prüfung und Abschlussscreen. |
 | `RaffleInfoAction` / `JoinRaffleAction` | Actions für Verlosungs-Auskunft bzw. -Beitritt per Sprachbefehl. |
