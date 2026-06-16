@@ -33,6 +33,9 @@ public class NavigationView extends FrameLayout {
     private LinearLayout waypointList;
     private ImageView mapImage;
     private WaypointMapView waypointMap;
+    private View scanStartButton;
+    private View scanStopButton;
+    private View waypointSaveButton;
 
     public NavigationView(Context context) {
         super(context);
@@ -63,11 +66,14 @@ public class NavigationView extends FrameLayout {
         waypointList = findViewById(R.id.navWpList);
         mapImage = findViewById(R.id.navMapImage);
         waypointMap = findViewById(R.id.navWaypointMap);
+        scanStartButton = findViewById(R.id.navScanStart);
+        scanStopButton = findViewById(R.id.navScanStop);
+        waypointSaveButton = findViewById(R.id.navWpSave);
 
         findViewById(R.id.navMapRefresh).setOnClickListener(v -> loadMap());
-        findViewById(R.id.navScanStart).setOnClickListener(v -> startScan());
-        findViewById(R.id.navScanStop).setOnClickListener(v -> stopScan());
-        findViewById(R.id.navWpSave).setOnClickListener(v -> saveWaypoint());
+        scanStartButton.setOnClickListener(v -> startScan());
+        scanStopButton.setOnClickListener(v -> stopScan());
+        waypointSaveButton.setOnClickListener(v -> saveWaypoint());
         findViewById(R.id.navClose).setOnClickListener(v -> NavigationController.get().close());
     }
 
@@ -122,6 +128,19 @@ public class NavigationView extends FrameLayout {
             text = getContext().getString(R.string.nav_status_idle);
         }
         statusView.setText(text);
+
+        boolean scanning = nav.isScanning();
+        boolean localized = nav.isLocalized();
+        setActionEnabled(scanStartButton, !scanning);
+        setActionEnabled(scanStopButton, scanning);
+        setActionEnabled(waypointSaveButton, localized);
+    }
+
+    private void setActionEnabled(View view, boolean enabled) {
+        if (view != null) {
+            view.setEnabled(enabled);
+            view.setAlpha(enabled ? 1f : 0.4f);
+        }
     }
 
     private void startScan() {

@@ -86,6 +86,7 @@
     <string name="dance_create_failed">Tanz konnte nicht erstellt werden:</string>
 
     <string name="nav_title">Navigation &amp; Wegpunkte</string>
+    <string name="nav_subtitle">Scanne einen Raum, aktiviere ihn und speichere Wegpunkte, damit Pepper navigieren kann.</string>
     <string name="nav_section_map">Karte</string>
     <string name="nav_map_refresh">Karte aktualisieren</string>
     <string name="nav_map_failed">Karte konnte nicht geladen werden.</string>
