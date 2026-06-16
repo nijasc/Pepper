@@ -22,8 +22,53 @@ import java.util.List;
 public final class DanceRepository {
 
     private static final String TAG = "Dance";
+    private static final String BUILTIN_PREFIX = "builtin_";
+    private static final String BUILTIN_HULA_ID = BUILTIN_PREFIX + "hula";
 
     private final AnimationGenerator generator = new AnimationGenerator();
+
+    public void ensureBuiltInDances(Context context) {
+        try {
+            seedBuiltIn(context, BUILTIN_HULA_ID, "Hula",
+                    com.buhlergroup.pepper.R.raw.hula_dance, 12000L);
+        } catch (Exception e) {
+            Log.w(TAG, "Could not seed built-in dances: " + e.getMessage());
+        }
+    }
+
+    private void seedBuiltIn(Context context, String id, String name, int rawRes, long durationMs)
+            throws IOException {
+        DanceDao dao = DanceDatabase.get(context).danceDao();
+        DanceEntity existing = dao.findById(id);
+        if (existing != null && existing.qianimPath != null
+                && new File(existing.qianimPath).exists()) {
+            return;
+        }
+        File target = new File(danceDir(context), id + ".qianim");
+        copyRawToFile(context, rawRes, target);
+        DanceEntity entity = new DanceEntity(
+                id, name, target.getAbsolutePath(), durationMs, false, System.currentTimeMillis());
+        dao.insert(entity);
+        Log.i(TAG, "Seeded built-in dance '" + name + "'");
+    }
+
+    private void copyRawToFile(Context context, int rawRes, File dest) throws IOException {
+        File tmp = new File(dest.getAbsolutePath() + ".part");
+        try (InputStream in = context.getResources().openRawResource(rawRes);
+             FileOutputStream out = new FileOutputStream(tmp)) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+        }
+        if (dest.exists() && !dest.delete()) {
+            throw new IOException("Alte Animations-Datei konnte nicht ersetzt werden.");
+        }
+        if (!tmp.renameTo(dest)) {
+            throw new IOException("Animations-Datei konnte nicht gespeichert werden.");
+        }
+    }
 
     public DanceEntity getOrCreate(Context context, String query) throws Exception {
         DanceDao dao = DanceDatabase.get(context).danceDao();
@@ -173,6 +218,10 @@ public final class DanceRepository {
     public void preparePlayback(Context context, DanceEntity dance) {
         if (applyLocalAudio(dance)) {
             Log.i(TAG, "Playing '" + dance.songName + "' from local cache");
+            return;
+        }
+        if (dance.youtubeId != null && dance.youtubeId.startsWith(BUILTIN_PREFIX)) {
+            dance.previewUrl = null;
             return;
         }
         try {

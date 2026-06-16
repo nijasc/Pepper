@@ -82,6 +82,7 @@ public class DanceLibraryView extends FrameLayout {
     private void refresh() {
         executor.execute(() -> {
             try {
+                repository.ensureBuiltInDances(getContext());
                 List<DanceEntity> dances = repository.all(getContext());
                 post(() -> render(dances));
             } catch (Exception e) {
