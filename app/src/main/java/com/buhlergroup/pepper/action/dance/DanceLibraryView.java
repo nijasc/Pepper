@@ -57,7 +57,40 @@ public class DanceLibraryView extends FrameLayout {
         setClickable(true);
         setFocusable(true);
         list = findViewById(R.id.danceList);
+        findViewById(R.id.danceCreate).setOnClickListener(v -> promptCreate());
         findViewById(R.id.danceClose).setOnClickListener(v -> DanceLibraryController.get().close());
+    }
+
+    private void promptCreate() {
+        EditText input = new EditText(getContext());
+        input.setHint(R.string.dance_create_hint);
+        new AlertDialog.Builder(getContext())
+                .setTitle(R.string.dance_create)
+                .setView(input)
+                .setNegativeButton(android.R.string.cancel, null)
+                .setPositiveButton(R.string.dance_create, (d, w) -> {
+                    String query = input.getText().toString().trim();
+                    if (!query.isEmpty()) {
+                        createDance(query);
+                    }
+                })
+                .show();
+    }
+
+    private void createDance(String query) {
+        toast(getContext().getString(R.string.dance_creating));
+        heavyExecutor.execute(() -> {
+            try {
+                repository.getOrCreate(getContext(), query);
+                post(() -> {
+                    toast(getContext().getString(R.string.dance_created));
+                    refresh();
+                });
+            } catch (Exception e) {
+                post(() -> toast(getContext().getString(R.string.dance_create_failed)
+                        + " " + e.getMessage()));
+            }
+        });
     }
 
     public void open() {

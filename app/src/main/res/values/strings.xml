@@ -76,8 +76,13 @@
     <string name="dance_more">Mehr Optionen</string>
     <string name="dance_rename">Umbenennen</string>
     <string name="dance_delete">Löschen</string>
-    <string name="dance_empty">Noch keine Tänze. Bitte Pepper einen Song zum Tanzen nennen.</string>
+    <string name="dance_empty">Noch keine Tänze. Erstelle einen Tanz über den Button oben.</string>
     <string name="dance_load_failed">Tänze konnten nicht geladen werden.</string>
+    <string name="dance_create">Tanz erstellen</string>
+    <string name="dance_create_hint">Song oder Künstler…</string>
+    <string name="dance_creating">Tanz wird erstellt…</string>
+    <string name="dance_created">Tanz erstellt.</string>
+    <string name="dance_create_failed">Tanz konnte nicht erstellt werden:</string>
 
     <string name="nav_title">Navigation &amp; Wegpunkte</string>
     <string name="nav_section_map">Karte</string>

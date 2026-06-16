@@ -15,7 +15,6 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
-import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.File;
@@ -44,49 +43,17 @@ public class DanceAction extends Action {
     @Override
     public void execute(QiContext context, String input) {
         String request = input == null ? "" : input.trim();
-        if (!hasConcreteSong(request)) {
-            DanceEntity fromLibrary = pickFromLibrary(context);
-            if (fromLibrary != null) {
-                repository.preparePlayback(context, fromLibrary);
-                SpeechManager.getInstance().systemSay(context,
-                        "Ich tanze einen Tanz aus meiner Sammlung für dich.");
-                playDance(context, fromLibrary);
-                return;
-            }
-        }
-
-        SpeechManager.getInstance().systemSay(context,
-                "Lass mich kurz einen passenden Tanz für dich einstudieren.");
-
-        ThinkingController.get().start(context);
-        DanceEntity dance;
-        try {
-            dance = repository.getOrCreate(context, query(request));
-        } catch (Exception e) {
-            ThinkingController.get().stop();
-            Log.w(TAG, "Dance preparation failed: " + e.getMessage());
-            DanceEntity cached = pickFromLibrary(context);
-            if (cached != null) {
-                repository.preparePlayback(context, cached);
-                SpeechManager.getInstance().systemSay(context,
-                        "Den Song erreiche ich gerade nicht. Ich tanze stattdessen einen aus meiner Sammlung.");
-                playDance(context, cached);
-                return;
-            }
+        DanceEntity dance = pickFromLibrary(context, request);
+        if (dance != null) {
+            repository.preparePlayback(context, dance);
             SpeechManager.getInstance().systemSay(context,
-                    "Diesen Song bekomme ich gerade nicht, ich tanze etwas Eigenes.");
-            playFallback(context);
+                    "Ich tanze einen Tanz aus meiner Sammlung für dich.");
+            playDance(context, dance);
             return;
         }
-        ThinkingController.get().stop();
-        playDance(context, dance);
-    }
-
-    private String query(String input) {
-        if (input == null || input.trim().isEmpty()) {
-            return "dance music";
-        }
-        return input.trim();
+        SpeechManager.getInstance().systemSay(context,
+                "Ich habe noch keinen Tanz gespeichert, ich tanze etwas Eigenes.");
+        playFallback(context);
     }
 
     private boolean hasConcreteSong(String request) {
@@ -101,7 +68,7 @@ public class DanceAction extends Action {
         return false;
     }
 
-    private DanceEntity pickFromLibrary(QiContext context) {
+    private DanceEntity pickFromLibrary(QiContext context, String request) {
         List<DanceEntity> playable = new ArrayList<>();
         List<DanceEntity> favorites = new ArrayList<>();
         for (DanceEntity dance : repository.all(context)) {
@@ -112,11 +79,31 @@ public class DanceAction extends Action {
                 }
             }
         }
-        List<DanceEntity> pool = !favorites.isEmpty() ? favorites : playable;
-        if (pool.isEmpty()) {
+        if (playable.isEmpty()) {
             return null;
         }
+        if (hasConcreteSong(request)) {
+            DanceEntity match = matchByName(playable, request);
+            if (match != null) {
+                return match;
+            }
+        }
+        List<DanceEntity> pool = !favorites.isEmpty() ? favorites : playable;
         return pool.get((int) (Math.random() * pool.size()));
+    }
+
+    private DanceEntity matchByName(List<DanceEntity> dances, String request) {
+        String needle = request.toLowerCase(Locale.ROOT);
+        DanceEntity best = null;
+        int bestLen = 0;
+        for (DanceEntity dance : dances) {
+            String name = dance.songName == null ? "" : dance.songName.toLowerCase(Locale.ROOT);
+            if (!name.isEmpty() && needle.contains(name) && name.length() > bestLen) {
+                best = dance;
+                bestLen = name.length();
+            }
+        }
+        return best;
     }
 
     private void playDance(QiContext context, DanceEntity dance) {
@@ -263,7 +250,8 @@ public class DanceAction extends Action {
 
     @Override
     public String getDescription() {
-        return "Makes Pepper dance to a song. The user can name any song or artist; Pepper plays a "
-                + "music preview and performs a generated choreography to it.";
+        return "Makes Pepper dance. Pepper plays one of the dances already saved in its library, "
+                + "preferring one that matches a song the user names. It never creates new dances; "
+                + "new choreographies are generated only from the admin dance library.";
     }
 }
