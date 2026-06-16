@@ -26,6 +26,7 @@ public final class AttractController {
     private static final String TAG = "AttractController";
     private static final double ROAM_STEP_M = 0.8;
     private static final double ROAM_TURN_MAX = 0.6;
+    private static final double GREET_DISTANCE_M = 1.5;
     private static final long ROAM_PAUSE_MS = 1500;
 
     private static final AttractController INSTANCE = new AttractController();
@@ -34,7 +35,6 @@ public final class AttractController {
     private volatile long lastGreetMs;
     private volatile boolean active;
     private volatile boolean greeting;
-    private volatile AttractView view;
     private volatile Thread roamThread;
     private volatile Future<Void> activeGoTo;
 
@@ -43,14 +43,6 @@ public final class AttractController {
 
     public static AttractController get() {
         return INSTANCE;
-    }
-
-    public void attachView(AttractView view) {
-        this.view = view;
-    }
-
-    public void detachView() {
-        this.view = null;
     }
 
     public boolean isActive() {
@@ -65,23 +57,25 @@ public final class AttractController {
     }
 
     public void tick(QiContext context, boolean overlayOpen, boolean busy) {
-        if (context == null || !active) {
+        if (context == null) {
             return;
         }
-        if (!AttractSettings.isEnabled(context) || overlayOpen) {
+        boolean shouldRun = AttractSettings.isEnabled(context)
+                && !overlayOpen && !busy && idleElapsed(context);
+        if (shouldRun && !active) {
+            startAttract(context);
+        } else if (!shouldRun && active) {
             stopAttract();
         }
     }
 
-    public void forceStart(QiContext context) {
-        if (context == null) {
-            return;
-        }
-        startAttract(context);
+    public void stop() {
+        stopAttract();
     }
 
-    public void forceStop() {
-        stopAttract();
+    private boolean idleElapsed(QiContext context) {
+        long idleMs = AttractSettings.getIdleMinutes(context) * 60_000L;
+        return SystemClock.elapsedRealtime() - lastInteractionMs >= idleMs;
     }
 
     private void startAttract(QiContext context) {
@@ -89,12 +83,7 @@ public final class AttractController {
             return;
         }
         active = true;
-        lastInteractionMs = SystemClock.elapsedRealtime();
-        Log.i(TAG, "Attract mode started manually");
-        AttractView v = view;
-        if (v != null) {
-            v.show();
-        }
+        Log.i(TAG, "Attract mode started");
         startRoaming(context);
     }
 
@@ -105,10 +94,6 @@ public final class AttractController {
         active = false;
         Log.i(TAG, "Attract mode stopped");
         cancelGoTo();
-        AttractView v = view;
-        if (v != null) {
-            v.hide();
-        }
     }
 
     private void startRoaming(QiContext context) {
@@ -125,7 +110,7 @@ public final class AttractController {
     private void roamLoop(QiContext context) {
         try {
             while (active) {
-                if (personPresent(context)) {
+                if (personClose(context)) {
                     greet(context);
                     sleep(ROAM_PAUSE_MS);
                 } else {
@@ -193,10 +178,25 @@ public final class AttractController {
         }
     }
 
-    private boolean personPresent(QiContext context) {
+    private boolean personClose(QiContext context) {
         try {
             List<Human> humans = context.getHumanAwareness().getHumansAround();
-            return humans != null && !humans.isEmpty();
+            if (humans == null || humans.isEmpty()) {
+                return false;
+            }
+            Frame robotFrame = context.getActuation().robotFrame();
+            for (Human human : humans) {
+                Frame head = human.getHeadFrame();
+                if (head == null) {
+                    continue;
+                }
+                Transform t = head.computeTransform(robotFrame).getTransform();
+                double distance = Math.hypot(t.getTranslation().getX(), t.getTranslation().getY());
+                if (distance <= GREET_DISTANCE_M) {
+                    return true;
+                }
+            }
+            return false;
         } catch (Exception e) {
             return false;
         }

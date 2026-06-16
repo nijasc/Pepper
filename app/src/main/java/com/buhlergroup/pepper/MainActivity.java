@@ -29,7 +29,6 @@ import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
 import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.buhlergroup.pepper.action.ActionHandler;
 import com.buhlergroup.pepper.action.attract.AttractController;
-import com.buhlergroup.pepper.action.attract.AttractView;
 import com.buhlergroup.pepper.action.career.CareerController;
 import com.buhlergroup.pepper.action.career.CareerView;
 import com.buhlergroup.pepper.action.follow.FollowController;
@@ -141,9 +140,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         WinnerView winnerView = findViewById(R.id.winnerView);
         WinnerController.get().attachView(winnerView);
 
-        AttractView attractView = findViewById(R.id.attractView);
-        AttractController.get().attachView(attractView);
-
         AdminController.get().setAdminStateListener(open -> updateHomeControls());
         SelfieController.get().setStateListener(active -> updateHomeControls());
         RaffleJoinController.get().setStateListener(active -> updateHomeControls());
@@ -190,7 +186,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         HoldController.get().detachView();
         WinnerController.get().setStateListener(null);
         WinnerController.get().detachView();
-        AttractController.get().detachView();
         watchdogHandler.removeCallbacks(speechWatchdog);
         QiSDK.unregister(this);
         recognizer.cancel();
@@ -251,6 +246,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     @Override
     public void onRobotFocusLost() {
         RobotContext.clear();
+        AttractController.get().stop();
         MemoryGameController.get().abort();
         FollowController.get().setFollowStateListener(null);
         FollowController.get().onFocusLost();
@@ -365,7 +361,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     }
 
     private void tickAttract() {
-        AttractController.get().tick(RobotContext.get(), homeOverlayOpen(), processing || listening);
+        AttractController.get().tick(RobotContext.get(), homeOverlayOpen(), processing);
     }
 
     private void checkSpeechWatchdog() {

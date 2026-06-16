@@ -1243,13 +1243,6 @@
             android:layout_marginTop="20dp"
             android:text="@string/raffle_save" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/attractTest"
-            style="@style/AdminMenuButton"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="12dp"
-            android:text="@string/attract_start" />
-
     </LinearLayout>
 
     <LinearLayout

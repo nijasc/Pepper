@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 
 public final class AttractSettings {
 
-    public static final boolean DEFAULT_ENABLED = false;
+    public static final boolean DEFAULT_ENABLED = true;
     public static final int DEFAULT_IDLE_MINUTES = 2;
     public static final int DEFAULT_GREET_SECONDS = 45;
 

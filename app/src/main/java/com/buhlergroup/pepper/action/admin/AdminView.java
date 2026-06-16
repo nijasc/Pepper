@@ -38,7 +38,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.buhlergroup.pepper.PepperApplication;
 import com.buhlergroup.pepper.R;
-import com.buhlergroup.pepper.action.attract.AttractController;
 import com.buhlergroup.pepper.action.attract.AttractSettings;
 import com.buhlergroup.pepper.action.camera.CameraSettings;
 import com.buhlergroup.pepper.action.camera.WifiCameraManager;
@@ -319,7 +318,6 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminStatsExport).setOnClickListener(v -> exportStats());
         findViewById(R.id.adminAttract).setOnClickListener(v -> showAttract());
         findViewById(R.id.attractSave).setOnClickListener(v -> saveAttract());
-        findViewById(R.id.attractTest).setOnClickListener(v -> toggleAttract());
         findViewById(R.id.cameraTest).setOnClickListener(v -> testCamera());
         findViewById(R.id.cameraSave).setOnClickListener(v -> saveCamera());
         findViewById(R.id.adminNavigation).setOnClickListener(v -> openNavigation());
@@ -1100,16 +1098,7 @@ public class AdminView extends FrameLayout {
         attractEnabled.setChecked(AttractSettings.isEnabled(getContext()));
         attractIdle.setText(String.valueOf(AttractSettings.getIdleMinutes(getContext())));
         attractGreet.setText(String.valueOf(AttractSettings.getGreetSeconds(getContext())));
-        updateAttractButton();
         showPanel(PANEL_ATTRACT);
-    }
-
-    private void updateAttractButton() {
-        TextView button = findViewById(R.id.attractTest);
-        if (button != null) {
-            button.setText(AttractController.get().isActive()
-                    ? R.string.attract_stop : R.string.attract_start);
-        }
     }
 
     private void saveAttract() {
@@ -1117,21 +1106,6 @@ public class AdminView extends FrameLayout {
         int greet = parseIntOr(attractGreet, AttractSettings.DEFAULT_GREET_SECONDS);
         AttractSettings.save(getContext(), attractEnabled.isChecked(), idle, greet);
         Toast.makeText(getContext(), R.string.attract_saved, Toast.LENGTH_SHORT).show();
-    }
-
-    private void toggleAttract() {
-        if (AttractController.get().isActive()) {
-            attractEnabled.setChecked(false);
-            saveAttract();
-            AttractController.get().forceStop();
-            updateAttractButton();
-        } else {
-            attractEnabled.setChecked(true);
-            saveAttract();
-            AttractController.get().forceStart(
-                    com.buhlergroup.pepper.action.dance.RobotContext.get());
-            hide();
-        }
     }
 
     private int parseIntOr(EditText field, int fallback) {
