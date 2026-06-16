@@ -10,6 +10,8 @@ import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.BatteryManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.text.InputType;
 import android.util.AttributeSet;
@@ -97,7 +99,17 @@ public class AdminView extends FrameLayout {
     private static final int PANEL_STATS = 11;
     private static final int PANEL_ATTRACT = 12;
 
+    private static final long DASH_REFRESH_MS = 15000;
+
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
+    private final Handler dashHandler = new Handler(Looper.getMainLooper());
+    private final Runnable dashRefresh = new Runnable() {
+        @Override
+        public void run() {
+            refreshDashboardStatus();
+            dashHandler.postDelayed(this, DASH_REFRESH_MS);
+        }
+    };
     private final StringBuilder entered = new StringBuilder();
     private int pinAttempts = 0;
     private long pinLockoutUntil = 0;
@@ -350,6 +362,7 @@ public class AdminView extends FrameLayout {
     public void hide() {
         AdminController.get().markClosed();
         releaseDetailServer();
+        dashHandler.removeCallbacks(dashRefresh);
         post(() -> setVisibility(GONE));
     }
 
@@ -447,8 +460,9 @@ public class AdminView extends FrameLayout {
         statusPanel.setVisibility(which == PANEL_STATUS ? VISIBLE : GONE);
         statsPanel.setVisibility(which == PANEL_STATS ? VISIBLE : GONE);
         attractPanel.setVisibility(which == PANEL_ATTRACT ? VISIBLE : GONE);
+        dashHandler.removeCallbacks(dashRefresh);
         if (which == PANEL_MENU) {
-            refreshDashboardStatus();
+            dashHandler.post(dashRefresh);
         }
     }
 
