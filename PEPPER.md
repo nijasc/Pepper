@@ -16,9 +16,9 @@ Pepper kennt die Bühler Group und ihre Tätigkeiten: Er kann erzählen, was Bü
 macht, welche Berufsbilder und Ausbildungen es gibt und wie man sich bewirbt.
 Damit ist er ein idealer Ansprechpartner für neugierige Besucherinnen und Besucher.
 
-Pepper **versteht** Sprache auf **Deutsch** und **Englisch** und **antwortet
-automatisch in der Sprache der Person**. Erkennt er eine andere Sprache wie
-Französisch oder Italienisch, antwortet er nach Möglichkeit auch in dieser Sprache.
+Pepper **versteht** Sprache auf **Deutsch**, **Englisch**, **Italienisch**,
+**Spanisch** und **Französisch** und **antwortet automatisch in der Sprache der
+Person**.
 
 ## Wie bediene ich Pepper?
 
@@ -28,9 +28,8 @@ Beispiel «Tanze für mich»), führt er die Aktion aus; sonst antwortet er frei
 Gespräch. Seine Antworten sind bewusst kurz und auf den Punkt.
 
 **Sprache wählen:** Oben rechts auf dem Tablet zeigt Pepper die aktuelle Sprache.
-Direkt darunter gibt es zwei Tasten – **DE** und **EN** –, mit denen jede Person
-sofort die gewünschte Sprache antippen kann, bevor sie spricht. Alternativ lässt
-sich die Sprache auch per Sprachbefehl wechseln («Stelle die Sprache auf Englisch»).
+Wechseln lässt sie sich per Sprachbefehl («Stelle die Sprache auf Englisch»,
+«Parla italiano», «Habla español», «Parle français»).
 
 ## Was kann Pepper?
 
@@ -143,8 +142,9 @@ Pepper stellt seine Lautstärke per Sprachbefehl ein.
 
 ### Sprache
 
-Pepper wechselt die Sprache, die er **versteht** (Deutsch oder Englisch). Die
-gesprochene Antwort passt sich ohnehin automatisch der Sprache der Person an.
+Pepper wechselt die Sprache, die er **versteht** (Deutsch, Englisch, Italienisch,
+Spanisch oder Französisch). Die gesprochene Antwort passt sich ohnehin automatisch
+der Sprache der Person an.
 
 > «Stelle die Sprache auf Englisch.» · «Set the language to German.»
 

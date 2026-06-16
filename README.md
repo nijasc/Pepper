@@ -20,6 +20,7 @@
   - [FollowMe-Mechanik](#followme-mechanik)
   - [Bildschirmanzeige](#bildschirmanzeige)
   - [Emotionswahrnehmung](#emotionswahrnehmung)
+  - [Attract-Modus](#attract-modus)
 - [Funktionen (Actions)](#funktionen-actions)
   - [Sprechen (Standard)](#sprechen-standard)
   - [Tanzen](#tanzen)
@@ -74,13 +75,13 @@ Pepper ist ein intelligenter Roboter mit physischen Fähigkeiten. Er beherrscht 
 
 Darüber hinaus verfügt Pepper über Wissen zur Bühler Group und ihren Tätigkeiten: Er weiss, welche Stellen es gibt und was Bühler macht, und kann Informationen über verschiedene Berufsbilder und Ausbildungsmöglichkeiten bereitstellen. Damit eignet er sich besonders gut als Ansprechpartner an Messen, Informationsanlässen oder im Empfangsbereich.
 
-Sein Charakter lässt sich als hilfreich, intelligent und humorvoll beschreiben. Pepper **versteht** Sprachbefehle auf **Deutsch** und **Englisch** und **antwortet automatisch in der Sprache des Benutzers** – erkennt das Sprachmodell etwa eine französische oder italienische Frage, gibt Pepper die Antwort in dieser Sprache aus (siehe [Sprache](#sprache)). Er weiss zu jedem Zeitpunkt, welche Fähigkeiten ihm aktuell zur Verfügung stehen – die verfügbaren Funktionen werden ihm dynamisch mitgeteilt (siehe [Intent Engine](#intent-engine)).
+Sein Charakter lässt sich als hilfreich, intelligent und humorvoll beschreiben. Pepper **versteht** Sprachbefehle in fünf Erkennungssprachen – **Deutsch**, **Englisch**, **Italienisch**, **Spanisch** und **Französisch** (umschaltbar, Start auf Deutsch) – und **antwortet automatisch in der Sprache des Benutzers** (siehe [Sprache](#sprache)). Er weiss zu jedem Zeitpunkt, welche Fähigkeiten ihm aktuell zur Verfügung stehen – die verfügbaren Funktionen werden ihm dynamisch mitgeteilt (siehe [Intent Engine](#intent-engine)).
 
 ### Wie bediene ich Pepper?
 
 Pepper hört auf Sprachbefehle. Man spricht ihn also einfach an, und er reagiert auf das Gesagte. Im Hintergrund entscheidet derselbe OpenAI-Aufruf in einem Zug, **ob** eine spezialisierte Funktion gemeint ist und **was** Pepper sagt: Erkennt Pepper im Gesagten einen Befehl, der zu einer seiner Funktionen passt (z. B. «Tanze für mich»), führt er die entsprechende Aktion aus; andernfalls antwortet er frei (siehe [Intent Engine](#intent-engine)). Die Antwort wird **satzweise gestreamt** und gesprochen, sodass Pepper früh zu reden beginnt, statt die ganze Antwort abzuwarten.
 
-> **Wichtig:** Die erste Anfrage muss auf Deutsch erfolgen. Grund dafür ist die Konfiguration der **Spracherkennung** – sie ist standardmässig auf Deutsch eingestellt und versteht nur Deutsch oder Englisch, bis die Erkennungssprache aktiv gewechselt wird (siehe Funktion [Sprache](#sprache)). Die *gesprochene Antwort* hingegen passt sich automatisch der erkannten Sprache an.
+> **Wichtig:** Die **Spracherkennung** startet standardmässig auf Deutsch; die erste Anfrage erfolgt daher am besten auf Deutsch. Danach lässt sich die Erkennungssprache per Sprachbefehl oder im Admin-Bereich auf Englisch, Italienisch, Spanisch oder Französisch umstellen (siehe Funktion [Sprache](#sprache)). Die *gesprochene Antwort* hingegen passt sich ohnehin automatisch der erkannten Sprache an.
 
 ---
 
@@ -213,7 +214,7 @@ Auf Peppers Display sind dauerhaft zwei Elemente eingeblendet: oben links das **
 
 Die Sprachanzeige wird live aktualisiert: Wechselt der Benutzer die Sprache (siehe Funktion [Sprache](#sprache)), passt sich die Anzeige sofort an, ohne dass die Applikation neu gestartet werden muss.
 
-Direkt unter der Sprachanzeige liegen zwei **Touch-Tasten «DE» / «EN»**, mit denen jede Person die Erkennungs- und Anzeigesprache sofort umschalten kann – ohne erst einen deutschen Sprachbefehl geben zu müssen. So lässt sich der dokumentierte «erste Anfrage auf Deutsch»-Einstieg umgehen. Wie der Admin-Button werden auch diese Tasten ausgeblendet, solange ein Overlay offen ist.
+Die Sprachanzeige ist reine Information und nicht antippbar. Die Erkennungssprache wird per Sprachbefehl (siehe Funktion [Sprache](#sprache)) oder im [Admin-Bereich](#admin-bereich) gewechselt. Wie der Admin-Button wird auch die Sprachanzeige ausgeblendet, solange ein Overlay offen ist.
 
 Während Pepper spricht, blendet die `DialogueView` seine Antwort zusätzlich als **Untertitel** ein – Wort für Wort, synchron zum Sprechen. Nach dem Satz bleibt der Text kurz stehen und wird dann automatisch ausgeblendet. Solange ein Overlay (Admin, Selfie, Memory, Verlosung, Navigation, Tanz-Bibliothek, Hold) offen ist, wird der Untertitel unterdrückt.
 
@@ -229,6 +230,12 @@ Ist eine Stimmung klar und nicht neutral erkennbar, fliesst sie als zusätzliche
 - Ein **Cooldown** verhindert, dass Pepper die Stimmung in zwei aufeinanderfolgenden Antworten anspricht.
 
 Wann und wie Pepper die Stimmung einbindet, formuliert das Sprachmodell selbst – dadurch wirkt die Erwähnung natürlich und passt sich der jeweiligen Sprache und Situation an. Erkennt Pepper keine oder nur eine neutrale Stimmung, erwähnt er sie gar nicht.
+
+### Attract-Modus
+
+Ist gerade niemand im Gespräch, lockt Pepper im **Attract-Modus** selbstständig Besucher an: Er fährt langsam im Raum umher und begrüsst kurz («Hallo»), sobald jemand nah genug (rund 1,5 m) an ihn herantritt; danach fährt er weiter. Auf dem Bildschirm erscheint dabei **kein** zusätzlicher Text.
+
+Der Modus läuft **vollautomatisch** und wird ausschliesslich über einen **Ein-/Aus-Schalter** im [Admin-Bereich](#admin-bereich) (Kachel «Attract-Modus») gesteuert – standardmässig aktiv, ein manueller Start entfällt. Spricht ein Besucher Pepper an oder wird ein Overlay (Admin, Selfie …) geöffnet, pausiert das Herumfahren automatisch; nach einer kurzen Leerlaufzeit nimmt Pepper es wieder auf. Das Fahren läuft auch weiter, während das Google-Spracherkennungs-Overlay sichtbar ist.
 
 ---
 
@@ -345,7 +352,7 @@ Beispiel (de): Quiz. / Frag mich was über Bühler.
 
 Auf Wunsch macht Pepper ein gemeinsames Selfie: Er nimmt mit seiner Kamera ein Foto auf, fügt ein Pepper-Motiv ins Bild ein und zeigt anschliessend auf dem Tablet einen QR-Code an. Über diesen QR-Code lässt sich das Bild auf das eigene Smartphone herunterladen.
 
-Vor dem Speichern zeigt Pepper das Foto zur **Vorschau**: Der Gast kann es **speichern** oder mit **«Nochmal»** (Touch oder Sprachbefehl «passt» / «nochmal») bis zu zweimal neu aufnehmen. Erfolgt keine Eingabe, wird nach kurzer Zeit automatisch das aktuelle Bild gespeichert (kein hängendes Overlay). Nur das bestätigte Foto wird gespeichert und geteilt.
+Vor dem Speichern zeigt Pepper das Foto zur **Vorschau**: Der Gast kann es **speichern** oder mit **«Nochmal»** (Touch oder Sprachbefehl «passt» / «nochmal») bis zu zweimal neu aufnehmen. Erfolgt keine Eingabe, wird nach kurzer Zeit automatisch das aktuelle Bild gespeichert (kein hängendes Overlay). Nur das bestätigte Foto wird gespeichert und geteilt. Auch im finalen QR-Code-Bildschirm gibt es einen **«Nochmal»**-Knopf: Er verwirft das bereits gespeicherte Bild (Datei und Datenbankeintrag) und startet eine neue Aufnahme.
 
 Das Foto wird **lokal auf Peppers Tablet** gespeichert (Metadaten in einer Room-Datenbank, das Bild als Datei) und über einen kleinen, in die App eingebetteten Webserver bereitgestellt. Über den QR-Code lädt das Smartphone das Bild **direkt von Pepper** – nichts wird ins Internet hochgeladen. Damit der Download funktioniert, muss sich das Smartphone im **selben WLAN wie Pepper** befinden.
 
@@ -413,7 +420,7 @@ Beispiel (de): Setze die Lautstärke auf 80%.
 
 Wechselt die Sprache der **Spracherkennung** (Google) sowie die Anzeige rechts oben. Damit bestimmt diese Funktion, welche Sprache Pepper *versteht*.
 
-**Unterstützte Erkennungssprachen:** Deutsch (`de-CH`), Englisch (`en-US`)
+**Unterstützte Erkennungssprachen:** Deutsch (`de-CH`), Englisch (`en-US`), Italienisch (`it-IT`), Spanisch (`es-ES`), Französisch (`fr-FR`)
 
 Davon zu unterscheiden ist die *gesprochene Antwort*: Diese richtet sich automatisch nach der Sprache der Benutzereingabe (über den `[[lang:…]]`-Marker, siehe [Intent Engine](#intent-engine)). Erkennt Pepper z. B. eine englische Frage, antwortet er auf Englisch, ohne dass die Erkennungssprache umgestellt werden muss. Die App kann eine ganze Reihe von Sprachcodes auf passende Pepper-Stimmen abbilden (`LocaleResolver`).
 
@@ -504,7 +511,7 @@ Das Menü bündelt:
 | Verlauf löschen | Leert das Gesprächsgedächtnis (`HistoryManager`). |
 | Dev-Logs | Zeigt die Entwickler-Logs chronologisch (neueste unten, Auto-Scroll). |
 | Selfies | Öffnet die [Selfie-Galerie](#selfie-galerie). |
-| Sprache | Wechselt die Erkennungssprache manuell zwischen Deutsch und Englisch. |
+| Sprache | Wechselt die Erkennungssprache manuell (Deutsch, Englisch, Italienisch, Spanisch, Französisch). |
 | Verlauf ansehen | Zeigt das aktuelle Gespräch als Chat-Blasen. |
 | Verlosung | Legt eine [Verlosung](#verlosung-verwalten) an bzw. verwaltet sie. |
 | Tänze | Öffnet die [Tanz-Bibliothek](#tanz-bibliothek). |
@@ -532,7 +539,7 @@ Die Tanz-Bibliothek listet alle bereits einstudierten [Tänze](#tanzen) (aus `da
 
 Typischer Ablauf:
 
-1. **Scan starten:** Pepper dreht sich für eine 360°-Rundumsicht und baut dabei eine Karte des Raums auf. Der Scan wird benannt und gespeichert.
+1. **Scan starten:** Pepper erkundet den Raum aktiv – er dreht sich zunächst für eine Rundumsicht und fährt dann ringförmig die Ecken an, bis die Raumgrenzen erreicht sind, und baut dabei fortlaufend eine Karte auf (der Scan endet also nicht schon nach einer einzelnen 360°-Drehung). Der Scan wird benannt und gespeichert.
 2. **Lokalisieren:** Auf Basis eines gespeicherten Scans bestimmt Pepper seine Position in der Karte.
 3. **Wegpunkte setzen:** An der aktuellen Position lässt sich ein benannter Wegpunkt ablegen, optional vom Typ **«Fotostand»**.
 4. **Hinfahren:** Pepper navigiert auf Wunsch zu einem gespeicherten Wegpunkt.
@@ -584,6 +591,8 @@ Die `NavigationView` zeigt dazu eine **Live-Karte** (`WaypointMapView`) mit Star
 - Pepper-Roboter
 - OpenAI-API-Token
 - Pepper-SDK-Plugin
+- **Build-JDK 17** – das in Android Studio gebündelte JBR (JDK 17). Neuere System-JDKs (21, 26 …) sind für Gradle 7.2 / AGP 7.1.3 zu neu und lassen den Build scheitern. Baust du über die Kommandozeile, setze `JAVA_HOME` auf das Studio-JBR (z. B. `…/Android Studio/jbr`).
+- **Android-SDK-Pakete** – Plattform `android-34` (Compile-/Target-SDK 34) und `build-tools;30.0.3`. Fehlen sie, installiere sie über den SDK-Manager (Android Studio) oder `sdkmanager "platforms;android-34" "build-tools;30.0.3"`.
 
 #### Env-Setup
 
@@ -662,7 +671,7 @@ Eine Release-APK muss signiert sein, sonst lässt sie sich nicht über `adb` ins
 
 > **Wichtig:** Bewahre den Keystore sicher auf und committe ihn niemals. Geht er verloren, lassen sich auf bereits installierten Geräten keine Updates derselben App mehr ausliefern. Im Repository verbleibt ausschliesslich die Vorlage `keystore.properties.template`.
 
-> **`-storetype JKS` ist bewusst gesetzt.** Erzeugst du den Keystore mit einem sehr neuen JDK (z. B. JDK 26), schreibt `keytool` standardmässig ein PKCS12-Format mit starken Algorithmen (Integritätsprüfung via `HmacPBESHA256`). Die ältere JVM, mit der Gradle 7.2 baut (max. JDK 16), kann das nicht lesen und der Build bricht beim Signieren ab mit `NoSuchAlgorithmException: Algorithm HmacPBESHA256 not available`. Das ältere JKS-Format vermeidet das und ist von jeder JVM lesbar. Alternativ erzeugst du den Keystore mit demselben JDK (≤ 16), mit dem auch gebaut wird.
+> **`-storetype JKS` ist bewusst gesetzt.** Erzeugst du den Keystore mit einem sehr neuen JDK (z. B. JDK 26), schreibt `keytool` standardmässig ein PKCS12-Format mit starken Algorithmen (Integritätsprüfung via `HmacPBESHA256`), das eine ältere Build-JVM nicht lesen kann – der Build bricht dann beim Signieren ab mit `NoSuchAlgorithmException: Algorithm HmacPBESHA256 not available`. Das ältere JKS-Format vermeidet das und ist breit lesbar. Erzeuge den Keystore am besten mit demselben JDK (dem Android-Studio-JBR), mit dem auch gebaut wird.
 
 #### Release-APK bauen
 
@@ -674,7 +683,7 @@ Baue die signierte APK über den Gradle-Task `assembleRelease`:
 
 Das Ergebnis liegt anschliessend unter `app/build/intermediates/apk/release/app-release.apk`.
 
-> **Build-JDK:** Gradle 7.2 / AGP 7.1.3 laufen nur mit **JDK 11–16** (JDK 17+ wird erst ab Gradle 7.3 unterstützt). Baue entweder direkt aus Android Studio (`Build → Generate Signed Bundle / APK` oder den Task `assembleRelease` im Studio-Terminal – Studio nutzt sein gebündeltes JBR), oder setze für die Kommandozeile `org.gradle.java.home` in `gradle.properties` auf ein JDK 11–16. Das in `compileOptions` gesetzte Java 8 betrifft nur die Quellcode-Kompatibilität, nicht das Build-JDK.
+> **Build-JDK:** Baue mit dem in Android Studio gebündelten **JBR (JDK 17)** – damit laufen Gradle 7.2 / AGP 7.1.3 zuverlässig. Deutlich neuere System-JDKs (21, 26 …) sind zu neu und lassen den Build scheitern. Baue entweder direkt aus Android Studio (`Build → Generate Signed Bundle / APK` oder den Task `assembleRelease` im Studio-Terminal – Studio nutzt sein JBR), oder setze für die Kommandozeile `JAVA_HOME` bzw. `org.gradle.java.home` auf das Studio-JBR. Das in `compileOptions` gesetzte Java 8 betrifft nur die Quellcode-Kompatibilität, nicht das Build-JDK.
 
 > **SDK-Pfad:** Für Kommandozeilen-Builds muss der Pfad zum Android-SDK bekannt sein – entweder über die Datei `local.properties` (`sdk.dir=…`) oder die Umgebungsvariable `ANDROID_HOME`. Android Studio legt `local.properties` automatisch an.
 
