@@ -115,3 +115,32 @@ ein Commit pro Subtask, keine Code-Kommentare. Befundformat: **Problem → Vorsc
 sauber ziehen — Subtask „Package-Schnitt aufräumen"). Erst wenn die Abhängigkeitsrichtung im
 Package-Schnitt stabil azyklisch ist, lohnt als optionaler Folgeschritt ein `:core`-Modul; eigene
 `:feature-*`-Module bringen bei der aktuellen QiSDK-Querkopplung kurzfristig zu wenig ROI.
+
+## Package-Schnitt (core vs. feature) — Befund
+
+**Stand:** Infrastruktur liegt bereits in eigenen Top-Level-Packages (`openai`, `net`, `stats`,
+`config`, `debug`, `lang`, `perception`), getrennt von den Feature-Packages (`action/*`). Die
+strukturelle Trennung ist also weitgehend vorhanden.
+
+**Problem — Abhängigkeiten in falscher Richtung (Infra → Feature, erzeugt Zyklen):**
+- `openai/OpenAIService` → `action.Action` (Action-Liste für Prompt-Aufbau) und
+  `action.raffle.RaffleRepository`/`RaffleEntity`/`RaffleStatus` (Raffle-Hinweis im System-Prompt).
+- `openai/history/HistoryEntry` + `HistoryManager` → `action.Action` (History-Einträge referenzieren
+  die erzeugende Action).
+- `lang/SpeechManager` → `action.audio.AudioCoordinator`, `action.dialogue.DialogueController`,
+  `action.thinking.ThinkingController` (Sprachausgabe koordiniert Audio-Ducking/Dialog/Thinking).
+
+**Vorschlag (Reihenfolge nach Risiko):**
+1. **Querschnitt-Koordinatoren verschieben (geringes Risiko, hoher Gewinn):**
+   `AudioCoordinator`, `DialogueController`, `ThinkingController` sind keine Features, sondern
+   cross-cutting Laufzeit-Koordination. In ein `core`-Package (z. B. `coordination`) ziehen → die
+   `lang → action`-Inversion verschwindet. (Reines Verschieben + Import-Update.)
+2. **OpenAIService ↔ Raffle entkoppeln (mittleres Risiko):** Raffle-Prompt-Hinweis nicht aus
+   `OpenAIService` heraus aus `RaffleRepository` ziehen, sondern per Provider-Interface
+   (`SystemPromptHint`) injizieren; Action-Liste ebenfalls als schmales Interface statt `List<Action>`.
+3. **History ↔ Action entkoppeln (Domänen-Kopplung):** `HistoryEntry`/`HistoryManager` referenzieren
+   `Action` nur, um den Urheber zu markieren — ein schmales Interface oder eine String-ID genügt.
+
+**Bewertung:** Schritt 1 ist ein sauberer, isolierter Verschiebe-Commit. Schritte 2–3 berühren den
+Prompt-/History-Pfad und sollten einzeln mit Hardware-Test gemacht werden. Zurückgestellt als
+bewusste, dokumentierte Entscheidung (kein Blind-Umbau des Prompt-Pfads ohne Gerätetest).
