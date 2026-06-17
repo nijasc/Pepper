@@ -19,6 +19,7 @@ import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
+import com.buhlergroup.pepper.databinding.ViewAdminBinding;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,30 +88,30 @@ public class AdminView extends FrameLayout {
     }
 
     private void init(Context context) {
-        LayoutInflater.from(context).inflate(R.layout.view_admin, this, true);
+        ViewAdminBinding binding = ViewAdminBinding.inflate(LayoutInflater.from(context), this);
         setBackgroundColor(ContextCompat.getColor(context, R.color.game_overlay));
         setClickable(true);
         setFocusable(true);
 
-        pinPanel = findViewById(R.id.adminPinPanel);
-        menuPanel = findViewById(R.id.adminMenuPanel);
-        devLogPanel = findViewById(R.id.adminDevLogPanel);
-        galleryPanel = findViewById(R.id.adminGalleryPanel);
-        detailPanel = findViewById(R.id.adminDetailPanel);
-        langPanel = findViewById(R.id.adminLangPanel);
-        historyPanel = findViewById(R.id.adminHistoryPanel);
-        raffleCreatePanel = findViewById(R.id.adminRaffleCreatePanel);
-        rafflePanel = findViewById(R.id.adminRafflePanel);
-        cameraPanel = findViewById(R.id.adminCameraPanel);
-        statusPanel = findViewById(R.id.adminStatusPanel);
-        statsPanel = findViewById(R.id.adminStatsPanel);
-        debugPanel = findViewById(R.id.adminDebugPanel);
-        attractPanel = findViewById(R.id.adminAttractPanel);
+        pinPanel = binding.adminPinPanel;
+        menuPanel = binding.adminMenuPanel;
+        devLogPanel = binding.adminDevLogPanel;
+        galleryPanel = binding.adminGalleryPanel;
+        detailPanel = binding.adminDetailPanel;
+        langPanel = binding.adminLangPanel;
+        historyPanel = binding.adminHistoryPanel;
+        raffleCreatePanel = binding.adminRaffleCreatePanel;
+        rafflePanel = binding.adminRafflePanel;
+        cameraPanel = binding.adminCameraPanel;
+        statusPanel = binding.adminStatusPanel;
+        statsPanel = binding.adminStatsPanel;
+        debugPanel = binding.adminDebugPanel;
+        attractPanel = binding.adminAttractPanel;
 
-        adminHeader = findViewById(R.id.adminHeader);
-        adminHeaderTitle = findViewById(R.id.adminHeaderTitle);
-        findViewById(R.id.adminHeaderBack).setOnClickListener(v -> goBack());
-        findViewById(R.id.adminHeaderClose).setOnClickListener(v -> hide());
+        adminHeader = binding.adminHeader;
+        adminHeaderTitle = binding.adminHeaderTitle;
+        binding.adminHeaderBack.setOnClickListener(v -> goBack());
+        binding.adminHeaderClose.setOnClickListener(v -> hide());
 
         panelNav = new PanelNavigator(adminHeader, adminHeaderTitle, this::onPanelShown);
         panelNav.register(PANEL_PIN, pinPanel);
@@ -137,24 +138,24 @@ public class AdminView extends FrameLayout {
         attract = new AttractPanelController(this, panelNav);
         camera = new CameraPanelController(this, dbExecutor, panelNav);
         diagnostics = new DiagnosticsController(this, panelNav);
-        findViewById(R.id.adminPinCancel).setOnClickListener(v -> hide());
-        findViewById(R.id.adminClose).setOnClickListener(v -> hide());
-        findViewById(R.id.adminDevLogs).setOnClickListener(v -> diagnostics.showDevLog());
-        findViewById(R.id.adminSelfies).setOnClickListener(v -> galleryController.showGallery());
-        findViewById(R.id.adminLanguage).setOnClickListener(v -> language.showLanguage());
-        findViewById(R.id.adminHistory).setOnClickListener(v -> history.showHistory());
-        findViewById(R.id.adminRaffle).setOnClickListener(v -> raffleAdmin.openRaffle());
-        findViewById(R.id.adminCamera).setOnClickListener(v -> camera.showCamera());
-        findViewById(R.id.adminStatus).setOnClickListener(v -> showStatus());
-        findViewById(R.id.statusRefresh).setOnClickListener(v -> showStatus());
-        findViewById(R.id.adminStats).setOnClickListener(v -> showStats());
-        findViewById(R.id.adminStatsExport).setOnClickListener(v -> dashboard.exportStats());
-        findViewById(R.id.adminDebug).setOnClickListener(v -> diagnostics.showDebug());
-        findViewById(R.id.adminAttract).setOnClickListener(v -> attract.showAttract());
-        findViewById(R.id.adminNavigation).setOnClickListener(v -> openNavigation());
-        findViewById(R.id.adminDances).setOnClickListener(v -> openDanceLibrary());
-        findViewById(R.id.adminDsgvo).setOnClickListener(v -> showDsgvoAccessDialog());
-        findViewById(R.id.adminChangePin).setOnClickListener(v -> showChangePinDialog());
+        binding.adminPinCancel.setOnClickListener(v -> hide());
+        binding.adminClose.setOnClickListener(v -> hide());
+        binding.adminDevLogs.setOnClickListener(v -> diagnostics.showDevLog());
+        binding.adminSelfies.setOnClickListener(v -> galleryController.showGallery());
+        binding.adminLanguage.setOnClickListener(v -> language.showLanguage());
+        binding.adminHistory.setOnClickListener(v -> history.showHistory());
+        binding.adminRaffle.setOnClickListener(v -> raffleAdmin.openRaffle());
+        binding.adminCamera.setOnClickListener(v -> camera.showCamera());
+        binding.adminStatus.setOnClickListener(v -> showStatus());
+        binding.statusRefresh.setOnClickListener(v -> showStatus());
+        binding.adminStats.setOnClickListener(v -> showStats());
+        binding.adminStatsExport.setOnClickListener(v -> dashboard.exportStats());
+        binding.adminDebug.setOnClickListener(v -> diagnostics.showDebug());
+        binding.adminAttract.setOnClickListener(v -> attract.showAttract());
+        binding.adminNavigation.setOnClickListener(v -> openNavigation());
+        binding.adminDances.setOnClickListener(v -> openDanceLibrary());
+        binding.adminDsgvo.setOnClickListener(v -> showDsgvoAccessDialog());
+        binding.adminChangePin.setOnClickListener(v -> showChangePinDialog());
     }
 
     public void open() {
