@@ -15,13 +15,13 @@ So bringst du Pepper bei, sich in einem Raum zu orientieren und gespeicherte
 bewusst einfach gehalten: **wenig Bewegung, schneller Scan, Wegpunkte werden per
 Tablet eingelernt** (kein autonomes Herumfahren).
 
-> **Wichtig zum Verständnis:** Pepper **dreht sich beim Scan nicht von selbst**.
+> **Wichtig zum Verständnis:** Pepper **bewegt sich beim Scan nicht von selbst**.
 > Während des Mappings (`LocalizeAndMap`) kann die Fahr-Basis nicht autonom
 > bewegt werden (ein paralleler `GoTo` scheitert mit „Move task not started“, und
-> `Animate`/`.qianim` steuert nur Gelenke, nicht die Räder). Deshalb **drehst du
-> Pepper beim Scannen selbst** – von Hand oder über die Bewegungs-Tasten. Erst
-> wenn die Karte gespeichert und aktiviert ist, fährt Pepper über `GoTo`
-> zuverlässig zu Wegpunkten.
+> `Animate`/`.qianim` steuert nur Gelenke, nicht die Räder). Deshalb **drehst und
+> schiebst du Pepper beim Scannen von Hand** – es gibt bewusst keine Bewegungs-/
+> Jog-Tasten mehr. Erst wenn die Karte gespeichert und aktiviert ist, fährt Pepper
+> über `GoTo` zuverlässig zu Wegpunkten.
 
 ### 1. Navigation öffnen
 
@@ -33,11 +33,15 @@ Tablet eingelernt** (kein autonomes Herumfahren).
 1. Oben einen **Namen** für den Scan eingeben (z. B. „Empfang“).
 2. **„Scan starten“** tippen. Pepper beginnt zu mappen und zeigt die **Live-Karte
    im Vollbild**, die laufend wächst.
-3. **Drehe Pepper langsam einmal um die eigene Achse** (von Hand schieben/drehen),
-   damit er den Umkreis erfasst. Für grössere Räume kannst du ihn zusätzlich ein
-   Stück weiterschieben und erneut drehen – es genügt, die später genutzten
-   Bereiche zu erfassen.
-4. Zum Beenden entweder den grossen **STOP-Button** drücken **oder** „**Stopp**“
+3. **Drehe Pepper langsam von Hand einmal um die eigene Achse**, damit er den
+   Umkreis erfasst. Für grössere oder verwinkelte Räume zusätzlich ein Stück
+   hinschieben (um Ecken, in Nischen) und dort erneut drehen. An markanten Stellen
+   **„Aktuelle Position erfassen“** tippen, damit die Live-Karte den Bereich sicher
+   aufnimmt.
+4. **Möglichst freie Fläche, kurzer Scan:** keine Personen im Sichtfeld, sonst
+   landen sie als „Geister-Hindernisse“ in der Karte. Kontrolliere das laufend an
+   der Live-Karte und scanne im Zweifel neu.
+5. Zum Beenden entweder den grossen **STOP-Button** drücken **oder** „**Stopp**“
    (bzw. „Halt“, „Fertig“) sagen. Die Karte wird gespeichert.
 
 ### 3. Karte aktivieren (lokalisieren)
@@ -47,11 +51,10 @@ Tablet eingelernt** (kein autonomes Herumfahren).
    **„Lokalisiert in …“**. (Steht Pepper noch ungefähr am Scan-Startpunkt, klappt
    das am schnellsten.)
 
-### 4. Wegpunkte einlernen (teach-by-driving)
+### 4. Wegpunkte einlernen
 
-1. Mit den **Bewegungs-Tasten** **Vor**, **Zurück**, **Links drehen** und
-   **Rechts drehen** fährst du Pepper in kleinen Schritten zur gewünschten Stelle.
-   (Das funktioniert jetzt, weil die Karte aktiv/lokalisiert ist.)
+1. Schiebe/drehe Pepper **von Hand** zur gewünschten Stelle. Weil die Karte aktiv
+   und lokalisiert ist, kennt Pepper dabei laufend seine Position.
 2. Einen **Namen** für den Wegpunkt eingeben. Für einen Foto-Standort zusätzlich
    **„Fotostand“** ankreuzen – dann fährt Pepper z. B. beim Selfie automatisch
    dorthin.

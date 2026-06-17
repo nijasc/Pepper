@@ -315,7 +315,7 @@ public final class NavigationManager {
             QiContext c = qiContext;
             RoomScanEntity scan = activeScan;
             if (c == null || scan == null || !localized) {
-                cb.onError("Pepper ist noch nicht lokalisiert.");
+                cb.onError("Pepper ist noch nicht lokalisiert. Aktiviere zuerst einen Raum-Scan.");
                 return;
             }
             try {
@@ -369,7 +369,7 @@ public final class NavigationManager {
         submit(() -> {
             QiContext c = qiContext;
             if (c == null || !localized) {
-                cb.onError("Pepper ist noch nicht lokalisiert.");
+                cb.onError("Pepper ist noch nicht lokalisiert. Aktiviere zuerst einen Raum-Scan.");
                 return;
             }
             try {
@@ -644,68 +644,8 @@ public final class NavigationManager {
         }
     }
 
-    public void jog(double dx, double dy, double dTheta, Callback<Void> cb) {
-        submit(() -> {
-            QiContext c = qiContext;
-            if (c == null) {
-                cb.onError("Roboter ist nicht bereit.");
-                return;
-            }
-            try {
-                Frame robotFrame = c.getActuation().robotFrame();
-                Transform t = TransformBuilder.create().from2DTransform(dx, dy, dTheta);
-                FreeFrame target = c.getMapping().makeFreeFrame();
-                target.update(robotFrame, t, 0L);
-                Future<Void> future = GoToBuilder.with(c).withFrame(target.frame()).build().async().run();
-                activeGoTo = future;
-                try {
-                    awaitGoTo(future, () -> qiContext != null);
-                } finally {
-                    if (activeGoTo == future) {
-                        activeGoTo = null;
-                    }
-                }
-                cb.onResult(null);
-            } catch (Exception e) {
-                Log.w(TAG, "jog failed: " + e.getMessage());
-                cb.onError("Bewegung fehlgeschlagen.");
-            }
-        });
-    }
-
-    public void rotateInPlace(Callback<Void> cb) {
-        submit(() -> {
-            QiContext c = qiContext;
-            if (c == null) {
-                cb.onError("Roboter ist nicht bereit.");
-                return;
-            }
-            int steps = 4;
-            double step = 2.0 * Math.PI / steps;
-            try {
-                for (int i = 0; i < steps && qiContext != null; i++) {
-                    Frame robotFrame = c.getActuation().robotFrame();
-                    Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, step);
-                    FreeFrame target = c.getMapping().makeFreeFrame();
-                    target.update(robotFrame, t, 0L);
-                    Future<Void> future = GoToBuilder.with(c).withFrame(target.frame()).build().async().run();
-                    activeGoTo = future;
-                    boolean ok = awaitGoTo(future, () -> qiContext != null);
-                    if (activeGoTo == future) {
-                        activeGoTo = null;
-                    }
-                    if (!ok) {
-                        cb.onError("Drehung fehlgeschlagen.");
-                        return;
-                    }
-                    publishScanSnapshot();
-                }
-                cb.onResult(null);
-            } catch (Exception e) {
-                Log.w(TAG, "rotateInPlace failed: " + e.getMessage());
-                cb.onError("Drehung fehlgeschlagen.");
-            }
-        });
+    public void captureSnapshot() {
+        submit(this::publishScanSnapshot);
     }
 
     private void cancelActiveGoTo() {
