@@ -151,7 +151,8 @@ flowchart TD
 
 ## Hold my beer (Zustandsautomat)
 
-Zustandsautomat der Hold-Session. Beteiligt: `action/hold/HoldController`.
+Zustandsautomat der Hold-Session. Beteiligt: `action/hold/HoldController`
+(lokalisierte Sprüche in `action/hold/HoldQuotes`).
 Aktueller Stand: 15 s Wartezeit, ruhige Halte-Hand (kein Pose-Loop), 5-Sekunden-
 Countdown vor der Rückkehr.
 
