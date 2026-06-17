@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
+import com.buhlergroup.pepper.databinding.ViewNavigationBinding;
 import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.util.List;
@@ -56,31 +57,32 @@ public class NavigationView extends FrameLayout {
     }
 
     private void init(Context context) {
-        LayoutInflater.from(context).inflate(R.layout.view_navigation, this, true);
+        ViewNavigationBinding binding =
+                ViewNavigationBinding.inflate(LayoutInflater.from(context), this);
         setBackgroundColor(ContextCompat.getColor(context, R.color.game_overlay));
         setClickable(true);
         setFocusable(true);
 
-        scrollRoot = findViewById(R.id.navScrollRoot);
-        statusView = findViewById(R.id.navStatus);
-        scanName = findViewById(R.id.navScanName);
-        waypointName = findViewById(R.id.navWpName);
-        fotostand = findViewById(R.id.navWpFotostand);
-        scanList = findViewById(R.id.navScanList);
-        waypointList = findViewById(R.id.navWpList);
-        waypointMap = findViewById(R.id.navWaypointMap);
-        scanStartButton = findViewById(R.id.navScanStart);
-        scanStopButton = findViewById(R.id.navScanStop);
-        waypointSaveButton = findViewById(R.id.navWpSave);
-        scanFullscreen = findViewById(R.id.navScanFullscreen);
-        scanMap = findViewById(R.id.navScanMap);
+        scrollRoot = binding.navScrollRoot;
+        statusView = binding.navStatus;
+        scanName = binding.navScanName;
+        waypointName = binding.navWpName;
+        fotostand = binding.navWpFotostand;
+        scanList = binding.navScanList;
+        waypointList = binding.navWpList;
+        waypointMap = binding.navWaypointMap;
+        scanStartButton = binding.navScanStart;
+        scanStopButton = binding.navScanStop;
+        waypointSaveButton = binding.navWpSave;
+        scanFullscreen = binding.navScanFullscreen;
+        scanMap = binding.navScanMap;
 
         scanStartButton.setOnClickListener(v -> startScan());
         scanStopButton.setOnClickListener(v -> requestScanStop());
-        findViewById(R.id.navScanStopBig).setOnClickListener(v -> requestScanStop());
-        findViewById(R.id.navScanCapture).setOnClickListener(v -> capturePosition());
+        binding.navScanStopBig.setOnClickListener(v -> requestScanStop());
+        binding.navScanCapture.setOnClickListener(v -> capturePosition());
         waypointSaveButton.setOnClickListener(v -> saveWaypoint());
-        findViewById(R.id.navClose).setOnClickListener(v -> NavigationController.get().close());
+        binding.navClose.setOnClickListener(v -> NavigationController.get().close());
 
         NavigationManager.get().setScanStopCallback(() -> post(this::requestScanStop));
     }
