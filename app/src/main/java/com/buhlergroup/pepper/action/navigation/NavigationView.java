@@ -83,6 +83,10 @@ public class NavigationView extends FrameLayout {
         scanStopButton.setOnClickListener(v -> requestScanStop());
         findViewById(R.id.navScanStopBig).setOnClickListener(v -> requestScanStop());
         waypointSaveButton.setOnClickListener(v -> saveWaypoint());
+        findViewById(R.id.navJogForward).setOnClickListener(v -> jog(0.3, 0.0, 0.0));
+        findViewById(R.id.navJogBack).setOnClickListener(v -> jog(-0.3, 0.0, 0.0));
+        findViewById(R.id.navJogLeft).setOnClickListener(v -> jog(0.0, 0.0, 0.5));
+        findViewById(R.id.navJogRight).setOnClickListener(v -> jog(0.0, 0.0, -0.5));
         findViewById(R.id.navClose).setOnClickListener(v -> NavigationController.get().close());
 
         NavigationManager.get().setScanStopCallback(() -> post(this::requestScanStop));
@@ -226,6 +230,20 @@ public class NavigationView extends FrameLayout {
                     toast(R.string.nav_scan_saved);
                     refreshAll();
                 });
+            }
+
+            @Override
+            public void onError(String error) {
+                post(() -> toastText(error));
+            }
+        });
+    }
+
+    private void jog(double dx, double dy, double dTheta) {
+        NavigationManager.get().jog(dx, dy, dTheta, new NavigationManager.Callback<Void>() {
+            @Override
+            public void onResult(Void value) {
+                post(() -> loadRobotPose());
             }
 
             @Override

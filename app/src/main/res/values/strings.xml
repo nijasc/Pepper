@@ -107,6 +107,11 @@
     <string name="nav_wp_name_hint">Name des Wegpunkts</string>
     <string name="nav_wp_fotostand">Fotostand</string>
     <string name="nav_wp_save">Aktuelle Position speichern</string>
+    <string name="nav_jog_label">Pepper bewegen (zum Wegpunkt fahren):</string>
+    <string name="nav_jog_forward">Vor</string>
+    <string name="nav_jog_back">Zurück</string>
+    <string name="nav_jog_left">Links drehen</string>
+    <string name="nav_jog_right">Rechts drehen</string>
     <string name="nav_close">Schließen</string>
     <string name="nav_activate">Aktivieren</string>
     <string name="nav_delete">Löschen</string>
