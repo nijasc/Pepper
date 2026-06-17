@@ -32,8 +32,6 @@ import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +45,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class SelfieController {
 
     private static final String TAG = "Selfie";
-    private static final int SERVER_PORT = 8080;
     private static final long DISPLAY_MS = 22000;
     private static final long START_TIMEOUT_MS = 15000;
     private static final int MAX_CAPTURES = 3;
@@ -65,10 +62,9 @@ public final class SelfieController {
     }
 
     private volatile SelfieView view;
-    private volatile LocalImageServer server;
+    private final SelfieShareServer shareServer = new SelfieShareServer();
     private volatile boolean running = false;
     private volatile StateListener stateListener;
-    private int qrViewers = 0;
 
     private SelfieController() {
     }
@@ -100,35 +96,16 @@ public final class SelfieController {
         this.view = null;
     }
 
-    public synchronized void stopServer() {
-        qrViewers = 0;
-        LocalImageServer current = server;
-        if (current != null) {
-            current.stop();
-            server = null;
-        }
+    public void stopServer() {
+        shareServer.stop();
     }
 
-    public synchronized void acquireServer(Context context) {
-        qrViewers++;
-        try {
-            ensureServer(SelfieRepository.get(context).imagesDir());
-        } catch (IOException e) {
-            Log.w(TAG, "Could not start image server: " + e.getMessage());
-        }
+    public void acquireServer(Context context) {
+        shareServer.acquire(context);
     }
 
-    public synchronized void releaseServer() {
-        if (qrViewers > 0) {
-            qrViewers--;
-        }
-        if (qrViewers == 0) {
-            LocalImageServer current = server;
-            if (current != null) {
-                current.stop();
-                server = null;
-            }
-        }
+    public void releaseServer() {
+        shareServer.release();
     }
 
     public SelfieEntity takeSelfie(QiContext context) {
@@ -252,28 +229,15 @@ public final class SelfieController {
     }
 
     public int serverPort() {
-        return SERVER_PORT;
+        return shareServer.port();
     }
 
     public String tokenFor(String filename) {
-        LocalImageServer current = server;
-        return current != null ? current.tokenFor(filename) : "";
+        return shareServer.tokenFor(filename);
     }
 
     public String downloadUrl(Context context, String filename) {
-        String ip = NetworkUtils.localIp(context);
-        if (ip == null) {
-            return null;
-        }
-        return "http://" + ip + ":" + SERVER_PORT + "/" + filename + "?token=" + tokenFor(filename);
-    }
-
-    private void ensureServer(File imagesDir) throws IOException {
-        if (server == null) {
-            LocalImageServer started = new LocalImageServer(imagesDir, SERVER_PORT);
-            started.start();
-            server = started;
-        }
+        return shareServer.downloadUrl(context, filename);
     }
 
     private Bitmap captureConfirmed(QiContext context, SelfieView board, boolean externalCam) {
