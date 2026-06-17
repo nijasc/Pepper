@@ -11,6 +11,8 @@
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
 
+    <uses-feature android:name="com.softbank.hardware.pepper" />
+
     <application
         android:name=".PepperApplication"
         android:allowBackup="true"
@@ -49,6 +51,4 @@
                 android:resource="@xml/file_paths" />
         </provider>
     </application>
-
-    <uses-feature android:name="com.softbank.hardware.pepper" />
 </manifest>

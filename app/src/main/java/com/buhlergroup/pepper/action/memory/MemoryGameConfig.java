@@ -1,5 +1,7 @@
 package com.buhlergroup.pepper.action.memory;
 
+import java.util.Locale;
+
 public final class MemoryGameConfig {
 
     public final String label;
@@ -37,7 +39,7 @@ public final class MemoryGameConfig {
         if (input == null) {
             return normal();
         }
-        String lower = input.toLowerCase();
+        String lower = input.toLowerCase(Locale.ROOT);
         if (lower.contains("leicht") || lower.contains("einfach") || lower.contains("easy")) {
             return easy();
         }

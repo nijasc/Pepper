@@ -165,11 +165,9 @@
     <string name="raffle_email_chooser">E-Mail senden mit …</string>
     <string name="raffle_email_subject">Herzlichen Glückwunsch – %1$s</string>
     <string name="raffle_email_body">Hallo %1$s,\n\nherzlichen Glückwunsch! Du wurdest bei unserer Verlosung «%2$s» als Gewinner gezogen. 🎉\n\nWir melden uns in Kürze mit allen weiteren Details bei dir.\n\nViele Grüße\nDein Bühler-Team</string>
-    <string name="raffle_join_prompt">Trag dich hier für die Verlosung ein</string>
     <string name="raffle_join_name_hint">Name</string>
     <string name="raffle_join_email_hint">E-Mail</string>
     <string name="raffle_join_phone_hint">Telefon</string>
-    <string name="raffle_join_save">Mitmachen</string>
     <string name="raffle_join_cancel">Abbrechen</string>
     <string name="raffle_join_name_required">Bitte gib deinen Namen ein.</string>
     <string name="raffle_join_email_invalid">Bitte gib eine gültige E-Mail-Adresse ein.</string>

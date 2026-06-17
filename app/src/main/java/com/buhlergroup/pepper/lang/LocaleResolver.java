@@ -47,7 +47,7 @@ public final class LocaleResolver {
             return fallbackLocale;
         }
 
-        String[] parts = tag.trim().toLowerCase().split("[-_]");
+        String[] parts = tag.trim().toLowerCase(java.util.Locale.ROOT).split("[-_]");
         if (parts.length == 0 || parts[0].isEmpty()) {
             return fallbackLocale;
         }
