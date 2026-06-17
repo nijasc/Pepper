@@ -22,6 +22,7 @@
   - [Emotionswahrnehmung](#emotionswahrnehmung)
   - [Attract-Modus](#attract-modus)
 - [Architektur-Diagramme](#architektur-diagramme)
+- [Tutorials](#tutorials)
 - [Funktionen (Actions)](#funktionen-actions)
   - [Sprechen (Standard)](#sprechen-standard)
   - [Tanzen](#tanzen)
@@ -93,6 +94,11 @@ Die zentralen Abläufe der App sind als Mermaid-Diagramme in [`FLOWS.md`](FLOWS.
 dokumentiert: Boot/Startup, Sprache → Aktions-Dispatch, Navigation/Raumscan,
 Attract-Modus, Tanz-Ablauf, Hold-my-beer-Zustandsautomat sowie OpenAI-Gespräch und
 Sprachwechsel.
+
+## Tutorials
+
+Schritt-für-Schritt-Anleitungen für Bediener stehen in [`TUTORIALS.md`](TUTORIALS.md) –
+u. a. **[Raum einrichten: Scan & Wegpunkte per Tablet einlernen](TUTORIALS.md#raum-einrichten-scan--wegpunkte-per-tablet-einlernen)** (Navigations-Setup nach Ansatz #3).
 
 ## Funktionsweise
 
