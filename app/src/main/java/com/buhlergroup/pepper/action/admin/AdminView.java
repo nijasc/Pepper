@@ -6,12 +6,8 @@ import android.app.TimePickerDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.BatteryManager;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.text.InputType;
 import android.util.AttributeSet;
@@ -36,7 +32,6 @@ import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.buhlergroup.pepper.PepperApplication;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.attract.AttractSettings;
 import com.buhlergroup.pepper.action.camera.CameraSettings;
@@ -48,7 +43,6 @@ import com.buhlergroup.pepper.action.raffle.RaffleSettings;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
-import com.buhlergroup.pepper.action.selfie.NetworkUtils;
 import com.buhlergroup.pepper.action.selfie.QrGenerator;
 import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
@@ -56,14 +50,10 @@ import com.buhlergroup.pepper.action.selfie.SelfieSettings;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
-import com.buhlergroup.pepper.net.Connectivity;
-import com.buhlergroup.pepper.stats.Stats;
 import com.buhlergroup.pepper.openai.history.HistoryEntry;
 import com.buhlergroup.pepper.openai.history.HistoryRole;
 
 import java.io.File;
-import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -74,7 +64,6 @@ import java.util.List;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -100,18 +89,9 @@ public class AdminView extends FrameLayout {
 
     private static final String TAG = "AdminView";
 
-    private static final long DASH_REFRESH_MS = 15000;
-
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
-    private final Handler dashHandler = new Handler(Looper.getMainLooper());
-    private final Runnable dashRefresh = new Runnable() {
-        @Override
-        public void run() {
-            refreshDashboardStatus();
-            dashHandler.postDelayed(this, DASH_REFRESH_MS);
-        }
-    };
     private PinController pinController;
+    private DashboardController dashboard;
 
     private View pinPanel;
     private View menuPanel;
@@ -125,7 +105,6 @@ public class AdminView extends FrameLayout {
     private View cameraPanel;
     private View statusPanel;
     private View statsPanel;
-    private TextView statsText;
     private View debugPanel;
     private CheckBox debugEnabled;
     private TextView debugStatus;
@@ -138,14 +117,6 @@ public class AdminView extends FrameLayout {
     private CheckBox attractEnabled;
     private EditText attractIdle;
     private EditText attractGreet;
-    private TextView statusWifi;
-    private TextView statusOpenAi;
-    private TextView statusBattery;
-    private TextView statusUptime;
-    private TextView dashWifi;
-    private TextView dashOpenAi;
-    private TextView dashBattery;
-    private TextView dashUptime;
     private ScrollView devLogScroll;
     private ScrollView historyScroll;
     private LinearLayout historyContainer;
@@ -228,7 +199,6 @@ public class AdminView extends FrameLayout {
         cameraPanel = findViewById(R.id.adminCameraPanel);
         statusPanel = findViewById(R.id.adminStatusPanel);
         statsPanel = findViewById(R.id.adminStatsPanel);
-        statsText = findViewById(R.id.adminStatsText);
         debugPanel = findViewById(R.id.adminDebugPanel);
         debugEnabled = findViewById(R.id.debugEnabled);
         debugStatus = findViewById(R.id.debugStatus);
@@ -238,14 +208,6 @@ public class AdminView extends FrameLayout {
         attractEnabled = findViewById(R.id.attractEnabled);
         attractIdle = findViewById(R.id.attractIdle);
         attractGreet = findViewById(R.id.attractGreet);
-        statusWifi = findViewById(R.id.statusWifi);
-        statusOpenAi = findViewById(R.id.statusOpenAi);
-        statusBattery = findViewById(R.id.statusBattery);
-        statusUptime = findViewById(R.id.statusUptime);
-        dashWifi = findViewById(R.id.dashWifi);
-        dashOpenAi = findViewById(R.id.dashOpenAi);
-        dashBattery = findViewById(R.id.dashBattery);
-        dashUptime = findViewById(R.id.dashUptime);
         devLogScroll = findViewById(R.id.adminDevLogScroll);
         historyScroll = findViewById(R.id.adminHistoryScroll);
         historyContainer = findViewById(R.id.adminHistoryContainer);
@@ -307,6 +269,7 @@ public class AdminView extends FrameLayout {
         panelNav.register(PANEL_ATTRACT, attractPanel);
 
         pinController = new PinController(this, () -> panelNav.show(PANEL_MENU));
+        dashboard = new DashboardController(this, dbExecutor);
         findViewById(R.id.adminPinCancel).setOnClickListener(v -> hide());
         findViewById(R.id.adminClose).setOnClickListener(v -> hide());
         findViewById(R.id.adminClearHistory).setOnClickListener(v -> onClearHistory());
@@ -337,7 +300,7 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminStatus).setOnClickListener(v -> showStatus());
         findViewById(R.id.statusRefresh).setOnClickListener(v -> showStatus());
         findViewById(R.id.adminStats).setOnClickListener(v -> showStats());
-        findViewById(R.id.adminStatsExport).setOnClickListener(v -> exportStats());
+        findViewById(R.id.adminStatsExport).setOnClickListener(v -> dashboard.exportStats());
         findViewById(R.id.adminDebug).setOnClickListener(v -> showDebug());
         debugEnabled.setOnClickListener(v -> DebugLog.get().setEnabled(getContext(), debugEnabled.isChecked()));
         findViewById(R.id.debugRefresh).setOnClickListener(v -> renderDebugLog());
@@ -374,7 +337,7 @@ public class AdminView extends FrameLayout {
     public void hide() {
         AdminController.get().markClosed();
         releaseDetailServer();
-        dashHandler.removeCallbacks(dashRefresh);
+        dashboard.stopRefresh();
         post(() -> setVisibility(GONE));
     }
 
@@ -389,9 +352,9 @@ public class AdminView extends FrameLayout {
     }
 
     private void onPanelShown(int which) {
-        dashHandler.removeCallbacks(dashRefresh);
+        dashboard.stopRefresh();
         if (which == PANEL_MENU) {
-            dashHandler.post(dashRefresh);
+            dashboard.startRefresh();
         }
     }
 
@@ -401,51 +364,6 @@ public class AdminView extends FrameLayout {
         } else {
             panelNav.show(PANEL_MENU);
         }
-    }
-
-    private void refreshDashboardStatus() {
-        boolean online = Connectivity.isOnline(getContext());
-        dashWifi.setText(online ? R.string.status_dash_connected : R.string.status_dash_disconnected);
-        dashWifi.setTextColor(ContextCompat.getColor(getContext(),
-                online ? R.color.status_ok : R.color.status_bad));
-
-        int pct = batteryPercent();
-        if (pct < 0) {
-            dashBattery.setText("–");
-            dashBattery.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
-        } else {
-            dashBattery.setText(pct + "%");
-            int color = pct >= 30 ? R.color.status_ok : pct >= 15 ? R.color.status_warn : R.color.status_bad;
-            dashBattery.setTextColor(ContextCompat.getColor(getContext(), color));
-        }
-
-        dashUptime.setText(uptimeText());
-        dashUptime.setTextColor(ContextCompat.getColor(getContext(), R.color.text_primary));
-
-        dashOpenAi.setText("…");
-        dashOpenAi.setTextColor(ContextCompat.getColor(getContext(), R.color.text_muted));
-        dbExecutor.submit(() -> {
-            boolean reachable = isOpenAiReachable();
-            post(() -> {
-                dashOpenAi.setText(reachable ? R.string.status_dash_ok : R.string.status_dash_fail);
-                dashOpenAi.setTextColor(ContextCompat.getColor(getContext(),
-                        reachable ? R.color.status_ok : R.color.status_bad));
-            });
-        });
-    }
-
-    private int batteryPercent() {
-        Intent battery = getContext().registerReceiver(null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        if (battery == null) {
-            return -1;
-        }
-        int level = battery.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = battery.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        if (level < 0 || scale <= 0) {
-            return -1;
-        }
-        return Math.round(level * 100f / scale);
     }
 
     private void showLanguage() {
@@ -1009,51 +927,8 @@ public class AdminView extends FrameLayout {
     }
 
     private void showStats() {
-        statsText.setText(buildStatsReport());
+        dashboard.refreshStats();
         panelNav.show(PANEL_STATS);
-    }
-
-    private String buildStatsReport() {
-        String date = Stats.today();
-        Map<String, Integer> day = Stats.forDay(getContext(), date);
-        StringBuilder sb = new StringBuilder("Tagesreport " + date + "\n\n");
-        sb.append("Interaktionen: ").append(value(day, Stats.INTERACTIONS)).append('\n');
-        sb.append("Selfies: ").append(value(day, Stats.SELFIES)).append('\n');
-        sb.append("Verlosungs-Beitritte: ").append(value(day, Stats.RAFFLE_JOINS)).append('\n');
-        sb.append("Fehler: ").append(value(day, Stats.ERRORS)).append("\n\n");
-        sb.append("Aktionen:\n");
-        boolean anyAction = false;
-        for (Map.Entry<String, Integer> entry : day.entrySet()) {
-            if (entry.getKey().startsWith(Stats.ACTION_PREFIX)) {
-                anyAction = true;
-                sb.append("  ").append(entry.getKey().substring(Stats.ACTION_PREFIX.length()))
-                        .append(": ").append(entry.getValue()).append('\n');
-            }
-        }
-        if (!anyAction) {
-            sb.append("  –\n");
-        }
-        return sb.toString();
-    }
-
-    private int value(Map<String, Integer> day, String key) {
-        Integer v = day.get(key);
-        return v != null ? v : 0;
-    }
-
-    private void exportStats() {
-        String report = buildStatsReport();
-        Intent share = new Intent(Intent.ACTION_SEND);
-        share.setType("text/plain");
-        share.putExtra(Intent.EXTRA_SUBJECT, getContext().getString(R.string.stats_share_title));
-        share.putExtra(Intent.EXTRA_TEXT, report);
-        Intent chooser = Intent.createChooser(share, getContext().getString(R.string.stats_export));
-        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        try {
-            getContext().startActivity(chooser);
-        } catch (Exception e) {
-            Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
-        }
     }
 
     private void showDebug() {
@@ -1117,50 +992,7 @@ public class AdminView extends FrameLayout {
 
     private void showStatus() {
         panelNav.show(PANEL_STATUS);
-        String ip = NetworkUtils.localIp(getContext());
-        boolean online = Connectivity.isOnline(getContext());
-        statusWifi.setText(online && ip != null
-                ? getContext().getString(R.string.status_wifi_connected, ip)
-                : getContext().getString(R.string.status_wifi_disconnected));
-        statusBattery.setText(batteryStatusText());
-        statusUptime.setText(getContext().getString(R.string.status_uptime, uptimeText()));
-        statusOpenAi.setText(R.string.status_openai_checking);
-        dbExecutor.submit(() -> {
-            boolean reachable = isOpenAiReachable();
-            post(() -> statusOpenAi.setText(
-                    reachable ? R.string.status_openai_ok : R.string.status_openai_fail));
-        });
-    }
-
-    private String batteryStatusText() {
-        Intent battery = getContext().registerReceiver(null,
-                new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        if (battery == null) {
-            return getContext().getString(R.string.status_battery_unknown);
-        }
-        int level = battery.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-        int scale = battery.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-        if (level < 0 || scale <= 0) {
-            return getContext().getString(R.string.status_battery_unknown);
-        }
-        return getContext().getString(R.string.status_battery, Math.round(level * 100f / scale));
-    }
-
-    private String uptimeText() {
-        long elapsedMs = SystemClock.elapsedRealtime() - PepperApplication.startElapsedMs();
-        long totalMinutes = Math.max(0, elapsedMs / 60000);
-        long hours = totalMinutes / 60;
-        long minutes = totalMinutes % 60;
-        return hours + " h " + minutes + " min";
-    }
-
-    private boolean isOpenAiReachable() {
-        try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress("api.openai.com", 443), 4000);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        dashboard.refreshStatus();
     }
 
     private void showCamera() {
