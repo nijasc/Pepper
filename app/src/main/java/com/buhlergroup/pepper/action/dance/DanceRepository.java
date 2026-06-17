@@ -89,9 +89,17 @@ public final class DanceRepository {
     }
 
     public DanceEntity getOrCreate(Context context, String query) throws Exception {
+        return getOrCreate(context, query, null);
+    }
+
+    public DanceEntity getOrCreate(Context context, String query,
+                                   AnimationGenerator.ProgressListener progress) throws Exception {
         DanceDao dao = DanceDatabase.get(context).danceDao();
         File danceDir = danceDir(context);
 
+        if (progress != null) {
+            progress.onStage(AnimationGenerator.Stage.SEARCH);
+        }
         AnimationGenerator.SongPlan plan = generator.planSong(context, query);
         SongSource source = resolveSource(plan.query);
         String songName = normalizeSongName(source.title);
@@ -119,7 +127,8 @@ public final class DanceRepository {
 
         long durationMs = source.durationMs > 0 ? source.durationMs : 25000L;
         int seconds = (int) Math.max(8, Math.min(30, durationMs / 1000));
-        String qianim = generator.generateValidatedDance(context, songName, seconds, null, plan.mood);
+        String qianim = generator.generateValidatedDance(
+                context, songName, seconds, null, plan.mood, progress);
         if (qianim == null) {
             throw new Exception("Tanz-Choreografie konnte nicht erzeugt werden.");
         }
@@ -132,6 +141,9 @@ public final class DanceRepository {
                 durationMs, false, System.currentTimeMillis());
         entity.previewUrl = source.previewUrl;
         entity.audioStartMs = plan.startSeconds * 1000L;
+        if (progress != null) {
+            progress.onStage(AnimationGenerator.Stage.AUDIO);
+        }
         cacheAudioQuietly(danceDir, entity, source);
         dao.insert(entity);
         Log.i(TAG, "Created dance for " + songName + " from iTunes " + source.sourceId);

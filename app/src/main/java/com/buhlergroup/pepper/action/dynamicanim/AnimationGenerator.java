@@ -29,6 +29,17 @@ public final class AnimationGenerator {
     private static final int DANCE_TIMEOUT_MS = 180000;
     private static final int RESEARCH_TIMEOUT_MS = 90000;
 
+    public enum Stage {
+        SEARCH,
+        ANALYZE,
+        CHOREOGRAPH,
+        AUDIO
+    }
+
+    public interface ProgressListener {
+        void onStage(Stage stage);
+    }
+
     private final OpenAIService openAi = new OpenAIService(new ArrayList<>());
 
     public String generateValidated(Context context, String command) {
@@ -50,8 +61,16 @@ public final class AnimationGenerator {
 
     public String generateValidatedDance(Context context, String songName, int seconds,
                                          String editNote, String mood) {
+        return generateValidatedDance(context, songName, seconds, editNote, mood, null);
+    }
+
+    public String generateValidatedDance(Context context, String songName, int seconds,
+                                         String editNote, String mood, ProgressListener progress) {
         int target = Math.min(MAX_SECONDS, Math.max(8, seconds));
         openAi.setC(context);
+        if (progress != null) {
+            progress.onStage(Stage.ANALYZE);
+        }
         SongResearch research = researchSong(context, songName);
         String userMessage = "Song: " + songName;
         if (research != null) {
@@ -62,6 +81,9 @@ public final class AnimationGenerator {
             userMessage += "\n\nApply this specific change to the choreography: " + editNote.trim();
         }
         String effectiveMood = research != null && research.mood != null ? research.mood : mood;
+        if (progress != null) {
+            progress.onStage(Stage.CHOREOGRAPH);
+        }
         for (int attempt = 1; attempt <= 2; attempt++) {
             try {
                 List<Map<String, String>> messages = new ArrayList<>();

@@ -100,6 +100,28 @@ public class DanceLibraryView extends FrameLayout {
         post(() -> loadingOverlay.setVisibility(GONE));
     }
 
+    private void showStage(com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator.Stage stage) {
+        int res;
+        switch (stage) {
+            case SEARCH:
+                res = R.string.dance_stage_search;
+                break;
+            case ANALYZE:
+                res = R.string.dance_stage_analyze;
+                break;
+            case CHOREOGRAPH:
+                res = R.string.dance_stage_choreo;
+                break;
+            case AUDIO:
+                res = R.string.dance_stage_audio;
+                break;
+            default:
+                res = R.string.dance_creating;
+                break;
+        }
+        showLoading(getContext().getString(res));
+    }
+
     private void promptCreate() {
         EditText input = new EditText(getContext());
         input.setHint(R.string.dance_create_hint);
@@ -120,7 +142,7 @@ public class DanceLibraryView extends FrameLayout {
         showLoading(getContext().getString(R.string.dance_creating));
         heavyExecutor.execute(() -> {
             try {
-                repository.getOrCreate(getContext(), query);
+                repository.getOrCreate(getContext(), query, this::showStage);
                 post(() -> {
                     hideLoading();
                     toast(getContext().getString(R.string.dance_created));

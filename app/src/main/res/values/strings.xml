@@ -91,6 +91,11 @@
     <string name="dance_create">Tanz erstellen</string>
     <string name="dance_create_hint">Song oder Künstler…</string>
     <string name="dance_creating">Tanz wird erstellt…</string>
+    <string name="dance_create_eta">Das kann bis zu 5 Minuten dauern.</string>
+    <string name="dance_stage_search">Song wird gesucht…</string>
+    <string name="dance_stage_analyze">Song wird analysiert…</string>
+    <string name="dance_stage_choreo">Choreografie wird erstellt…</string>
+    <string name="dance_stage_audio">Audio wird vorbereitet…</string>
     <string name="dance_created">Tanz erstellt.</string>
     <string name="dance_create_failed">Tanz konnte nicht erstellt werden:</string>
 
