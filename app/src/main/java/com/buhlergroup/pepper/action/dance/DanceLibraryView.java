@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
+import com.buhlergroup.pepper.databinding.ViewDanceLibraryBinding;
 import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.util.List;
@@ -57,16 +58,17 @@ public class DanceLibraryView extends FrameLayout {
     }
 
     private void init(Context context) {
-        LayoutInflater.from(context).inflate(R.layout.view_dance_library, this, true);
+        ViewDanceLibraryBinding binding =
+                ViewDanceLibraryBinding.inflate(LayoutInflater.from(context), this);
         setBackgroundColor(ContextCompat.getColor(context, R.color.game_overlay));
         setClickable(true);
         setFocusable(true);
-        list = findViewById(R.id.danceList);
-        loadingOverlay = findViewById(R.id.danceLoading);
-        loadingText = findViewById(R.id.danceLoadingText);
-        scrollRoot = findViewById(R.id.danceScrollRoot);
-        findViewById(R.id.danceCreate).setOnClickListener(v -> promptCreate());
-        findViewById(R.id.danceClose).setOnClickListener(v -> DanceLibraryController.get().close());
+        list = binding.danceList;
+        loadingOverlay = binding.danceLoading;
+        loadingText = binding.danceLoadingText;
+        scrollRoot = binding.danceScrollRoot;
+        binding.danceCreate.setOnClickListener(v -> promptCreate());
+        binding.danceClose.setOnClickListener(v -> DanceLibraryController.get().close());
     }
 
     @Override

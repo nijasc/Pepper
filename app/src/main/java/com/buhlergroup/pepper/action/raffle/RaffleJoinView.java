@@ -17,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.databinding.ViewRaffleJoinBinding;
 
 public class RaffleJoinView extends FrameLayout {
 
@@ -73,25 +74,26 @@ public class RaffleJoinView extends FrameLayout {
     }
 
     private void init(Context context) {
-        LayoutInflater.from(context).inflate(R.layout.view_raffle_join, this, true);
+        ViewRaffleJoinBinding binding =
+                ViewRaffleJoinBinding.inflate(LayoutInflater.from(context), this);
         setBackgroundColor(ContextCompat.getColor(context, R.color.game_overlay));
         setClickable(true);
         setFocusable(true);
 
-        card = findViewById(R.id.raffleJoinCard);
-        stepContainer = findViewById(R.id.raffleJoinStep);
-        consentContainer = findViewById(R.id.raffleJoinConsent);
-        consentText = findViewById(R.id.raffleJoinConsentText);
-        consentCheck = findViewById(R.id.raffleJoinConsentCheck);
-        titleView = findViewById(R.id.raffleJoinTitle);
-        progressView = findViewById(R.id.raffleJoinProgress);
-        promptView = findViewById(R.id.raffleJoinStepPrompt);
-        errorView = findViewById(R.id.raffleJoinError);
-        confirmView = findViewById(R.id.raffleJoinConfirm);
-        input = findViewById(R.id.raffleJoinInput);
-        cancelButton = findViewById(R.id.raffleJoinCancel);
-        backButton = findViewById(R.id.raffleJoinBack);
-        nextButton = findViewById(R.id.raffleJoinNext);
+        card = binding.raffleJoinCard;
+        stepContainer = binding.raffleJoinStep;
+        consentContainer = binding.raffleJoinConsent;
+        consentText = binding.raffleJoinConsentText;
+        consentCheck = binding.raffleJoinConsentCheck;
+        titleView = binding.raffleJoinTitle;
+        progressView = binding.raffleJoinProgress;
+        promptView = binding.raffleJoinStepPrompt;
+        errorView = binding.raffleJoinError;
+        confirmView = binding.raffleJoinConfirm;
+        input = binding.raffleJoinInput;
+        cancelButton = binding.raffleJoinCancel;
+        backButton = binding.raffleJoinBack;
+        nextButton = binding.raffleJoinNext;
 
         cancelButton.setOnClickListener(v -> onCancel());
         backButton.setOnClickListener(v -> onBack());
