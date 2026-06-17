@@ -8,7 +8,6 @@ import androidx.annotation.Nullable;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.util.IOUtils;
-import com.buhlergroup.pepper.BuildConfig;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
@@ -21,12 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.zip.GZIPInputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -44,9 +38,9 @@ public class OpenAIService {
     private static final String TAG = "OpenAIService";
     private static final int MAX_OUTPUT_TOKENS = 600;
     private static final int RESPONSE_TIMEOUT_MS = 60000;
-    private static final String URL = "https://api.openai.com/v1";
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final EmotionReader emotionReader = new EmotionReader();
+    private final OpenAiHttpClient httpClient = new OpenAiHttpClient(() -> getAuthToken(this.c));
     private final List<Action> actions;
     private static String cachedToken;
     private Context c;
@@ -78,10 +72,6 @@ public class OpenAIService {
             Pattern.compile("\\[\\[\\s*lang\\s*:\\s*([A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?)\\s*\\]\\]");
     private static final Pattern ACTION_TAG =
             Pattern.compile("\\[\\[\\s*action\\s*:\\s*([A-Za-z0-9_]+)\\s*\\]\\]");
-    private static final Pattern LEADING_MARKER =
-            Pattern.compile("^\\s*\\[\\[\\s*(lang|action)\\s*:\\s*([^\\]\\s]+)\\s*\\]\\]");
-    private static final Pattern LANG_VALUE =
-            Pattern.compile("[A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?");
     private String lastLanguageTag;
 
     public interface StreamListener {
@@ -180,162 +170,36 @@ public class OpenAIService {
             throw new IOException("OpenAI circuit open, failing fast to fallback");
         }
 
-        HttpURLConnection con = (HttpURLConnection) new URL(URL + "/responses").openConnection();
-        con.setConnectTimeout(8000);
-        con.setReadTimeout(30000);
-        con.setRequestMethod("POST");
-        con.setDoOutput(true);
-        con.setRequestProperty("Authorization", "Bearer " + getAuthToken(c));
-        con.setRequestProperty("Content-Type", "application/json");
-        con.setRequestProperty("Accept", "text/event-stream");
-
         boolean failed = false;
+        OpenAiHttpClient.EventStream stream = null;
         try {
-            try (OutputStream os = con.getOutputStream()) {
-                os.write(objectMapper.writeValueAsString(body).getBytes(StandardCharsets.UTF_8));
-            }
-
-            int code = con.getResponseCode();
-            if (code >= 400) {
-                throw new IOException("Streaming request failed with HTTP " + code);
-            }
-
-            StringBuilder pending = new StringBuilder();
-            StringBuilder full = new StringBuilder();
-            boolean markerPhase = true;
-            boolean firstSentence = true;
-
-            BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (!line.startsWith("data:")) {
-                    continue;
-                }
-                String data = line.substring(5).trim();
-                if (data.isEmpty() || "[DONE]".equals(data)) {
-                    break;
-                }
-                org.json.JSONObject event;
-                try {
-                    event = new org.json.JSONObject(data);
-                } catch (org.json.JSONException e) {
-                    continue;
-                }
-                String type = event.optString("type", "");
-                if (type.endsWith("output_text.delta")) {
-                    pending.append(event.optString("delta", ""));
-                    if (markerPhase) {
-                        int state = consumeMarkers(pending, listener);
-                        if (state < 0) {
-                            return null;
-                        }
-                        if (state == 0) {
-                            continue;
-                        }
-                        markerPhase = false;
-                    }
-                    String sentence;
-                    while ((sentence = extractSentence(pending, false)) != null) {
-                        if (firstSentence) {
-                            Log.i("LATENCY", "first streamed sentence after "
-                                    + (System.currentTimeMillis() - started) + "ms");
-                            firstSentence = false;
-                        }
-                        listener.onSentence(sentence, lastLanguageTag);
-                        full.append(sentence).append(' ');
-                    }
-                } else if ("response.completed".equals(type)) {
-                    break;
-                } else if ("response.failed".equals(type) || "error".equals(type)) {
-                    throw new IOException("Streaming response failed: " + data);
-                }
-            }
-
-            if (markerPhase && consumeMarkers(pending, listener) < 0) {
+            stream = httpClient.openEventStream("/responses", body);
+            OpenAiStreamParser parser = new OpenAiStreamParser();
+            String result = parser.parse(stream.reader, listener, started);
+            lastLanguageTag = parser.lastLanguageTag();
+            if (result == null) {
                 return null;
-            }
-            String tail;
-            while ((tail = extractSentence(pending, true)) != null) {
-                listener.onSentence(tail, lastLanguageTag);
-                full.append(tail).append(' ');
             }
             Log.i("LATENCY", "streamed response complete after "
                     + (System.currentTimeMillis() - started) + "ms");
             DebugLog.get().setStatus("OpenAI – Antwort erhalten");
             DebugLog.get().i(TAG, "Streaming-Antwort komplett nach "
                     + (System.currentTimeMillis() - started) + "ms");
-            return ACTION_TAG.matcher(full.toString()).replaceAll("").trim();
+            return result;
         } catch (IOException e) {
             failed = true;
             DebugLog.get().w(TAG, "OpenAI-Streaming fehlgeschlagen: " + e.getMessage());
             throw e;
         } finally {
-            con.disconnect();
+            if (stream != null) {
+                stream.disconnect();
+            }
             if (failed) {
                 recordFailure();
             } else {
                 recordSuccess();
             }
         }
-    }
-
-    private int consumeMarkers(StringBuilder pending, StreamListener listener) {
-        while (true) {
-            Matcher matcher = LEADING_MARKER.matcher(pending);
-            if (matcher.find()) {
-                String kind = matcher.group(1);
-                String value = matcher.group(2);
-                pending.delete(0, matcher.end());
-                if ("lang".equals(kind)) {
-                    if (LANG_VALUE.matcher(value).matches()) {
-                        lastLanguageTag = value;
-                    }
-                } else if (!listener.onAction(value)) {
-                    return -1;
-                }
-                continue;
-            }
-            String current = pending.toString();
-            String trimmed = current.trim();
-            if (trimmed.isEmpty()) {
-                return 0;
-            }
-            if (trimmed.startsWith("[") && current.length() < 80) {
-                return 0;
-            }
-            return 1;
-        }
-    }
-
-    private String extractSentence(StringBuilder pending, boolean flush) {
-        int length = pending.length();
-        for (int i = 0; i < length; i++) {
-            char ch = pending.charAt(i);
-            if (ch == '.' || ch == '!' || ch == '?' || ch == '…') {
-                boolean boundary = i == length - 1
-                        ? flush
-                        : Character.isWhitespace(pending.charAt(i + 1));
-                if (boundary && i >= 2) {
-                    String sentence = pending.substring(0, i + 1).trim();
-                    pending.delete(0, i + 1);
-                    if (!sentence.isEmpty()) {
-                        return sentence;
-                    }
-                }
-            }
-        }
-        if (flush) {
-            String rest = pending.toString().trim();
-            pending.setLength(0);
-            return rest.isEmpty() ? null : rest;
-        }
-        if (length > 300) {
-            String chunk = pending.substring(0, length).trim();
-            pending.setLength(0);
-            return chunk.isEmpty() ? null : chunk;
-        }
-        return null;
     }
 
     private String parseOutput(String responseJson) throws IOException {
@@ -454,53 +318,7 @@ public class OpenAIService {
 
     public String sendOpenAiRequest(String path, @Nullable Map<String, Object> body, int readTimeoutMs)
             throws IOException {
-        URL url = new URL(URL + path);
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-
-        con.setConnectTimeout(8000);
-        con.setReadTimeout(readTimeoutMs);
-        con.setRequestProperty("Authorization", "Bearer " + getAuthToken(c));
-        con.setRequestProperty("Content-Type", "application/json");
-        con.setRequestProperty("Accept-Encoding", "gzip");
-
-        if (body != null) {
-            con.setRequestMethod("POST");
-            con.setDoOutput(true);
-
-            String json = objectMapper.writeValueAsString(body);
-            if (BuildConfig.DEBUG) {
-                Map<String, Object> f = body;
-                f.remove("instructions");
-                Log.i("OPENREQ", objectMapper.writeValueAsString(f));
-            }
-
-            try (OutputStream os = con.getOutputStream()) {
-                byte[] input = json.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
-            }
-        } else {
-            con.setRequestMethod("GET");
-        }
-
-        int code = con.getResponseCode();
-        InputStream rawStream = code >= 400 ? con.getErrorStream() : con.getInputStream();
-        if ("gzip".equalsIgnoreCase(con.getContentEncoding()) && rawStream != null) {
-            rawStream = new GZIPInputStream(rawStream);
-        }
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(rawStream, StandardCharsets.UTF_8)
-        );
-
-        StringBuilder content = new StringBuilder();
-        String line;
-        while ((line = in.readLine()) != null) {
-            content.append(line);
-        }
-        in.close();
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "OpenAI Response: " + content);
-        }
-        return content.toString();
+        return httpClient.request(path, body, readTimeoutMs);
     }
 
     public String getAuthToken(Context context) {
