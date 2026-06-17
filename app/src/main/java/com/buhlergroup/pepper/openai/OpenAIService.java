@@ -18,10 +18,7 @@ import com.buhlergroup.pepper.openai.history.HistoryManager;
 import com.buhlergroup.pepper.perception.EmotionReader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,31 +39,10 @@ public class OpenAIService {
     private final EmotionReader emotionReader = new EmotionReader();
     private final OpenAiHttpClient httpClient = new OpenAiHttpClient(() -> getAuthToken(this.c));
     private final List<Action> actions;
-    private static String cachedToken;
     private Context c;
 
-    private static final int CIRCUIT_FAILURE_THRESHOLD = 3;
-    private static final long CIRCUIT_COOLDOWN_MS = 30000;
-    private static volatile int consecutiveFailures;
-    private static volatile long circuitOpenUntilMs;
-
-    private static synchronized boolean isCircuitOpen() {
-        return System.currentTimeMillis() < circuitOpenUntilMs;
-    }
-
-    private static synchronized void recordSuccess() {
-        consecutiveFailures = 0;
-        circuitOpenUntilMs = 0;
-    }
-
-    private static synchronized void recordFailure() {
-        consecutiveFailures++;
-        if (consecutiveFailures >= CIRCUIT_FAILURE_THRESHOLD) {
-            circuitOpenUntilMs = System.currentTimeMillis() + CIRCUIT_COOLDOWN_MS;
-            Log.w(TAG, "OpenAI circuit opened after " + consecutiveFailures
-                    + " consecutive failures; failing fast for " + CIRCUIT_COOLDOWN_MS + "ms");
-        }
-    }
+    private static final OpenAiCircuitBreaker circuitBreaker = new OpenAiCircuitBreaker();
+    private static final OpenAiTokenProvider tokenProvider = new OpenAiTokenProvider();
 
     private static final Pattern LANG_TAG =
             Pattern.compile("\\[\\[\\s*lang\\s*:\\s*([A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?)\\s*\\]\\]");
@@ -181,7 +157,7 @@ public class OpenAIService {
         DebugLog.get().setStatus("OpenAI – Anfrage läuft …");
         DebugLog.get().d(TAG, "Streaming-Anfrage gestartet");
 
-        if (isCircuitOpen()) {
+        if (circuitBreaker.isOpen()) {
             DebugLog.get().w(TAG, "OpenAI-Circuit offen – schneller Fallback");
             throw new IOException("OpenAI circuit open, failing fast to fallback");
         }
@@ -211,9 +187,9 @@ public class OpenAIService {
                 stream.disconnect();
             }
             if (failed) {
-                recordFailure();
+                circuitBreaker.recordFailure();
             } else {
-                recordSuccess();
+                circuitBreaker.recordSuccess();
             }
         }
     }
@@ -338,44 +314,7 @@ public class OpenAIService {
     }
 
     public String getAuthToken(Context context) {
-        if (cachedToken != null) {
-            return cachedToken;
-        }
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(context.getAssets().open("env"), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.isEmpty() || line.startsWith("#")) continue;
-
-                int eq = line.indexOf('=');
-                if (eq < 0) continue;
-
-                String key = line.substring(0, eq).trim();
-                String value = line.substring(eq + 1).trim();
-
-                if (value.length() >= 2
-                        && ((value.startsWith("\"") && value.endsWith("\""))
-                        || (value.startsWith("'") && value.endsWith("'")))) {
-                    value = value.substring(1, value.length() - 1);
-                }
-
-                if ("OPENAI_API_TOKEN".equals(key)) {
-                    cachedToken = value;
-                }
-            }
-        } catch (IOException e) {
-            Log.e("TOKENAUTH", "Failed to read env asset", e);
-        }
-        Log.i("TOKENAUTH", cachedToken == null ? "no token" : "token loaded (" + mask(cachedToken) + ")");
-        return cachedToken;
-    }
-
-    private String mask(String token) {
-        if (token == null || token.length() <= 4) {
-            return "****";
-        }
-        return "****" + token.substring(token.length() - 4);
+        return tokenProvider.getToken(context);
     }
 
     public void setC(Context c) {
