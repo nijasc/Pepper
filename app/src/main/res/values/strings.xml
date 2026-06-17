@@ -96,6 +96,7 @@
     <string name="dance_stage_analyze">Song wird analysiert…</string>
     <string name="dance_stage_choreo">Choreografie wird erstellt…</string>
     <string name="dance_stage_audio">Audio wird vorbereitet…</string>
+    <string name="dance_stage_beat">Takt wird analysiert…</string>
     <string name="dance_created">Tanz erstellt.</string>
     <string name="dance_create_failed">Tanz konnte nicht erstellt werden:</string>
 

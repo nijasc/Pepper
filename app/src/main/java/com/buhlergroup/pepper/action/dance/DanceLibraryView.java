@@ -115,6 +115,9 @@ public class DanceLibraryView extends FrameLayout {
             case AUDIO:
                 res = R.string.dance_stage_audio;
                 break;
+            case BEAT:
+                res = R.string.dance_stage_beat;
+                break;
             default:
                 res = R.string.dance_creating;
                 break;

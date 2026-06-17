@@ -33,7 +33,8 @@ public final class AnimationGenerator {
         SEARCH,
         ANALYZE,
         CHOREOGRAPH,
-        AUDIO
+        AUDIO,
+        BEAT
     }
 
     public interface ProgressListener {
@@ -61,12 +62,19 @@ public final class AnimationGenerator {
 
     public String generateValidatedDance(Context context, String songName, int seconds,
                                          String editNote, String mood) {
-        return generateValidatedDance(context, songName, seconds, editNote, mood, null);
+        return generateValidatedDance(context, songName, seconds, editNote, mood, 0, null);
     }
 
     public String generateValidatedDance(Context context, String songName, int seconds,
                                          String editNote, String mood, ProgressListener progress) {
+        return generateValidatedDance(context, songName, seconds, editNote, mood, 0, progress);
+    }
+
+    public String generateValidatedDance(Context context, String songName, int seconds,
+                                         String editNote, String mood, int measuredBpm,
+                                         ProgressListener progress) {
         int target = Math.min(MAX_SECONDS, Math.max(8, seconds));
+        int beatFrameStep = beatFrameStep(measuredBpm);
         openAi.setC(context);
         if (progress != null) {
             progress.onStage(Stage.ANALYZE);
@@ -76,6 +84,10 @@ public final class AnimationGenerator {
         if (research != null) {
             userMessage += "\n\nResearched facts about this song (base the choreography on them):\n"
                     + research.brief();
+        }
+        if (measuredBpm > 0) {
+            userMessage += "\n\nMeasured tempo of the actual audio: " + measuredBpm
+                    + " BPM - match the dance speed to it; the keyframe spacing is already locked to this beat.";
         }
         if (editNote != null && !editNote.trim().isEmpty()) {
             userMessage += "\n\nApply this specific change to the choreography: " + editNote.trim();
@@ -103,7 +115,7 @@ public final class AnimationGenerator {
                         .getJSONObject("message")
                         .getString("content");
                 JSONObject plan = new JSONObject(extractJson(content));
-                String xml = buildDanceXml(plan, target);
+                String xml = buildDanceXml(plan, target, beatFrameStep);
                 Document doc = XmlUtils.parse(xml);
                 return postProcess(doc, xml, true);
             } catch (Exception e) {
@@ -490,8 +502,24 @@ public final class AnimationGenerator {
         return content.substring(start, end + 1);
     }
 
-    private String buildDanceXml(JSONObject plan, int targetSeconds) throws Exception {
-        int frameStep = Math.max(10, Math.min(25, plan.optInt("frameStep", 16)));
+    public static int beatFrameStep(int bpm) {
+        if (bpm <= 0) {
+            return 0;
+        }
+        double framesPerBeat = 25.0 * 60.0 / bpm;
+        double step = framesPerBeat;
+        if (step < 11) {
+            step = framesPerBeat * 2;
+        } else if (step > 22) {
+            step = framesPerBeat / 2;
+        }
+        return (int) Math.max(10, Math.min(25, Math.round(step)));
+    }
+
+    private String buildDanceXml(JSONObject plan, int targetSeconds, int beatFrameStep) throws Exception {
+        int frameStep = beatFrameStep > 0
+                ? beatFrameStep
+                : Math.max(10, Math.min(25, plan.optInt("frameStep", 16)));
         JSONObject curves = plan.getJSONObject("curves");
         JSONArray names = curves.names();
 

@@ -6,6 +6,7 @@ import android.util.Log;
 import com.buhlergroup.pepper.action.dance.data.DanceDao;
 import com.buhlergroup.pepper.action.dance.data.DanceDatabase;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
+import com.buhlergroup.pepper.action.dance.audio.SongAudioAnalyzer;
 import com.buhlergroup.pepper.action.dance.itunes.ITunesSearch;
 import com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator;
 import com.buhlergroup.pepper.debug.DebugLog;
@@ -127,8 +128,21 @@ public final class DanceRepository {
 
         long durationMs = source.durationMs > 0 ? source.durationMs : 25000L;
         int seconds = (int) Math.max(8, Math.min(30, durationMs / 1000));
+
+        if (progress != null) {
+            progress.onStage(AnimationGenerator.Stage.AUDIO);
+        }
+        File audioFile = downloadPreview(danceDir, source);
+
+        if (progress != null) {
+            progress.onStage(AnimationGenerator.Stage.BEAT);
+        }
+        SongAudioAnalyzer.Result analysis =
+                audioFile != null ? SongAudioAnalyzer.analyze(audioFile) : null;
+        int measuredBpm = analysis != null && analysis.hasBpm() ? analysis.bpm : 0;
+
         String qianim = generator.generateValidatedDance(
-                context, songName, seconds, null, plan.mood, progress);
+                context, songName, seconds, null, plan.mood, measuredBpm, progress);
         if (qianim == null) {
             throw new Exception("Tanz-Choreografie konnte nicht erzeugt werden.");
         }
@@ -140,13 +154,16 @@ public final class DanceRepository {
                 source.sourceId, songName, qianimFile.getAbsolutePath(),
                 durationMs, false, System.currentTimeMillis());
         entity.previewUrl = source.previewUrl;
-        entity.audioStartMs = plan.startSeconds * 1000L;
-        if (progress != null) {
-            progress.onStage(AnimationGenerator.Stage.AUDIO);
+        entity.audioStartMs = analysis != null && analysis.hasHook()
+                ? analysis.hookStartMs : plan.startSeconds * 1000L;
+        entity.bpm = measuredBpm;
+        if (audioFile != null) {
+            entity.audioPath = audioFile.getAbsolutePath();
+            entity.previewUrl = audioFile.getAbsolutePath();
         }
-        cacheAudioQuietly(danceDir, entity, source);
         dao.insert(entity);
-        Log.i(TAG, "Created dance for " + songName + " from iTunes " + source.sourceId);
+        Log.i(TAG, "Created dance for " + songName + " from iTunes " + source.sourceId
+                + " (bpm=" + measuredBpm + ", startMs=" + entity.audioStartMs + ")");
         return entity;
     }
 
@@ -200,18 +217,18 @@ public final class DanceRepository {
         deleteQuietly(dance.audioPath);
     }
 
-    private void cacheAudioQuietly(File danceDir, DanceEntity entity, SongSource source) {
+    private File downloadPreview(File danceDir, SongSource source) {
         if (source.previewUrl == null || source.previewUrl.isEmpty()) {
-            return;
+            return null;
         }
         try {
             File audioFile = new File(danceDir, sanitizeFileName(source.sourceId) + ".m4a");
             downloadToFile(source.previewUrl, audioFile);
-            entity.audioPath = audioFile.getAbsolutePath();
-            entity.previewUrl = audioFile.getAbsolutePath();
-            Log.i(TAG, "Cached preview audio for " + entity.songName);
+            Log.i(TAG, "Cached preview audio for " + source.title);
+            return audioFile;
         } catch (Exception e) {
-            Log.w(TAG, "Could not cache preview audio for " + entity.songName + ": " + e.getMessage());
+            Log.w(TAG, "Could not cache preview audio for " + source.title + ": " + e.getMessage());
+            return null;
         }
     }
 
@@ -326,7 +343,7 @@ public final class DanceRepository {
         if (edit.choreography != null && dance.qianimPath != null) {
             int seconds = (int) Math.max(8, Math.min(30, dance.durationMs / 1000));
             String qianim = generator.generateValidatedDance(
-                    context, dance.songName, seconds, edit.choreography);
+                    context, dance.songName, seconds, edit.choreography, null, dance.bpm, null);
             if (qianim != null) {
                 writeFile(new File(dance.qianimPath), qianim);
                 Log.i(TAG, "Edit regenerated choreography for " + dance.songName);

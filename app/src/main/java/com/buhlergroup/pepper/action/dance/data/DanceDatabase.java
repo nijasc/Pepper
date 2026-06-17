@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {DanceEntity.class}, version = 5)
+@Database(entities = {DanceEntity.class}, version = 6)
 public abstract class DanceDatabase extends RoomDatabase {
 
     private static volatile DanceDatabase instance;
@@ -51,6 +51,13 @@ public abstract class DanceDatabase extends RoomDatabase {
         }
     };
 
+    private static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `dances` ADD COLUMN `bpm` INTEGER NOT NULL DEFAULT 0");
+        }
+    };
+
     public abstract DanceDao danceDao();
 
     public static DanceDatabase get(Context context) {
@@ -61,7 +68,8 @@ public abstract class DanceDatabase extends RoomDatabase {
                                     context.getApplicationContext(),
                                     DanceDatabase.class,
                                     "dances.db")
-                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4,
+                                    MIGRATION_4_5, MIGRATION_5_6)
                             .build();
                 }
             }

@@ -38,6 +38,9 @@ public class DanceEntity {
     @Nullable
     public String audioPath;
 
+    @ColumnInfo(name = "bpm", defaultValue = "0")
+    public int bpm;
+
     @Ignore
     @Nullable
     public String previewUrl;
