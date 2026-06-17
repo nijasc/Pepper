@@ -2,10 +2,7 @@ package com.buhlergroup.pepper.action.navigation;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
-
-import java.nio.ByteBuffer;
 
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
@@ -551,25 +548,12 @@ public final class NavigationManager {
         announcer.start();
     }
 
-    private Bitmap renderMap(ExplorationMap map) {
-        try {
-            ByteBuffer buffer = map.getTopGraphicalRepresentation().getImage().getData();
-            buffer.rewind();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        } catch (Exception e) {
-            Log.w(TAG, "renderMap failed: " + e.getMessage());
-            return null;
-        }
-    }
-
     private void publishMap(ExplorationMap map) {
         MapUpdateListener listener = mapUpdateListener;
         if (listener == null || map == null) {
             return;
         }
-        Bitmap bitmap = renderMap(map);
+        Bitmap bitmap = NavMapRenderer.render(map);
         if (bitmap != null) {
             listener.onMapBitmap(bitmap);
         }
