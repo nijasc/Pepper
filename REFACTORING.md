@@ -89,3 +89,29 @@ ein Commit pro Subtask, keine Code-Kommentare. Befundformat: **Problem → Vorsc
 2. Risikoarme Infrastruktur-Splits: OpenAIService-Transport/Streaming, geteilte Instanz,
    AnimationGenerator-Datenklassen.
 3. Danach größere, hardware-zu-testende Umbauten (AdminView-Panels, NavigationManager) einzeln.
+
+## Multi-Modul-Schnitt (Evaluation, keine Umsetzung)
+
+**Frage:** Lohnt es, das single `:app`-Modul in `:core` + `:feature-*`-Module aufzuteilen?
+
+**Befund / Abwägung:**
+- **Build-Zeit:** Bei ~16,5k LOC ist die Compile-Zeit unkritisch (Debug-Build ~10–30 s, meist
+  inkrementell). Modul-Parallelisierung bringt hier kaum messbaren Gewinn; der Mehraufwand
+  (Gradle-Setup, `api`/`implementation`-Pflege) überwiegt vorerst.
+- **QiSDK-Kopplung:** Fast jedes Feature-Package (`action/*`) hängt direkt an `com.aldebaran.qi.sdk`
+  (QiContext, Animate, Say, GoTo, Touch). Eine saubere Feature-Modul-Grenze müsste den QiContext
+  durchreichen; aktuell ist er über `RobotContext`/Controller-Singletons querverdrahtet. Module
+  würden diese Kopplung sichtbar machen, aber nicht von allein auflösen.
+- **Reihenfolge:** Die God-Classes (AdminView, NavigationManager) und der statische Controller-/
+  Singleton-State (`SelfieController`, `HoldController`, `NavigationManager`, `OpenAIService`)
+  müssten ZUERST entflochten werden. Module über ungeschnittene God-Classes zu legen, zementiert
+  die Kopplung nur an Modulgrenzen.
+- **Sinnvoller Erststich (falls überhaupt):** ein dünnes `:core` für reine Infrastruktur ohne
+  Feature-/QiSDK-Logik — `openai/*`, `net`, `stats`, `config`, `debug`, `lang`. Das ist die einzige
+  Schicht mit klarer, azyklischer Abhängigkeitsrichtung (Feature → core, nie umgekehrt).
+
+**Empfehlung:** Multi-Modul-Schnitt **zurückstellen**. Zuerst die in-Modul-Refactorings abschließen
+(God-Classes aufteilen, statischen State pro Instanz isolieren, Package-Schnitt `core` vs `feature`
+sauber ziehen — Subtask „Package-Schnitt aufräumen"). Erst wenn die Abhängigkeitsrichtung im
+Package-Schnitt stabil azyklisch ist, lohnt als optionaler Folgeschritt ein `:core`-Modul; eigene
+`:feature-*`-Module bringen bei der aktuellen QiSDK-Querkopplung kurzfristig zu wenig ROI.
