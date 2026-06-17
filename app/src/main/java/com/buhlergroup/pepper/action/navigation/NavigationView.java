@@ -327,7 +327,7 @@ public class NavigationView extends FrameLayout {
     }
 
     private void activate(RoomScanEntity scan) {
-        toast(R.string.nav_localizing);
+        announce(R.string.nav_localizing);
         NavigationManager.get().localize(scan, new NavigationManager.Callback<Boolean>() {
             @Override
             public void onResult(Boolean value) {
