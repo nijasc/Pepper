@@ -70,24 +70,27 @@ flowchart TD
 
 ## Navigation / Raumscan
 
-Raum-Scan, Lokalisierung und Fahrt zu Wegpunkten. Beteiligt:
-`action/navigation/NavigationManager` (+ `NavigationController`, `data/`).
+Raum-Scan, Lokalisierung und Fahrt zu Wegpunkten. `NavigationManager` ist Fassade und
+delegiert an die Kollaboratoren `RoomScanner` (Scan/Snapshot), `RobotLocalizer`
+(Mapping/Localization) und `RobotGuide` (GoTo/Stopp-Listener); Karten-Rendering in
+`NavMapRenderer`. Beteiligt: `action/navigation/NavigationManager` (+ `NavigationController`,
+`NavigationView`, `data/`).
 
 ```mermaid
 flowchart TD
-    subgraph Scan["Raum-Scan"]
-        S1["startScan: LocalizeAndMap, Fähigkeiten halten, Startpunkt erfassen"] --> S2[autoScanExplore]
-        S2 --> S3["rotationSweep mit 4 Drehungen + Ringe bis 6 m (driveToOriginOffset)"]
-        S3 --> S4["zurück zum Startpunkt + Abschluss-Ansage"]
+    subgraph Scan["Raum-Scan (RoomScanner)"]
+        S1["startScan: LocalizeAndMap, Fähigkeiten halten"] --> S2["Operator dreht Pepper von Hand"]
+        S2 --> S3["Snapshot-Loop: Live-Karte via NavMapRenderer (captureSnapshot bei 'Position erfassen')"]
+        S3 --> S4["Stopp per STOP-Button oder Sprache ('stopp'/'fertig')"]
         S4 --> S5["stopAndSaveScan: dumpMap, serialize, Datei + DB"]
     end
-    subgraph Loc["Lokalisierung"]
+    subgraph Loc["Lokalisierung (RobotLocalizer)"]
         L1["localize(scan): Karte laden, Localize starten"] --> L2{LocalizationStatus}
         L2 -->|LOCALIZED| L3["localized = true"]
         L2 -->|Timeout 40 s| L4["Abbruch + Fehlermeldung"]
         L3 -->|Orientierung verloren| L5["handleLocalizationLost: anhalten, neu orientieren"]
     end
-    subgraph Drive["Wegpunkte"]
+    subgraph Drive["Wegpunkte (RobotGuide)"]
         D1["saveWaypoint: Pose in Karte speichern"]
         D2["goToWaypoint / guideToWaypoint: GoTo zum Wegpunkt"]
         D3["guide: Stopp-Listener auf 'stopp'"]
@@ -120,8 +123,9 @@ stateDiagram-v2
 
 Tänze werden in der Admin-Bibliothek erzeugt (iTunes + LLM-Choreografie) und beim
 Sprachbefehl nur abgespielt. Beteiligt: `action/dance/DanceRepository`,
-`action/dance/itunes/ITunesSearch`, `action/dynamicanim/AnimationGenerator`,
-`action/dance/DanceAction`.
+`action/dance/itunes/ITunesSearch`, `action/dynamicanim/AnimationGenerator`
+(Choreografie; Song-Research/Planning in `SongResearcher`/`SongPlan`/`SongResearch`,
+gemeinsame Generator-Basis `GeneratorBase`), `action/dance/DanceAction`.
 
 ```mermaid
 flowchart TD
@@ -170,7 +174,9 @@ stateDiagram-v2
 ## OpenAI-Gespräch & Sprachwechsel
 
 Freies Gespräch via Streaming und Sprachwechsel (automatisch über Marker oder per
-Befehl). Beteiligt: `openai/OpenAIService`, `openai/history/HistoryManager`
+Befehl). `OpenAIService` ist Fassade über `OpenAiHttpClient` (Transport),
+`OpenAiStreamParser`/`OpenAiResponse` (SSE), `OpenAiCircuitBreaker` und `OpenAiTokenProvider`.
+Beteiligt: `openai/OpenAIService`, `openai/history/HistoryManager`
 (max. 10 Gesprächseinträge), `lang/LanguageManager`, `action/lang/ChangeLanguageAction`.
 
 ```mermaid

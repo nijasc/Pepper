@@ -733,7 +733,7 @@ Die folgende Übersicht zeigt die wichtigsten Klassen und ihre Verantwortung –
 | `FollowController` (Singleton) | Hintergrundschleife der FollowMe-Mechanik (siehe [FollowMe-Mechanik](#followme-mechanik)). |
 | `MemoryGameController` / `MemoryGameView` | Steuerung und Tablet-Darstellung des [Memory-Minispiels](#memory-minispiel). |
 | `EmotionReader` / `BasicEmotion` | Liest über die QiSDK-Wahrnehmung die Stimmung der Person, mappt `PleasureState` × `ExcitementState` auf eine Grundstimmung und speist sie als Kontext in den Systemprompt (siehe [Emotionswahrnehmung](#emotionswahrnehmung)). |
-| `SelfieController` / `SelfieRepository` | Nimmt das [Selfie](#selfie) auf, legt das Bild ab (Room + Datei), serviert es über `LocalImageServer` und bietet nach der Aufnahme ggf. den Verlosungs-Beitritt an. |
+| `SelfieController` / `SelfieRepository` | Nimmt das [Selfie](#selfie) auf, legt das Bild ab (Room + Datei), serviert es über `SelfieShareServer` (kapselt den `LocalImageServer`) und bietet nach der Aufnahme ggf. den Verlosungs-Beitritt an. |
 | `NetworkUtils` | Ermittelt die lokale WLAN-IP von Pepper (für die Download-URLs der QR-Codes). |
 | `NavigationManager` / `NavigationController` / `NavigationView` | Raumkartierung, Wegpunkte und Navigation (siehe [Navigation & Wegpunkte](#navigation--wegpunkte)); Persistenz in `navigation.db` plus `.map`-Dateien. |
 | `AdminController` / `AdminView` | Steuerung und Tablet-Oberfläche des [Admin-Bereichs](#admin-bereich) (PIN, Kachelmenü, Dev-Logs, Debug-Modus, Galerie, Verlosung inkl. Gewinnerziehung, Kamera, Navigation, Tänze). Meldet den Offen-Zustand an `MainActivity`. |
