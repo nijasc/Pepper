@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 final class RobotLocalizer {
 
     private static final String TAG = "Navigation";
-    private static final long LOCALIZE_TIMEOUT_MS = 40000;
 
     private final NavigationManager nav;
     private volatile Future<Void> localizeFuture;
@@ -75,7 +74,7 @@ final class RobotLocalizer {
                         nav.setLocalized(false);
                     }
                 });
-                scheduleLocalizeTimeout(done, cb);
+                scheduleLocalizeTimeout(done, cb, NavigationSettings.getLocalizeTimeoutMs(c));
             } catch (Exception e) {
                 nav.releaseAbilities();
                 Log.w(TAG, "localize failed: " + e.getMessage());
@@ -92,10 +91,11 @@ final class RobotLocalizer {
         }
     }
 
-    private void scheduleLocalizeTimeout(AtomicBoolean done, NavigationManager.Callback<Boolean> cb) {
+    private void scheduleLocalizeTimeout(AtomicBoolean done, NavigationManager.Callback<Boolean> cb,
+                                         long timeoutMs) {
         Thread watchdog = new Thread(() -> {
             try {
-                Thread.sleep(LOCALIZE_TIMEOUT_MS);
+                Thread.sleep(timeoutMs);
             } catch (InterruptedException e) {
                 return;
             }

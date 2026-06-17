@@ -424,6 +424,24 @@
                         android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
+
+                <LinearLayout android:id="@+id/adminNavSettings" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_navigation_settings"
+                        android:src="@drawable/ic_admin_navigation" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_navigation_settings"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
             </GridLayout>
 
             <TextView
@@ -1404,6 +1422,71 @@
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/danceSave"
+            style="@style/AdminMenuButton"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:text="@string/raffle_save" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adminNavPanel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/admin_navigation_settings"
+            android:textColor="@color/white"
+            android:textSize="26sp"
+            android:textStyle="bold" />
+
+        <CheckBox
+            android:id="@+id/navAutoLocalize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/nav_auto_localize"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/nav_default_scan_label"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <Spinner
+            android:id="@+id/navDefaultScan"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/nav_localize_timeout_label"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/navLocalizeTimeout"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="@color/text_muted" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/navSave"
             style="@style/AdminMenuButton"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="20dp"

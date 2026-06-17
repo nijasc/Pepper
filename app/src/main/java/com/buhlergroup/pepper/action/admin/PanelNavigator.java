@@ -25,6 +25,7 @@ final class PanelNavigator {
     public static final int PANEL_ATTRACT = 12;
     public static final int PANEL_DEBUG = 13;
     public static final int PANEL_DANCE = 14;
+    public static final int PANEL_NAV = 15;
 
     interface OnPanelShown {
         void onPanelShown(int which);
@@ -97,6 +98,8 @@ final class PanelNavigator {
                 return R.string.admin_attract;
             case PANEL_DANCE:
                 return R.string.admin_dance_settings;
+            case PANEL_NAV:
+                return R.string.admin_navigation_settings;
             default:
                 return R.string.admin_menu_title;
         }

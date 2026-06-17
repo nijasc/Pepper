@@ -39,6 +39,7 @@ import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATS;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_ATTRACT;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEBUG;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DANCE;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_NAV;
 
 public class AdminView extends FrameLayout {
 
@@ -63,6 +64,7 @@ public class AdminView extends FrameLayout {
     private View debugPanel;
     private View attractPanel;
     private View dancePanel;
+    private View navPanel;
     private View adminHeader;
     private TextView adminHeaderTitle;
     private PanelNavigator panelNav;
@@ -72,6 +74,7 @@ public class AdminView extends FrameLayout {
     private HistoryPanelController history;
     private AttractPanelController attract;
     private DancePanelController dance;
+    private NavigationPanelController navigationSettings;
     private CameraPanelController camera;
     private DiagnosticsController diagnostics;
 
@@ -111,6 +114,7 @@ public class AdminView extends FrameLayout {
         debugPanel = binding.adminDebugPanel;
         attractPanel = binding.adminAttractPanel;
         dancePanel = binding.adminDancePanel;
+        navPanel = binding.adminNavPanel;
 
         adminHeader = binding.adminHeader;
         adminHeaderTitle = binding.adminHeaderTitle;
@@ -133,6 +137,7 @@ public class AdminView extends FrameLayout {
         panelNav.register(PANEL_DEBUG, debugPanel);
         panelNav.register(PANEL_ATTRACT, attractPanel);
         panelNav.register(PANEL_DANCE, dancePanel);
+        panelNav.register(PANEL_NAV, navPanel);
 
         pinController = new PinController(this, () -> panelNav.show(PANEL_MENU));
         dashboard = new DashboardController(this, dbExecutor);
@@ -142,6 +147,7 @@ public class AdminView extends FrameLayout {
         history = new HistoryPanelController(this, panelNav);
         attract = new AttractPanelController(this, panelNav);
         dance = new DancePanelController(this, dbExecutor, panelNav);
+        navigationSettings = new NavigationPanelController(this, dbExecutor, panelNav);
         camera = new CameraPanelController(this, dbExecutor, panelNav);
         diagnostics = new DiagnosticsController(this, panelNav);
         binding.adminPinCancel.setOnClickListener(v -> hide());
@@ -159,6 +165,7 @@ public class AdminView extends FrameLayout {
         binding.adminDebug.setOnClickListener(v -> diagnostics.showDebug());
         binding.adminAttract.setOnClickListener(v -> attract.showAttract());
         binding.adminDanceSettings.setOnClickListener(v -> dance.showDance());
+        binding.adminNavSettings.setOnClickListener(v -> navigationSettings.showNavigation());
         binding.adminNavigation.setOnClickListener(v -> openNavigation());
         binding.adminDances.setOnClickListener(v -> openDanceLibrary());
         binding.adminDsgvo.setOnClickListener(v -> showDsgvoAccessDialog());

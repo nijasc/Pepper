@@ -85,6 +85,35 @@ public final class NavigationManager {
         return qiContext;
     }
 
+    public void maybeAutoLocalize() {
+        QiContext c = qiContext;
+        if (c == null || localized || !NavigationSettings.isAutoLocalize(c)) {
+            return;
+        }
+        String scanId = NavigationSettings.getDefaultScanId(c);
+        if (scanId == null || scanId.isEmpty()) {
+            return;
+        }
+        submit(() -> {
+            try {
+                RoomScanEntity scan = dao(c).getScan(scanId);
+                if (scan != null) {
+                    localize(scan, new Callback<Boolean>() {
+                        @Override
+                        public void onResult(Boolean value) {
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "auto-localize failed: " + e.getMessage());
+            }
+        });
+    }
+
     public void onFocusLost() {
         scanner.stopScanning();
         scanner.cancelScanStopListener();

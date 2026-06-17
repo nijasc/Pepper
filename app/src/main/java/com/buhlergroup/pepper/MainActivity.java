@@ -197,6 +197,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         RobotContext.set(qiContext);
         holdBackgroundMovement(qiContext);
         NavigationManager.get().setQiContext(qiContext);
+        NavigationManager.get().maybeAutoLocalize();
         FollowController.get().onFocusGained(qiContext);
         FollowController.get().setFollowStateListener(following -> {
             runOnUiThread(() ->

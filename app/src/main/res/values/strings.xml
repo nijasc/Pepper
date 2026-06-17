@@ -227,6 +227,12 @@
     <string name="dance_duration_label">Standard-Dauer (Sekunden)</string>
     <string name="dance_default_none">Zufall / Favoriten</string>
     <string name="dance_settings_saved">Tanz-Einstellungen gespeichert.</string>
+    <string name="admin_navigation_settings">Navigations-Einstellungen</string>
+    <string name="nav_auto_localize">Beim Start automatisch lokalisieren</string>
+    <string name="nav_default_scan_label">Standard-Raum-Scan</string>
+    <string name="nav_default_scan_none">Keiner</string>
+    <string name="nav_localize_timeout_label">Lokalisierungs-Timeout (Sekunden)</string>
+    <string name="nav_settings_saved">Navigations-Einstellungen gespeichert.</string>
     <string name="dance_startpoint">Startpunkt</string>
     <string name="dance_preview_here">Ab hier vorhören</string>
     <string name="status_refresh">Aktualisieren</string>
