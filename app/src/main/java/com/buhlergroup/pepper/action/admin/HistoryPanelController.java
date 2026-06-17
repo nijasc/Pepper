@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.app.AlertDialog;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -48,6 +49,15 @@ final class HistoryPanelController {
     }
 
     private void onClearHistory() {
+        new AlertDialog.Builder(root.getContext())
+                .setTitle(R.string.admin_history_clear_title)
+                .setMessage(R.string.admin_history_clear_message)
+                .setNegativeButton(R.string.admin_cancel, null)
+                .setPositiveButton(R.string.admin_delete, (d, w) -> clearHistoryConfirmed())
+                .show();
+    }
+
+    private void clearHistoryConfirmed() {
         boolean cleared = AdminController.get().clearHistory();
         Toast.makeText(root.getContext(),
                 cleared ? R.string.admin_history_cleared : R.string.admin_pin_error,
