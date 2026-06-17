@@ -1,14 +1,9 @@
 package com.buhlergroup.pepper;
 
-import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.SystemClock;
 import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -16,8 +11,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.QiSDK;
@@ -69,10 +62,6 @@ import java.util.ArrayList;
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
     private static final int SPEECH_EVENT = 10;
     private static final int DANCE_EDIT_SPEECH_EVENT = 11;
-    private static final long SPEECH_WATCHDOG_INTERVAL_MS = 5000;
-    private static final long SPEECH_WATCHDOG_IDLE_MS = 15000;
-    private SpeechRecognizer recognizer;
-    private Intent intent;
     private String said = "";
     private ActionHandler executionHandler;
     private LanguageManager languageManager;
@@ -82,19 +71,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private Holder backgroundMovementHolder;
     private TextView languageLabel;
     private DebugOverlayView debugOverlay;
-    private volatile boolean listening;
-    private volatile boolean listenPending;
     private volatile boolean processing;
-    private volatile long lastListenStartMs;
-    private final Handler watchdogHandler = new Handler(Looper.getMainLooper());
-    private final Runnable speechWatchdog = new Runnable() {
-        @Override
-        public void run() {
-            checkSpeechWatchdog();
-            tickAttract();
-            watchdogHandler.postDelayed(this, SPEECH_WATCHDOG_INTERVAL_MS);
-        }
-    };
+    private SpeechSession speech;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -153,17 +131,28 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         HoldController.get().setStateListener(active -> updateHomeControls());
         WinnerController.get().setStateListener(active -> updateHomeControls());
 
-        initSpeech();
-        lastListenStartMs = SystemClock.elapsedRealtime();
-        watchdogHandler.postDelayed(speechWatchdog, SPEECH_WATCHDOG_INTERVAL_MS);
+        speech = new SpeechSession(this, SPEECH_EVENT, new SpeechSession.Gate() {
+            @Override
+            public boolean isOverlayOpen() {
+                return MainActivity.this.isOverlayOpen();
+            }
+
+            @Override
+            public boolean isBusy() {
+                return processing;
+            }
+
+            @Override
+            public void onTick() {
+                tickAttract();
+            }
+        });
+        speech.start();
         RaffleRepository.purgeExpiredAsync(this);
         SelfieRepository.purgeExpiredAsync(this);
 
-        DanceLibraryController.get().setVoiceRequester(() -> runOnUiThread(() -> {
-            if (intent != null && intent.resolveActivity(getPackageManager()) != null) {
-                startActivityForResult(intent, DANCE_EDIT_SPEECH_EVENT);
-            }
-        }));
+        DanceLibraryController.get().setVoiceRequester(() ->
+                runOnUiThread(() -> speech.requestDanceEdit(DANCE_EDIT_SPEECH_EVENT)));
     }
 
     @Override
@@ -191,10 +180,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         HoldController.get().detachView();
         WinnerController.get().setStateListener(null);
         WinnerController.get().detachView();
-        watchdogHandler.removeCallbacks(speechWatchdog);
+        speech.destroy();
         QiSDK.unregister(this);
-        recognizer.cancel();
-        recognizer.destroy();
         super.onDestroy();
     }
 
@@ -215,12 +202,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             runOnUiThread(() ->
                     stopFollowButton.setVisibility(following ? View.VISIBLE : View.GONE));
             if (!following) {
-                maybeResumeListening();
+                speech.resumeIfPending();
             }
         });
 
         if (languageManager == null) {
-            languageManager = new LanguageManager(intent);
+            languageManager = new LanguageManager(speech.recognitionIntent());
             languageManager.setLanguageChangeListener(this::updateLanguageLabel);
             SpeechManager.getInstance().setLanguageManager(languageManager);
         }
@@ -247,7 +234,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         } catch (Exception e) {
             Log.e("Mainactivity", "OnFocuseGainedError: " + e.getMessage());
         }
-        listenToSpeech();
+        speech.listen();
     }
 
     @Override
@@ -327,40 +314,16 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             languageLabel.setVisibility(visibility);
         });
         if (overlayOpen) {
-            stopListening();
+            speech.pause();
         } else {
-            maybeResumeListening();
+            speech.resumeIfPending();
         }
-    }
-
-    private void stopListening() {
-        listenPending = true;
-        runOnUiThread(() -> {
-            boolean wasListening = listening;
-            listening = false;
-            if (wasListening) {
-                finishActivity(SPEECH_EVENT);
-            }
-            try {
-                recognizer.cancel();
-            } catch (Exception ignored) {
-            }
-        });
     }
 
     private void updateLanguageLabel(SupportedLanguage lang) {
         if (languageLabel != null) {
             runOnUiThread(() -> languageLabel.setText(lang.getDisplayName()));
         }
-    }
-
-    private void listenToSpeech() {
-        if (isOverlayOpen()) {
-            listenPending = true;
-            return;
-        }
-        listenPending = false;
-        startSpeechRecognition();
     }
 
     private boolean isOverlayOpen() {
@@ -372,65 +335,8 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 || WinnerController.get().isActive();
     }
 
-    private void startSpeechRecognition() {
-        runOnUiThread(() -> {
-            if (listening || isOverlayOpen()) {
-                return;
-            }
-            if (intent != null && intent.resolveActivity(getPackageManager()) != null) {
-                listening = true;
-                lastListenStartMs = SystemClock.elapsedRealtime();
-                DebugLog.get().setStatus("Höre zu …");
-                DebugLog.get().d("MainActivity", "Spracherkennung gestartet");
-                startActivityForResult(intent, SPEECH_EVENT);
-            }
-        });
-    }
-
-    private void maybeResumeListening() {
-        if (listenPending && !listening && !isOverlayOpen()) {
-            listenToSpeech();
-        }
-    }
-
     private void tickAttract() {
         AttractController.get().tick(RobotContext.get(), homeOverlayOpen(), processing);
-    }
-
-    private void checkSpeechWatchdog() {
-        if (listening || processing || isOverlayOpen()) {
-            return;
-        }
-        long idle = SystemClock.elapsedRealtime() - lastListenStartMs;
-        if (idle > SPEECH_WATCHDOG_IDLE_MS) {
-            Log.w("Mainactivity", "Speech watchdog restarting recognition after " + idle + "ms idle");
-            DebugLog.get().w("MainActivity", "Watchdog startet Spracherkennung neu nach " + idle + "ms");
-            listenToSpeech();
-        }
-    }
-
-    private void initSpeech() {
-        checkPermission();
-        recognizer = SpeechRecognizer.createSpeechRecognizer(this);
-        intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
-    }
-
-    private void checkPermission() {
-        String[] required = {
-                Manifest.permission.RECORD_AUDIO,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-        };
-        java.util.List<String> missing = new java.util.ArrayList<>();
-        for (String permission : required) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                missing.add(permission);
-            }
-        }
-        if (!missing.isEmpty()) {
-            ActivityCompat.requestPermissions(this, missing.toArray(new String[0]), 1);
-        }
     }
 
     @Override
@@ -439,15 +345,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         Log.d("Mainactivity", "AActivity result");
 
         if (requestCode == SPEECH_EVENT) {
-            listening = false;
-            if (resultCode == RESULT_OK && data != null) {
-                ArrayList<String> results =
-                        data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                if (results != null && !results.isEmpty()) {
-                    said = results.get(0);
-                    DebugLog.get().setStatus("Erkannt: \"" + said + "\"");
-                    DebugLog.get().i("MainActivity", "Sprache erkannt: \"" + said + "\"");
-                }
+            String recognized = speech.handleSpeechResult(resultCode, data);
+            if (recognized != null) {
+                said = recognized;
             }
         } else if (requestCode == DANCE_EDIT_SPEECH_EVENT) {
             if (resultCode == RESULT_OK && data != null) {
