@@ -8,7 +8,7 @@ import com.buhlergroup.pepper.action.dance.data.DanceDatabase;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 import com.buhlergroup.pepper.action.dance.audio.SongAudioAnalyzer;
 import com.buhlergroup.pepper.action.dance.itunes.ITunesSearch;
-import com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator;
+import com.buhlergroup.pepper.action.dynamicanim.DanceGenerator;
 import com.buhlergroup.pepper.action.dynamicanim.SongPlan;
 import com.buhlergroup.pepper.action.dynamicanim.SongResearcher;
 import com.buhlergroup.pepper.debug.DebugLog;
@@ -30,7 +30,7 @@ public final class DanceRepository {
     private static final String BUILTIN_HULA_ID = BUILTIN_PREFIX + "hula";
     private static final String BUILTIN_SIX_SEVEN_ID = BUILTIN_PREFIX + "six_seven";
 
-    private final AnimationGenerator generator = new AnimationGenerator();
+    private final DanceGenerator generator = new DanceGenerator();
     private final SongResearcher songResearcher = new SongResearcher();
 
     public void ensureBuiltInDances(Context context) {
@@ -97,12 +97,12 @@ public final class DanceRepository {
     }
 
     public DanceEntity getOrCreate(Context context, String query,
-                                   AnimationGenerator.ProgressListener progress) throws Exception {
+                                   DanceGenerator.ProgressListener progress) throws Exception {
         DanceDao dao = DanceDatabase.get(context).danceDao();
         File danceDir = danceDir(context);
 
         if (progress != null) {
-            progress.onStage(AnimationGenerator.Stage.SEARCH);
+            progress.onStage(DanceGenerator.Stage.SEARCH);
         }
         SongPlan plan = songResearcher.planSong(context, query);
         SongSource source = resolveSource(plan.query);
@@ -133,12 +133,12 @@ public final class DanceRepository {
         int seconds = (int) Math.max(8, Math.min(30, durationMs / 1000));
 
         if (progress != null) {
-            progress.onStage(AnimationGenerator.Stage.AUDIO);
+            progress.onStage(DanceGenerator.Stage.AUDIO);
         }
         File audioFile = downloadPreview(danceDir, source);
 
         if (progress != null) {
-            progress.onStage(AnimationGenerator.Stage.BEAT);
+            progress.onStage(DanceGenerator.Stage.BEAT);
         }
         SongAudioAnalyzer.Result analysis =
                 audioFile != null ? SongAudioAnalyzer.analyze(audioFile) : null;
@@ -330,7 +330,7 @@ public final class DanceRepository {
     }
 
     public void aiEdit(Context context, DanceEntity dance, String instruction) throws Exception {
-        AnimationGenerator.DanceEdit edit =
+        DanceGenerator.DanceEdit edit =
                 generator.interpretEdit(context, dance.songName, dance.audioStartMs, instruction);
         DanceDao dao = DanceDatabase.get(context).danceDao();
         boolean changed = false;

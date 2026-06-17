@@ -49,10 +49,10 @@ public class SongAudioAnalyzerTest {
 
     @Test
     public void beatFrameStepLocksToTempo() {
-        assertTrue(com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator.beatFrameStep(0) == 0);
-        int step120 = com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator.beatFrameStep(120);
+        assertTrue(com.buhlergroup.pepper.action.dynamicanim.DanceGenerator.beatFrameStep(0) == 0);
+        int step120 = com.buhlergroup.pepper.action.dynamicanim.DanceGenerator.beatFrameStep(120);
         assertTrue("step120 was " + step120, step120 >= 10 && step120 <= 16);
-        int step170 = com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator.beatFrameStep(170);
+        int step170 = com.buhlergroup.pepper.action.dynamicanim.DanceGenerator.beatFrameStep(170);
         assertTrue("step170 was " + step170, step170 >= 10 && step170 <= 25);
     }
 }

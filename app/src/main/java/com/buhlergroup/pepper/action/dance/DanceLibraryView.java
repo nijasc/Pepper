@@ -100,7 +100,7 @@ public class DanceLibraryView extends FrameLayout {
         post(() -> loadingOverlay.setVisibility(GONE));
     }
 
-    private void showStage(com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator.Stage stage) {
+    private void showStage(com.buhlergroup.pepper.action.dynamicanim.DanceGenerator.Stage stage) {
         int res;
         switch (stage) {
             case SEARCH:
