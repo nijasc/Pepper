@@ -673,6 +673,41 @@ public final class NavigationManager {
         });
     }
 
+    public void rotateInPlace(Callback<Void> cb) {
+        submit(() -> {
+            QiContext c = qiContext;
+            if (c == null) {
+                cb.onError("Roboter ist nicht bereit.");
+                return;
+            }
+            int steps = 4;
+            double step = 2.0 * Math.PI / steps;
+            try {
+                for (int i = 0; i < steps && qiContext != null; i++) {
+                    Frame robotFrame = c.getActuation().robotFrame();
+                    Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, step);
+                    FreeFrame target = c.getMapping().makeFreeFrame();
+                    target.update(robotFrame, t, 0L);
+                    Future<Void> future = GoToBuilder.with(c).withFrame(target.frame()).build().async().run();
+                    activeGoTo = future;
+                    boolean ok = awaitGoTo(future, () -> qiContext != null);
+                    if (activeGoTo == future) {
+                        activeGoTo = null;
+                    }
+                    if (!ok) {
+                        cb.onError("Drehung fehlgeschlagen.");
+                        return;
+                    }
+                    publishScanSnapshot();
+                }
+                cb.onResult(null);
+            } catch (Exception e) {
+                Log.w(TAG, "rotateInPlace failed: " + e.getMessage());
+                cb.onError("Drehung fehlgeschlagen.");
+            }
+        });
+    }
+
     private void cancelActiveGoTo() {
         Future<Void> f = activeGoTo;
         activeGoTo = null;

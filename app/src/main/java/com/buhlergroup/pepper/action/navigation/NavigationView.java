@@ -82,6 +82,11 @@ public class NavigationView extends FrameLayout {
         scanStartButton.setOnClickListener(v -> startScan());
         scanStopButton.setOnClickListener(v -> requestScanStop());
         findViewById(R.id.navScanStopBig).setOnClickListener(v -> requestScanStop());
+        findViewById(R.id.navScanJogForward).setOnClickListener(v -> jog(0.3, 0.0, 0.0));
+        findViewById(R.id.navScanJogBack).setOnClickListener(v -> jog(-0.3, 0.0, 0.0));
+        findViewById(R.id.navScanJogLeft).setOnClickListener(v -> jog(0.0, 0.0, 0.5));
+        findViewById(R.id.navScanJogRight).setOnClickListener(v -> jog(0.0, 0.0, -0.5));
+        findViewById(R.id.navScanRotate).setOnClickListener(v -> rotateInPlace());
         waypointSaveButton.setOnClickListener(v -> saveWaypoint());
         findViewById(R.id.navJogForward).setOnClickListener(v -> jog(0.3, 0.0, 0.0));
         findViewById(R.id.navJogBack).setOnClickListener(v -> jog(-0.3, 0.0, 0.0));
@@ -241,6 +246,20 @@ public class NavigationView extends FrameLayout {
 
     private void jog(double dx, double dy, double dTheta) {
         NavigationManager.get().jog(dx, dy, dTheta, new NavigationManager.Callback<Void>() {
+            @Override
+            public void onResult(Void value) {
+                post(() -> loadRobotPose());
+            }
+
+            @Override
+            public void onError(String error) {
+                post(() -> toastText(error));
+            }
+        });
+    }
+
+    private void rotateInPlace() {
+        NavigationManager.get().rotateInPlace(new NavigationManager.Callback<Void>() {
             @Override
             public void onResult(Void value) {
                 post(() -> loadRobotPose());
