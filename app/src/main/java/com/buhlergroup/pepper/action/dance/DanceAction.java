@@ -93,8 +93,25 @@ public class DanceAction extends Action {
                 return match;
             }
         }
+        DanceEntity preferred = defaultDance(context, playable);
+        if (preferred != null) {
+            return preferred;
+        }
         List<DanceEntity> pool = !favorites.isEmpty() ? favorites : playable;
         return pool.get((int) (Math.random() * pool.size()));
+    }
+
+    private DanceEntity defaultDance(QiContext context, List<DanceEntity> playable) {
+        String id = DanceSettings.getDefaultDanceId(context);
+        if (id == null || id.isEmpty()) {
+            return null;
+        }
+        for (DanceEntity dance : playable) {
+            if (id.equals(dance.youtubeId)) {
+                return dance;
+            }
+        }
+        return null;
     }
 
     private DanceEntity matchByName(List<DanceEntity> dances, String request) {

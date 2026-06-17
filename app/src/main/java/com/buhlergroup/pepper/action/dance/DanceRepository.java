@@ -129,7 +129,8 @@ public final class DanceRepository {
             return existing;
         }
 
-        long durationMs = source.durationMs > 0 ? source.durationMs : 25000L;
+        long durationMs = source.durationMs > 0
+                ? source.durationMs : DanceSettings.getDefaultDurationMs(context);
         int seconds = (int) Math.max(8, Math.min(30, durationMs / 1000));
 
         if (progress != null) {

@@ -222,6 +222,11 @@
     <string name="attract_idle_label">Leerlauf bis Attract (Minuten)</string>
     <string name="attract_greet_label">Begrüßungs-Intervall (Sekunden)</string>
     <string name="attract_saved">Attract-Einstellungen gespeichert.</string>
+    <string name="admin_dance_settings">Tanz-Einstellungen</string>
+    <string name="dance_default_label">Standard-Tanz</string>
+    <string name="dance_duration_label">Standard-Dauer (Sekunden)</string>
+    <string name="dance_default_none">Zufall / Favoriten</string>
+    <string name="dance_settings_saved">Tanz-Einstellungen gespeichert.</string>
     <string name="dance_startpoint">Startpunkt</string>
     <string name="dance_preview_here">Ab hier vorhören</string>
     <string name="status_refresh">Aktualisieren</string>
