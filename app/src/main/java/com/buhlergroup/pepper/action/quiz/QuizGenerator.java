@@ -26,7 +26,7 @@ public final class QuizGenerator {
             return null;
         }
         try {
-            OpenAIService service = new OpenAIService(new ArrayList<>());
+            OpenAIService service = OpenAIService.shared();
             service.setC(context);
             String languageName = lang == SupportedLanguage.ENGLISH ? "English" : "German";
             String raw = service.generateText(instructions(languageName, count),

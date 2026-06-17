@@ -41,7 +41,7 @@ public final class AnimationGenerator {
         void onStage(Stage stage);
     }
 
-    private final OpenAIService openAi = new OpenAIService(new ArrayList<>());
+    private final OpenAIService openAi = OpenAIService.shared();
 
     public String generateValidated(Context context, String command) {
         return generateValidated(context, command, 0);

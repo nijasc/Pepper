@@ -201,7 +201,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     @Override
     public void onRobotFocusGained(QiContext qiContext) {
 
-        OpenAIService s = new OpenAIService(new ArrayList<>());
+        OpenAIService s = OpenAIService.shared();
         s.setC(qiContext);
         s.getAuthToken(qiContext);
         Log.d("Mainactivity", "AFocus Gained");

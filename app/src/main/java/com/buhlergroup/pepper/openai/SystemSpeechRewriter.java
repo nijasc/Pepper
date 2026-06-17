@@ -30,7 +30,7 @@ public final class SystemSpeechRewriter {
 
     private final Map<String, String> cache = new ConcurrentHashMap<>();
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final OpenAIService openAi = new OpenAIService(new ArrayList<>());
+    private final OpenAIService openAi = OpenAIService.shared();
 
     private SystemSpeechRewriter() {
     }

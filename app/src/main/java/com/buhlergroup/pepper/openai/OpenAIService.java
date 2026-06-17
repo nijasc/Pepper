@@ -80,8 +80,24 @@ public class OpenAIService {
         void onSentence(String sentence, String languageTag);
     }
 
+    private static volatile OpenAIService shared;
+
     public OpenAIService(List<Action> actions) {
         this.actions = actions;
+    }
+
+    public static OpenAIService shared() {
+        OpenAIService instance = shared;
+        if (instance == null) {
+            synchronized (OpenAIService.class) {
+                instance = shared;
+                if (instance == null) {
+                    instance = new OpenAIService(new java.util.ArrayList<>());
+                    shared = instance;
+                }
+            }
+        }
+        return instance;
     }
 
     public String getResponse(HistoryManager historyManager, QiContext context) {
