@@ -10,6 +10,10 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class JoinRaffleAction extends Action {
 
+    public JoinRaffleAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext context, String input) {
         RaffleEntity raffle = RaffleRepository.get(context).getCurrentRaffle();

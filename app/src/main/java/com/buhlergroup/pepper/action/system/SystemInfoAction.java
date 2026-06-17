@@ -16,7 +16,9 @@ public class SystemInfoAction extends Action {
     private final LanguageManager lm;
     private final OpenAIService openAi;
 
-    public SystemInfoAction(LanguageManager lm, List<Action> actions) {
+    public SystemInfoAction(LanguageManager lm, List<Action> actions,
+                            com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
         this.lm = lm;
         this.openAi = new OpenAIService(actions);
     }

@@ -10,7 +10,9 @@ import java.util.List;
 public class SayAction extends Action {
     private final OpenAIService openAi;
 
-    public SayAction(List<Action> actions) {
+    public SayAction(List<Action> actions,
+                     com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
         this.openAi = new OpenAIService(actions);
     }
 

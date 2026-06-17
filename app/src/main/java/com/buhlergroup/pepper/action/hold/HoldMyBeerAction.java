@@ -5,6 +5,10 @@ import com.buhlergroup.pepper.action.Action;
 
 public class HoldMyBeerAction extends Action {
 
+    public HoldMyBeerAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext context, String input) {
         HoldController.get().requestHold(context);

@@ -11,6 +11,11 @@ import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class HighFiveAction extends Action {
+
+    public HighFiveAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext context, String input) {
         SpeechManager.getInstance().systemSay(context, "High five!");

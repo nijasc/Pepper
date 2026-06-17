@@ -43,7 +43,9 @@ public class DocumentationAction extends Action {
     private String cachedDocumentation;
     private long cachedAtMs;
 
-    public DocumentationAction(List<Action> actions) {
+    public DocumentationAction(List<Action> actions,
+                               com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
         this.service = new OpenAIService(actions);
     }
 

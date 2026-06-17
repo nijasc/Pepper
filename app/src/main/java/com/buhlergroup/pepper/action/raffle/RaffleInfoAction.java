@@ -16,7 +16,9 @@ public class RaffleInfoAction extends Action {
 
     private final OpenAIService openAi;
 
-    public RaffleInfoAction(List<Action> actions) {
+    public RaffleInfoAction(List<Action> actions,
+                            com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
         this.openAi = new OpenAIService(actions);
     }
 

@@ -16,6 +16,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class GuideAction extends Action {
 
+    public GuideAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     private static final long WAYPOINT_TIMEOUT_MS = 8000;
 
     private static final Set<String> FILLERS = new HashSet<>(Arrays.asList(

@@ -26,7 +26,9 @@ public class SiriAction extends Action {
     private final LanguageManager languageManager;
     private final Random random = new Random();
 
-    public SiriAction(LanguageManager languageManager) {
+    public SiriAction(LanguageManager languageManager,
+                      com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
         this.languageManager = languageManager;
     }
 

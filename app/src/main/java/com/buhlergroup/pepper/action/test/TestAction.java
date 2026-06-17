@@ -17,6 +17,10 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class TestAction extends Action {
 
+    public TestAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext context, String input) {
         SpeechManager.getInstance().systemSay(context, "Ich drehe mich einmal im Kreis");

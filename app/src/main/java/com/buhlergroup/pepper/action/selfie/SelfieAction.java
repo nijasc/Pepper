@@ -5,6 +5,10 @@ import com.buhlergroup.pepper.action.Action;
 
 public class SelfieAction extends Action {
 
+    public SelfieAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext context, String input) {
         SelfieController.get().takeSelfie(context);

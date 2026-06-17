@@ -12,6 +12,10 @@ import java.util.regex.Pattern;
 
 public class ChangeVolumeAction extends Action {
 
+    public ChangeVolumeAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext qiContext, String input) {
 

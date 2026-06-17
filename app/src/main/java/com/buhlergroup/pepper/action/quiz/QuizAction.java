@@ -7,6 +7,10 @@ import com.buhlergroup.pepper.lang.SupportedLanguage;
 
 public class QuizAction extends Action {
 
+    public QuizAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext context, String input) {
         SupportedLanguage lang = SpeechManager.getInstance().currentLanguage();

@@ -9,7 +9,9 @@ import com.buhlergroup.pepper.lang.SupportedLanguage;
 public class ChangeLanguageAction extends Action {
     private final LanguageManager languageManager;
 
-    public ChangeLanguageAction(LanguageManager languageManager) {
+    public ChangeLanguageAction(LanguageManager languageManager,
+                                com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
         this.languageManager = languageManager;
     }
 

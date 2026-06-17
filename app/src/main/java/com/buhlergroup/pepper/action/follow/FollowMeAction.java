@@ -5,6 +5,11 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class FollowMeAction extends Action {
+
+    public FollowMeAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext context, String input) {
         if (FollowController.get().isFollowing()) {

@@ -28,6 +28,10 @@ import java.util.Set;
 
 public class DanceAction extends Action {
 
+    public DanceAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     private static final String TAG = "Dance";
     private static final long MAX_PLAY_MS = 35000;
     private static final long MIN_PLAY_MS = 5000;

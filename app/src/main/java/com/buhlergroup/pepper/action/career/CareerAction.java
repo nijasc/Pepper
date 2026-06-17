@@ -12,6 +12,10 @@ import com.buhlergroup.pepper.lang.SupportedLanguage;
 
 public class CareerAction extends Action {
 
+    public CareerAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     private static final String TAG = "Career";
     private static final String CAREER_URL_KEY = "PEPPER_CAREER_URL";
     private static final long DISPLAY_MS = 30000;

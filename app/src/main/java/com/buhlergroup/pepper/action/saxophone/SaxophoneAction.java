@@ -15,6 +15,10 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class SaxophoneAction extends Action {
 
+    public SaxophoneAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     private static final long MAX_PLAY_MS = 35000;
 
     @Override

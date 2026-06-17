@@ -241,31 +241,30 @@ public class ActionHandler {
     }
 
     private void initActions(LanguageManager languageManager) {
-        actions.add(new SayAction(actions));
-        actions.add(new DanceAction());
-        actions.add(new DynamicAnimationAction());
-        actions.add(new SiriAction(languageManager));
-        actions.add(new SaxophoneAction());
-        actions.add(new HighFiveAction());
-        actions.add(new HoldMyBeerAction());
-        actions.add(new ChangeLanguageAction(languageManager));
-        actions.add(new ChangeVolumeAction());
-        actions.add(new DocumentationAction(actions));
-        actions.add(new TestAction());
-        actions.add(new SystemInfoAction(languageManager, actions));
-        actions.add(new FollowMeAction());
-        actions.add(new GuideAction());
-        actions.add(new MemoryGameAction());
-        actions.add(new QuizAction());
-        actions.add(new CareerAction());
-        actions.add(new SelfieAction());
-        actions.add(new OpenAdminAction());
-        actions.add(new RaffleInfoAction(actions));
-        actions.add(new JoinRaffleAction());
+        actions.add(new SayAction(actions, historyManager));
+        actions.add(new DanceAction(historyManager));
+        actions.add(new DynamicAnimationAction(historyManager));
+        actions.add(new SiriAction(languageManager, historyManager));
+        actions.add(new SaxophoneAction(historyManager));
+        actions.add(new HighFiveAction(historyManager));
+        actions.add(new HoldMyBeerAction(historyManager));
+        actions.add(new ChangeLanguageAction(languageManager, historyManager));
+        actions.add(new ChangeVolumeAction(historyManager));
+        actions.add(new DocumentationAction(actions, historyManager));
+        actions.add(new TestAction(historyManager));
+        actions.add(new SystemInfoAction(languageManager, actions, historyManager));
+        actions.add(new FollowMeAction(historyManager));
+        actions.add(new GuideAction(historyManager));
+        actions.add(new MemoryGameAction(historyManager));
+        actions.add(new QuizAction(historyManager));
+        actions.add(new CareerAction(historyManager));
+        actions.add(new SelfieAction(historyManager));
+        actions.add(new OpenAdminAction(historyManager));
+        actions.add(new RaffleInfoAction(actions, historyManager));
+        actions.add(new JoinRaffleAction(historyManager));
 
         for (Action action : actions) {
             Log.i("ActionHandler", "Registered action: " + action.getClass().getSimpleName());
-            action.setHistoryManager(historyManager);
         }
     }
 }

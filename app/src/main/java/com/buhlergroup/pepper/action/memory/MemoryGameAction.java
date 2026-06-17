@@ -5,6 +5,10 @@ import com.buhlergroup.pepper.action.Action;
 
 public class MemoryGameAction extends Action {
 
+    public MemoryGameAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext context, String input) {
         MemoryGameConfig config = MemoryGameConfig.fromInput(input);

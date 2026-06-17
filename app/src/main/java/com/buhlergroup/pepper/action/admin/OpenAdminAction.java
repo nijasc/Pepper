@@ -5,6 +5,10 @@ import com.buhlergroup.pepper.action.Action;
 
 public class OpenAdminAction extends Action {
 
+    public OpenAdminAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     @Override
     public void execute(QiContext context, String input) {
         AdminController.get().open();

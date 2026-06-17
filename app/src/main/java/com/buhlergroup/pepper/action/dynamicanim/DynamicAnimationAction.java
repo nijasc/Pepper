@@ -16,6 +16,10 @@ import java.util.regex.Pattern;
 
 public class DynamicAnimationAction extends Action {
 
+    public DynamicAnimationAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
+
     private static final String TAG = "DynAnim";
     private static final Pattern SECONDS = Pattern.compile(
             "(\\d+)\\s*(?:sekunden?|seconds?|secs?|sek\\b|s\\b)", Pattern.CASE_INSENSITIVE);
