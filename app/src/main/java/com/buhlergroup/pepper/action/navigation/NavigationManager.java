@@ -136,6 +136,21 @@ public final class NavigationManager {
         this.scanStopCallback = callback;
     }
 
+    public void speak(String text) {
+        QiContext c = qiContext;
+        if (c == null || text == null || text.trim().isEmpty()) {
+            return;
+        }
+        Thread t = new Thread(() -> {
+            try {
+                SpeechManager.getInstance().say(c, text);
+            } catch (Exception ignored) {
+            }
+        }, "nav-speak");
+        t.setDaemon(true);
+        t.start();
+    }
+
     public boolean isLocalized() {
         return localized;
     }
@@ -488,22 +503,6 @@ public final class NavigationManager {
                 Log.w(TAG, "getRobotPose failed: " + e.getMessage());
                 cb.onError("Position konnte nicht ermittelt werden.");
             }
-        });
-    }
-
-    public void getMapBitmap(Callback<Bitmap> cb) {
-        submit(() -> {
-            ExplorationMap map = activeMap;
-            if (map == null) {
-                cb.onError("Noch keine Karte vorhanden. Erst scannen oder aktivieren.");
-                return;
-            }
-            Bitmap bitmap = renderMap(map);
-            if (bitmap == null) {
-                cb.onError("Karte konnte nicht erzeugt werden.");
-                return;
-            }
-            cb.onResult(bitmap);
         });
     }
 

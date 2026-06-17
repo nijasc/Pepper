@@ -1,7 +1,6 @@
 package com.buhlergroup.pepper.action.navigation;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -33,7 +32,6 @@ public class NavigationView extends FrameLayout {
     private CheckBox fotostand;
     private LinearLayout scanList;
     private LinearLayout waypointList;
-    private ImageView mapImage;
     private WaypointMapView waypointMap;
     private View scanStartButton;
     private View scanStopButton;
@@ -70,7 +68,6 @@ public class NavigationView extends FrameLayout {
         fotostand = findViewById(R.id.navWpFotostand);
         scanList = findViewById(R.id.navScanList);
         waypointList = findViewById(R.id.navWpList);
-        mapImage = findViewById(R.id.navMapImage);
         waypointMap = findViewById(R.id.navWaypointMap);
         scanStartButton = findViewById(R.id.navScanStart);
         scanStopButton = findViewById(R.id.navScanStop);
@@ -78,7 +75,6 @@ public class NavigationView extends FrameLayout {
         scanFullscreen = findViewById(R.id.navScanFullscreen);
         scanMap = findViewById(R.id.navScanMap);
 
-        findViewById(R.id.navMapRefresh).setOnClickListener(v -> loadMap());
         scanStartButton.setOnClickListener(v -> startScan());
         scanStopButton.setOnClickListener(v -> requestScanStop());
         findViewById(R.id.navScanStopBig).setOnClickListener(v -> requestScanStop());
@@ -109,11 +105,8 @@ public class NavigationView extends FrameLayout {
     }
 
     public void open() {
-        NavigationManager.get().setMapUpdateListener(bitmap -> post(() -> {
-            mapImage.setImageBitmap(bitmap);
-            mapImage.setVisibility(VISIBLE);
-            scanMap.setImageBitmap(bitmap);
-        }));
+        NavigationManager.get().setMapUpdateListener(bitmap -> post(() ->
+                scanMap.setImageBitmap(bitmap)));
         post(() -> {
             setVisibility(VISIBLE);
             bringToFront();
@@ -180,7 +173,7 @@ public class NavigationView extends FrameLayout {
             @Override
             public void onResult(Void value) {
                 post(() -> {
-                    toast(R.string.nav_scan_started);
+                    announce(R.string.nav_scan_started);
                     enterScanFullscreen();
                     updateStatus();
                 });
@@ -188,7 +181,7 @@ public class NavigationView extends FrameLayout {
 
             @Override
             public void onError(String error) {
-                post(() -> toastText(error));
+                post(() -> announceText(error));
             }
         });
     }
@@ -224,21 +217,21 @@ public class NavigationView extends FrameLayout {
             public void onResult(RoomScanEntity value) {
                 post(() -> {
                     scanName.setText("");
-                    toast(R.string.nav_scan_saved);
+                    announce(R.string.nav_scan_saved);
                     refreshAll();
                 });
             }
 
             @Override
             public void onError(String error) {
-                post(() -> toastText(error));
+                post(() -> announceText(error));
             }
         });
     }
 
     private void capturePosition() {
         NavigationManager.get().captureSnapshot();
-        toast(R.string.nav_scan_captured);
+        announce(R.string.nav_scan_captured);
     }
 
     private void saveWaypoint() {
@@ -254,31 +247,14 @@ public class NavigationView extends FrameLayout {
                 post(() -> {
                     waypointName.setText("");
                     fotostand.setChecked(false);
-                    toast(R.string.nav_wp_saved);
+                    announce(R.string.nav_wp_saved);
                     loadWaypoints();
                 });
             }
 
             @Override
             public void onError(String error) {
-                post(() -> toastText(error));
-            }
-        });
-    }
-
-    private void loadMap() {
-        NavigationManager.get().getMapBitmap(new NavigationManager.Callback<Bitmap>() {
-            @Override
-            public void onResult(Bitmap value) {
-                post(() -> {
-                    mapImage.setImageBitmap(value);
-                    mapImage.setVisibility(VISIBLE);
-                });
-            }
-
-            @Override
-            public void onError(String error) {
-                post(() -> toastText(error));
+                post(() -> announceText(error));
             }
         });
     }
@@ -354,7 +330,7 @@ public class NavigationView extends FrameLayout {
             @Override
             public void onResult(Boolean value) {
                 post(() -> {
-                    toast(R.string.nav_localized);
+                    announce(R.string.nav_localized);
                     updateStatus();
                     loadWaypoints();
                     loadRobotPose();
@@ -364,7 +340,7 @@ public class NavigationView extends FrameLayout {
             @Override
             public void onError(String error) {
                 post(() -> {
-                    toastText(error);
+                    announceText(error);
                     updateStatus();
                 });
             }
@@ -477,5 +453,16 @@ public class NavigationView extends FrameLayout {
 
     private void toastText(String text) {
         Toast.makeText(getContext(), text, Toast.LENGTH_SHORT).show();
+    }
+
+    private void announce(int resId) {
+        String text = getContext().getString(resId);
+        toastText(text);
+        NavigationManager.get().speak(text);
+    }
+
+    private void announceText(String text) {
+        toastText(text);
+        NavigationManager.get().speak(text);
     }
 }
