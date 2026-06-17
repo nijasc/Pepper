@@ -21,6 +21,7 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 
 import java.util.List;
+import java.util.Locale;
 
 public final class AttractController {
 
@@ -30,6 +31,12 @@ public final class AttractController {
     private static final double GREET_DISTANCE_M = 1.5;
     private static final long ROAM_PAUSE_MS = 1500;
 
+    private enum RoamPhase {
+        SEARCHING,
+        PERSON_FAR,
+        PERSON_CLOSE
+    }
+
     private static final AttractController INSTANCE = new AttractController();
 
     private volatile long lastInteractionMs = SystemClock.elapsedRealtime();
@@ -38,6 +45,7 @@ public final class AttractController {
     private volatile boolean greeting;
     private volatile Thread roamThread;
     private volatile Future<Void> activeGoTo;
+    private volatile RoamPhase roamPhase;
 
     private AttractController() {
     }
@@ -84,6 +92,7 @@ public final class AttractController {
             return;
         }
         active = true;
+        roamPhase = null;
         Log.i(TAG, "Attract mode started");
         DebugLog.get().setStatus("Attract-Modus gestartet");
         DebugLog.get().i(TAG, "Attract-Modus gestartet");
@@ -95,6 +104,7 @@ public final class AttractController {
             return;
         }
         active = false;
+        roamPhase = null;
         Log.i(TAG, "Attract mode stopped");
         DebugLog.get().setStatus("Attract-Modus gestoppt");
         DebugLog.get().i(TAG, "Attract-Modus gestoppt");
@@ -115,10 +125,15 @@ public final class AttractController {
     private void roamLoop(QiContext context) {
         try {
             while (active) {
-                if (personClose(context)) {
+                double distance = nearestPersonDistance(context);
+                if (!Double.isNaN(distance) && distance <= GREET_DISTANCE_M) {
+                    updateRoamPhase(RoamPhase.PERSON_CLOSE, distance);
                     greet(context);
                     sleep(ROAM_PAUSE_MS);
                 } else {
+                    updateRoamPhase(
+                            Double.isNaN(distance) ? RoamPhase.SEARCHING : RoamPhase.PERSON_FAR,
+                            distance);
                     driveRoamStep(context);
                 }
             }
@@ -126,6 +141,34 @@ public final class AttractController {
             Log.w(TAG, "Attract roaming failed: " + e.getMessage());
         } finally {
             roamThread = null;
+        }
+    }
+
+    private void updateRoamPhase(RoamPhase phase, double distance) {
+        if (roamPhase == phase) {
+            return;
+        }
+        RoamPhase previous = roamPhase;
+        roamPhase = phase;
+        switch (phase) {
+            case SEARCHING:
+                DebugLog.get().setStatus("Attract – Suche nach Person");
+                DebugLog.get().i(TAG, previous == null
+                        ? "Attract – Suche nach Person"
+                        : "Attract – Interesse verloren, suche wieder");
+                break;
+            case PERSON_FAR:
+                DebugLog.get().setStatus(String.format(Locale.US,
+                        "Attract – Person erkannt (%.1f m, zu weit)", distance));
+                DebugLog.get().i(TAG, String.format(Locale.US,
+                        "Attract – Person erkannt: %.1f m (zu weit zum Begrüßen)", distance));
+                break;
+            case PERSON_CLOSE:
+                DebugLog.get().setStatus(String.format(Locale.US,
+                        "Attract – Person in der Nähe (%.1f m)", distance));
+                DebugLog.get().i(TAG, String.format(Locale.US,
+                        "Attract – Person erfasst: %.1f m", distance));
+                break;
         }
     }
 
@@ -185,13 +228,14 @@ public final class AttractController {
         }
     }
 
-    private boolean personClose(QiContext context) {
+    private double nearestPersonDistance(QiContext context) {
         try {
             List<Human> humans = context.getHumanAwareness().getHumansAround();
             if (humans == null || humans.isEmpty()) {
-                return false;
+                return Double.NaN;
             }
             Frame robotFrame = context.getActuation().robotFrame();
+            double nearest = Double.NaN;
             for (Human human : humans) {
                 Frame head = human.getHeadFrame();
                 if (head == null) {
@@ -199,13 +243,13 @@ public final class AttractController {
                 }
                 Transform t = head.computeTransform(robotFrame).getTransform();
                 double distance = Math.hypot(t.getTranslation().getX(), t.getTranslation().getY());
-                if (distance <= GREET_DISTANCE_M) {
-                    return true;
+                if (Double.isNaN(nearest) || distance < nearest) {
+                    nearest = distance;
                 }
             }
-            return false;
+            return nearest;
         } catch (Exception e) {
-            return false;
+            return Double.NaN;
         }
     }
 
