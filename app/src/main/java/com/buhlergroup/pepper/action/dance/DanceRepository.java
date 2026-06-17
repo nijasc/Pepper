@@ -9,6 +9,8 @@ import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 import com.buhlergroup.pepper.action.dance.audio.SongAudioAnalyzer;
 import com.buhlergroup.pepper.action.dance.itunes.ITunesSearch;
 import com.buhlergroup.pepper.action.dynamicanim.AnimationGenerator;
+import com.buhlergroup.pepper.action.dynamicanim.SongPlan;
+import com.buhlergroup.pepper.action.dynamicanim.SongResearcher;
 import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.io.File;
@@ -29,6 +31,7 @@ public final class DanceRepository {
     private static final String BUILTIN_SIX_SEVEN_ID = BUILTIN_PREFIX + "six_seven";
 
     private final AnimationGenerator generator = new AnimationGenerator();
+    private final SongResearcher songResearcher = new SongResearcher();
 
     public void ensureBuiltInDances(Context context) {
         try {
@@ -101,7 +104,7 @@ public final class DanceRepository {
         if (progress != null) {
             progress.onStage(AnimationGenerator.Stage.SEARCH);
         }
-        AnimationGenerator.SongPlan plan = generator.planSong(context, query);
+        SongPlan plan = songResearcher.planSong(context, query);
         SongSource source = resolveSource(plan.query);
         String songName = normalizeSongName(source.title);
 
