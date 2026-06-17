@@ -24,7 +24,6 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 
 import java.util.Locale;
-import java.util.Random;
 
 public final class HoldController {
 
@@ -41,92 +40,9 @@ public final class HoldController {
     private static final String PREFS = "pepper_hold";
     private static final String KEY_HELD_COUNT = "beers_held";
 
-    private static final String[] ALREADY_DE = {
-            "Ich halte doch schon etwas. Zwei Sachen gleichzeitig gehen nicht.",
-            "Eine Hand, ein Getränk. Mehr geht gerade nicht."
-    };
-    private static final String[] ALREADY_EN = {
-            "I'm already holding something. One drink at a time.",
-            "One hand, one drink. That's all I can do right now."
-    };
-    private static final String[] ACCEPT_DE = {
-            "Na klar, her damit! Ich habe sowieso gerade frei.",
-            "Halt mal dein Bier? Kein Problem, ich verschütte garantiert nichts.",
-            "Okay! Stell es auf meine Hand, ich passe auf."
-    };
-    private static final String[] ACCEPT_EN = {
-            "Sure, hand it over! I'm free anyway.",
-            "Hold your beer? No problem, I never spill.",
-            "Okay! Place it on my hand, I'll watch it."
-    };
-    private static final String[] CONFIRM_DE = {
-            "Hab's! Sicher verwahrt.",
-            "Festgehalten. Geh ruhig, ich passe auf wie ein Schweizer Uhrwerk.",
-            "Dein Getränk ist bei mir in der besten Hand."
-    };
-    private static final String[] CONFIRM_EN = {
-            "Got it! Safe and sound.",
-            "Holding tight. Go ahead, I'll keep watch.",
-            "Your drink is in good hands. Well, in one good hand."
-    };
-    private static final String[][] ESCALATION_DE = {
-            {
-                    "Dein Bier wird langsam warm…",
-                    "Nur zur Info: dein Getränk steht hier immer noch."
-            },
-            {
-                    "Ich kriege zwar keinen Muskelkater, aber langsam wird es einsam hier.",
-                    "Drei Minuten. Ich fange gleich an, Selbstgespräche mit dem Getränk zu führen."
-            },
-            {
-                    "Ein Roboter, allein mit einem Getränk. Soll das mein Leben sein? Hol es bitte ab!",
-                    "Fünf Minuten! Ich erwäge, das Getränk als Dienstaufwand abzurechnen."
-            }
-    };
-    private static final String[][] ESCALATION_EN = {
-            {
-                    "Your beer is getting warm…",
-                    "Just so you know: your drink is still here."
-            },
-            {
-                    "I can't get sore muscles, but it's getting lonely over here.",
-                    "Three minutes. I'm about to start talking to the drink."
-            },
-            {
-                    "A robot, alone with a drink. Is this my life now? Please come get it!",
-                    "Five minutes! I'm considering charging a holding fee."
-            }
-    };
-    private static final String[] OVERTIME_DE = {
-            "Meine maximale Haltezeit ist um. Bitte nimm dein Getränk jetzt ab!",
-            "Schichtende! Bitte hol dein Getränk ab, ich lasse es nicht einfach fallen."
-    };
-    private static final String[] OVERTIME_EN = {
-            "My maximum holding time is up. Please take your drink now!",
-            "Shift's over! Please come get your drink, I won't just drop it."
-    };
-    private static final String[] NO_OBJECT_DE = {
-            "Niemand gibt mir etwas. Dann eben nicht.",
-            "Das Angebot ist abgelaufen. Hand wieder runter."
-    };
-    private static final String[] NO_OBJECT_EN = {
-            "Nobody is giving me anything. Fine then.",
-            "Offer expired. Hand goes back down."
-    };
-    private static final String[] BYE_DE = {
-            "Bitte sehr! Trinkgeld nehme ich in Watt.",
-            "Gern geschehen. Prost!",
-            "Bitte schön. Für einen Roboter war das Schwerstarbeit."
-    };
-    private static final String[] BYE_EN = {
-            "There you go! I accept tips in watts.",
-            "You're welcome. Cheers!",
-            "Here you are. Heavy lifting, for a robot."
-    };
-
     private static final HoldController INSTANCE = new HoldController();
 
-    private final Random random = new Random();
+    private final HoldQuotes quotes = new HoldQuotes();
     private volatile boolean sessionRunning;
     private volatile boolean objectConfirmed;
     private volatile boolean releaseRequested;
@@ -134,7 +50,6 @@ public final class HoldController {
     private volatile Thread loopThread;
     private volatile HoldView view;
     private volatile HoldStateListener stateListener;
-    private int lastPick = -1;
 
     private HoldController() {
     }
@@ -161,7 +76,7 @@ public final class HoldController {
 
     public synchronized void requestHold(QiContext context) {
         if (sessionRunning) {
-            sayQuietly(context, pick(language() == SupportedLanguage.ENGLISH ? ALREADY_EN : ALREADY_DE));
+            sayQuietly(context, quotes.already(language() == SupportedLanguage.ENGLISH));
             return;
         }
         sessionRunning = true;
@@ -215,7 +130,7 @@ public final class HoldController {
                     .build();
             holder.hold();
 
-            sayQuietly(context, pick(english ? ACCEPT_EN : ACCEPT_DE));
+            sayQuietly(context, quotes.accept(english));
             runAnimation(context, R.raw.hold_arm_raise);
             if (!alive(gen)) {
                 return;
@@ -237,13 +152,13 @@ public final class HoldController {
                 return;
             }
             if (!objectConfirmed) {
-                sayQuietly(context, pick(english ? NO_OBJECT_EN : NO_OBJECT_DE));
+                sayQuietly(context, quotes.noObject(english));
                 runAnimation(context, R.raw.hold_release);
                 return;
             }
 
             runAnimation(context, R.raw.hold_hand_close);
-            sayQuietly(context, pick(english ? CONFIRM_EN : CONFIRM_DE));
+            sayQuietly(context, quotes.confirm(english));
             showView(english ? "I'm holding your drink. Say \"stop\" or press STOP to get it back."
                             : "Ich halte dein Getränk. Sag \"Stopp\" oder drück STOP, um es zurückzubekommen.",
                     null, false);
@@ -260,14 +175,13 @@ public final class HoldController {
                 for (int i = 0; i < ESCALATION_AT_MS.length; i++) {
                     if (!escalated[i] && elapsed >= ESCALATION_AT_MS[i]) {
                         escalated[i] = true;
-                        String[] pool = english ? ESCALATION_EN[i] : ESCALATION_DE[i];
-                        sayQuietly(context, pick(pool));
+                        sayQuietly(context, quotes.escalation(english, i));
                     }
                 }
                 if (elapsed >= MAX_HOLD_MS
                         && System.currentTimeMillis() - lastOvertimePrompt >= OVERTIME_PROMPT_INTERVAL_MS) {
                     lastOvertimePrompt = System.currentTimeMillis();
-                    sayQuietly(context, pick(english ? OVERTIME_EN : OVERTIME_DE));
+                    sayQuietly(context, quotes.overtime(english));
                 }
                 Thread.sleep(LOOP_PAUSE_MS);
             }
@@ -291,7 +205,7 @@ public final class HoldController {
             runAnimation(context, R.raw.hold_release);
 
             int count = incrementHeldCount(context);
-            String bye = pick(english ? BYE_EN : BYE_DE);
+            String bye = quotes.bye(english);
             if (count > 1) {
                 bye += english
                         ? " That was drink number " + count + " for me."
@@ -401,15 +315,6 @@ public final class HoldController {
         } catch (Exception e) {
             return SupportedLanguage.GERMAN;
         }
-    }
-
-    private String pick(String[] pool) {
-        int index;
-        do {
-            index = random.nextInt(pool.length);
-        } while (pool.length > 1 && index == lastPick);
-        lastPick = index;
-        return pool[index];
     }
 
     private String formatElapsed(long ms) {
