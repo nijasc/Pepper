@@ -81,25 +81,26 @@ import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PIN;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_MENU;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEVLOG;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_GALLERY;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DETAIL;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_LANG;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_HISTORY;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE_CREATE;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_CAMERA;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATUS;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATS;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_ATTRACT;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEBUG;
+
 public class AdminView extends FrameLayout {
 
     private static final String TAG = "AdminView";
     private static final int MAX_PIN_ATTEMPTS = 5;
     private static final long PIN_LOCKOUT_MS = 60000;
-    private static final int PANEL_PIN = 0;
-    private static final int PANEL_MENU = 1;
-    private static final int PANEL_DEVLOG = 2;
-    private static final int PANEL_GALLERY = 3;
-    private static final int PANEL_DETAIL = 4;
-    private static final int PANEL_LANG = 5;
-    private static final int PANEL_HISTORY = 6;
-    private static final int PANEL_RAFFLE_CREATE = 7;
-    private static final int PANEL_RAFFLE = 8;
-    private static final int PANEL_CAMERA = 9;
-    private static final int PANEL_STATUS = 10;
-    private static final int PANEL_STATS = 11;
-    private static final int PANEL_ATTRACT = 12;
-    private static final int PANEL_DEBUG = 13;
 
     private static final long DASH_REFRESH_MS = 15000;
 
@@ -137,7 +138,7 @@ public class AdminView extends FrameLayout {
     private View attractPanel;
     private View adminHeader;
     private TextView adminHeaderTitle;
-    private int currentPanel = PANEL_PIN;
+    private PanelNavigator panelNav;
     private CheckBox attractEnabled;
     private EditText attractIdle;
     private EditText attractGreet;
@@ -297,6 +298,22 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminHeaderBack).setOnClickListener(v -> goBack());
         findViewById(R.id.adminHeaderClose).setOnClickListener(v -> hide());
 
+        panelNav = new PanelNavigator(adminHeader, adminHeaderTitle, this::onPanelShown);
+        panelNav.register(PANEL_PIN, pinPanel);
+        panelNav.register(PANEL_MENU, menuPanel);
+        panelNav.register(PANEL_DEVLOG, devLogPanel);
+        panelNav.register(PANEL_GALLERY, galleryPanel);
+        panelNav.register(PANEL_DETAIL, detailPanel);
+        panelNav.register(PANEL_LANG, langPanel);
+        panelNav.register(PANEL_HISTORY, historyPanel);
+        panelNav.register(PANEL_RAFFLE_CREATE, raffleCreatePanel);
+        panelNav.register(PANEL_RAFFLE, rafflePanel);
+        panelNav.register(PANEL_CAMERA, cameraPanel);
+        panelNav.register(PANEL_STATUS, statusPanel);
+        panelNav.register(PANEL_STATS, statsPanel);
+        panelNav.register(PANEL_DEBUG, debugPanel);
+        panelNav.register(PANEL_ATTRACT, attractPanel);
+
         wireKeypad();
         findViewById(R.id.adminPinCancel).setOnClickListener(v -> hide());
         findViewById(R.id.adminClose).setOnClickListener(v -> hide());
@@ -369,7 +386,7 @@ public class AdminView extends FrameLayout {
             } else {
                 pinError.setVisibility(INVISIBLE);
             }
-            showPanel(PANEL_PIN);
+            panelNav.show(PANEL_PIN);
             setVisibility(VISIBLE);
             bringToFront();
         });
@@ -425,7 +442,7 @@ public class AdminView extends FrameLayout {
             pinAttempts = 0;
             pinLockoutUntil = 0;
             resetEntry();
-            showPanel(PANEL_MENU);
+            panelNav.show(PANEL_MENU);
         } else {
             resetEntry();
             pinAttempts++;
@@ -462,73 +479,18 @@ public class AdminView extends FrameLayout {
         pinDots.setText(dots.toString());
     }
 
-    private void showPanel(int which) {
-        currentPanel = which;
-        pinPanel.setVisibility(which == PANEL_PIN ? VISIBLE : GONE);
-        menuPanel.setVisibility(which == PANEL_MENU ? VISIBLE : GONE);
-        devLogPanel.setVisibility(which == PANEL_DEVLOG ? VISIBLE : GONE);
-        galleryPanel.setVisibility(which == PANEL_GALLERY ? VISIBLE : GONE);
-        detailPanel.setVisibility(which == PANEL_DETAIL ? VISIBLE : GONE);
-        langPanel.setVisibility(which == PANEL_LANG ? VISIBLE : GONE);
-        historyPanel.setVisibility(which == PANEL_HISTORY ? VISIBLE : GONE);
-        raffleCreatePanel.setVisibility(which == PANEL_RAFFLE_CREATE ? VISIBLE : GONE);
-        rafflePanel.setVisibility(which == PANEL_RAFFLE ? VISIBLE : GONE);
-        cameraPanel.setVisibility(which == PANEL_CAMERA ? VISIBLE : GONE);
-        statusPanel.setVisibility(which == PANEL_STATUS ? VISIBLE : GONE);
-        statsPanel.setVisibility(which == PANEL_STATS ? VISIBLE : GONE);
-        debugPanel.setVisibility(which == PANEL_DEBUG ? VISIBLE : GONE);
-        attractPanel.setVisibility(which == PANEL_ATTRACT ? VISIBLE : GONE);
+    private void onPanelShown(int which) {
         dashHandler.removeCallbacks(dashRefresh);
         if (which == PANEL_MENU) {
             dashHandler.post(dashRefresh);
         }
-        updateHeader(which);
-    }
-
-    private void updateHeader(int which) {
-        boolean show = which != PANEL_PIN && which != PANEL_MENU;
-        adminHeader.setVisibility(show ? VISIBLE : GONE);
-        if (show) {
-            adminHeaderTitle.setText(titleFor(which));
-            adminHeader.bringToFront();
-        }
-    }
-
-    private int titleFor(int which) {
-        switch (which) {
-            case PANEL_DEVLOG:
-                return R.string.admin_dev_logs;
-            case PANEL_GALLERY:
-            case PANEL_DETAIL:
-                return R.string.admin_selfies;
-            case PANEL_LANG:
-                return R.string.admin_language;
-            case PANEL_HISTORY:
-                return R.string.admin_history_view;
-            case PANEL_RAFFLE_CREATE:
-                return R.string.raffle_create_title;
-            case PANEL_RAFFLE:
-                return R.string.admin_raffle;
-            case PANEL_CAMERA:
-                return R.string.admin_camera_title;
-            case PANEL_STATUS:
-                return R.string.admin_status;
-            case PANEL_STATS:
-                return R.string.admin_stats;
-            case PANEL_DEBUG:
-                return R.string.admin_debug_title;
-            case PANEL_ATTRACT:
-                return R.string.admin_attract;
-            default:
-                return R.string.admin_menu_title;
-        }
     }
 
     private void goBack() {
-        if (currentPanel == PANEL_DETAIL) {
+        if (panelNav.current() == PANEL_DETAIL) {
             showGallery();
         } else {
-            showPanel(PANEL_MENU);
+            panelNav.show(PANEL_MENU);
         }
     }
 
@@ -579,7 +541,7 @@ public class AdminView extends FrameLayout {
 
     private void showLanguage() {
         updateLanguageLabel();
-        showPanel(PANEL_LANG);
+        panelNav.show(PANEL_LANG);
     }
 
     private void setLanguage(SupportedLanguage language) {
@@ -607,7 +569,7 @@ public class AdminView extends FrameLayout {
                 historyContainer.addView(createBubble(entry));
             }
         }
-        showPanel(PANEL_HISTORY);
+        panelNav.show(PANEL_HISTORY);
         historyScroll.post(() -> historyScroll.fullScroll(View.FOCUS_DOWN));
     }
 
@@ -645,7 +607,7 @@ public class AdminView extends FrameLayout {
         raffleCreateError.setVisibility(GONE);
         raffleCreateSave.setEnabled(true);
         raffleCreateSave.setAlpha(1f);
-        showPanel(PANEL_RAFFLE_CREATE);
+        panelNav.show(PANEL_RAFFLE_CREATE);
     }
 
     private void hideKeyboard(View anchor) {
@@ -785,7 +747,7 @@ public class AdminView extends FrameLayout {
                 raffleEntries.addView(createEntryRow(entry, isWinner));
             }
         }
-        showPanel(PANEL_RAFFLE);
+        panelNav.show(PANEL_RAFFLE);
     }
 
     private View createEntryRow(RaffleEntryEntity entry, boolean isWinner) {
@@ -1119,7 +1081,7 @@ public class AdminView extends FrameLayout {
         attractEnabled.setChecked(AttractSettings.isEnabled(getContext()));
         attractIdle.setText(String.valueOf(AttractSettings.getIdleMinutes(getContext())));
         attractGreet.setText(String.valueOf(AttractSettings.getGreetSeconds(getContext())));
-        showPanel(PANEL_ATTRACT);
+        panelNav.show(PANEL_ATTRACT);
     }
 
     private void saveAttract() {
@@ -1139,7 +1101,7 @@ public class AdminView extends FrameLayout {
 
     private void showStats() {
         statsText.setText(buildStatsReport());
-        showPanel(PANEL_STATS);
+        panelNav.show(PANEL_STATS);
     }
 
     private String buildStatsReport() {
@@ -1188,7 +1150,7 @@ public class AdminView extends FrameLayout {
     private void showDebug() {
         debugEnabled.setChecked(DebugLog.get().isEnabled());
         renderDebugLog();
-        showPanel(PANEL_DEBUG);
+        panelNav.show(PANEL_DEBUG);
     }
 
     private void renderDebugLog() {
@@ -1245,7 +1207,7 @@ public class AdminView extends FrameLayout {
     }
 
     private void showStatus() {
-        showPanel(PANEL_STATUS);
+        panelNav.show(PANEL_STATUS);
         String ip = NetworkUtils.localIp(getContext());
         boolean online = Connectivity.isOnline(getContext());
         statusWifi.setText(online && ip != null
@@ -1297,7 +1259,7 @@ public class AdminView extends FrameLayout {
         cameraPort.setText(String.valueOf(CameraSettings.getPort(getContext())));
         cameraEnabled.setChecked(CameraSettings.isEnabled(getContext()));
         cameraStatus.setText("");
-        showPanel(PANEL_CAMERA);
+        panelNav.show(PANEL_CAMERA);
     }
 
     private int readCameraPort() {
@@ -1335,7 +1297,7 @@ public class AdminView extends FrameLayout {
         Toast.makeText(getContext(),
                 cleared ? R.string.admin_history_cleared : R.string.admin_pin_error,
                 Toast.LENGTH_SHORT).show();
-        showPanel(PANEL_MENU);
+        panelNav.show(PANEL_MENU);
     }
 
     private void showDevLog() {
@@ -1349,7 +1311,7 @@ public class AdminView extends FrameLayout {
             }
         }
         devLogText.setText(text.toString());
-        showPanel(PANEL_DEVLOG);
+        panelNav.show(PANEL_DEVLOG);
         devLogScroll.post(() -> devLogScroll.fullScroll(View.FOCUS_DOWN));
     }
 
@@ -1362,7 +1324,7 @@ public class AdminView extends FrameLayout {
 
     private void showGallery() {
         releaseDetailServer();
-        showPanel(PANEL_GALLERY);
+        panelNav.show(PANEL_GALLERY);
         galleryEmpty.setVisibility(GONE);
         setExportEnabled(false);
         dbExecutor.submit(() -> {
@@ -1453,7 +1415,7 @@ public class AdminView extends FrameLayout {
             detailServerHeld = true;
         }
         currentDetail = selfie;
-        showPanel(PANEL_DETAIL);
+        panelNav.show(PANEL_DETAIL);
         detailNumber.setText("#" + selfie.number);
         detailDate.setText(new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
                 .format(new Date(selfie.createdAt)));
