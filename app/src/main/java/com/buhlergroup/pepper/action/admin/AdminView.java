@@ -29,8 +29,6 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.attract.AttractSettings;
@@ -43,10 +41,7 @@ import com.buhlergroup.pepper.action.raffle.RaffleSettings;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
-import com.buhlergroup.pepper.action.selfie.QrGenerator;
-import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
-import com.buhlergroup.pepper.action.selfie.SelfieSettings;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
@@ -54,7 +49,6 @@ import com.buhlergroup.pepper.openai.history.HistoryEntry;
 import com.buhlergroup.pepper.openai.history.HistoryRole;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -67,8 +61,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PIN;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_MENU;
@@ -122,20 +114,8 @@ public class AdminView extends FrameLayout {
     private LinearLayout historyContainer;
 
     private TextView devLogText;
-    private TextView galleryEmpty;
     private TextView langCurrent;
-    private Button exportAllButton;
-    private RecyclerView selfieGrid;
-    private SelfieAdapter selfieAdapter;
-
-    private ImageView detailImage;
-    private ImageView detailQr;
-    private TextView detailQrHint;
-    private TextView detailNumber;
-    private TextView detailDate;
-    private Button detailFavorite;
-    private SelfieEntity currentDetail;
-    private boolean detailServerHeld = false;
+    private SelfieGalleryController galleryController;
 
     private EditText raffleTitle;
     private EditText raffleDescription;
@@ -213,16 +193,7 @@ public class AdminView extends FrameLayout {
         historyContainer = findViewById(R.id.adminHistoryContainer);
 
         devLogText = findViewById(R.id.adminDevLogText);
-        galleryEmpty = findViewById(R.id.adminGalleryEmpty);
         langCurrent = findViewById(R.id.adminLangCurrent);
-        exportAllButton = findViewById(R.id.adminExportAll);
-        selfieGrid = findViewById(R.id.adminSelfieGrid);
-        detailImage = findViewById(R.id.adminDetailImage);
-        detailQr = findViewById(R.id.adminDetailQr);
-        detailQrHint = findViewById(R.id.adminDetailQrHint);
-        detailNumber = findViewById(R.id.adminDetailNumber);
-        detailDate = findViewById(R.id.adminDetailDate);
-        detailFavorite = findViewById(R.id.adminDetailFavorite);
 
         raffleTitle = findViewById(R.id.raffleTitle);
         raffleDescription = findViewById(R.id.raffleDescription);
@@ -270,15 +241,12 @@ public class AdminView extends FrameLayout {
 
         pinController = new PinController(this, () -> panelNav.show(PANEL_MENU));
         dashboard = new DashboardController(this, dbExecutor);
+        galleryController = new SelfieGalleryController(this, dbExecutor, panelNav);
         findViewById(R.id.adminPinCancel).setOnClickListener(v -> hide());
         findViewById(R.id.adminClose).setOnClickListener(v -> hide());
         findViewById(R.id.adminClearHistory).setOnClickListener(v -> onClearHistory());
         findViewById(R.id.adminDevLogs).setOnClickListener(v -> showDevLog());
-        findViewById(R.id.adminSelfies).setOnClickListener(v -> showGallery());
-        exportAllButton.setOnClickListener(v -> onExportAll());
-        findViewById(R.id.adminSelfieRetention).setOnClickListener(v -> showSelfieRetentionDialog());
-        detailFavorite.setOnClickListener(v -> toggleFavorite());
-        findViewById(R.id.adminDetailDelete).setOnClickListener(v -> deleteCurrent());
+        findViewById(R.id.adminSelfies).setOnClickListener(v -> galleryController.showGallery());
         findViewById(R.id.adminLanguage).setOnClickListener(v -> showLanguage());
         findViewById(R.id.adminLangDe).setOnClickListener(v -> setLanguage(SupportedLanguage.GERMAN));
         findViewById(R.id.adminLangEn).setOnClickListener(v -> setLanguage(SupportedLanguage.ENGLISH));
@@ -314,10 +282,6 @@ public class AdminView extends FrameLayout {
         findViewById(R.id.adminDances).setOnClickListener(v -> openDanceLibrary());
         findViewById(R.id.adminDsgvo).setOnClickListener(v -> showDsgvoAccessDialog());
         findViewById(R.id.adminChangePin).setOnClickListener(v -> showChangePinDialog());
-
-        selfieAdapter = new SelfieAdapter(this::showDetail);
-        selfieGrid.setLayoutManager(new GridLayoutManager(context, 3));
-        selfieGrid.setAdapter(selfieAdapter);
     }
 
     public void open() {
@@ -336,7 +300,7 @@ public class AdminView extends FrameLayout {
 
     public void hide() {
         AdminController.get().markClosed();
-        releaseDetailServer();
+        galleryController.releaseDetailServer();
         dashboard.stopRefresh();
         post(() -> setVisibility(GONE));
     }
@@ -360,7 +324,7 @@ public class AdminView extends FrameLayout {
 
     private void goBack() {
         if (panelNav.current() == PANEL_DETAIL) {
-            showGallery();
+            galleryController.showGallery();
         } else {
             panelNav.show(PANEL_MENU);
         }
@@ -637,7 +601,7 @@ public class AdminView extends FrameLayout {
                         thumb.setImageBitmap(bitmap);
                     }
                     thumb.setVisibility(VISIBLE);
-                    row.setOnClickListener(v -> showDetail(selfie));
+                    row.setOnClickListener(v -> galleryController.showDetail(selfie));
                 });
             });
         }
@@ -662,29 +626,6 @@ public class AdminView extends FrameLayout {
                         Toast.makeText(getContext(), R.string.admin_change_pin_invalid,
                                 Toast.LENGTH_SHORT).show();
                     }
-                })
-                .show();
-    }
-
-    private void showSelfieRetentionDialog() {
-        EditText input = new EditText(getContext());
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
-        input.setHint(R.string.selfie_retention_hint);
-        input.setText(String.valueOf(SelfieSettings.getRetentionDays(getContext())));
-        new AlertDialog.Builder(getContext())
-                .setTitle(R.string.selfie_retention_title)
-                .setView(input)
-                .setNegativeButton(R.string.admin_back, null)
-                .setPositiveButton(R.string.raffle_save, (d, w) -> {
-                    int days;
-                    try {
-                        days = Math.max(0, Integer.parseInt(input.getText().toString().trim()));
-                    } catch (NumberFormatException e) {
-                        days = SelfieSettings.DEFAULT_RETENTION_DAYS;
-                    }
-                    SelfieSettings.setRetentionDays(getContext(), days);
-                    Toast.makeText(getContext(), R.string.selfie_retention_saved,
-                            Toast.LENGTH_SHORT).show();
                 })
                 .show();
     }
@@ -1056,179 +997,4 @@ public class AdminView extends FrameLayout {
         devLogScroll.post(() -> devLogScroll.fullScroll(View.FOCUS_DOWN));
     }
 
-    private void releaseDetailServer() {
-        if (detailServerHeld) {
-            SelfieController.get().releaseServer();
-            detailServerHeld = false;
-        }
-    }
-
-    private void showGallery() {
-        releaseDetailServer();
-        panelNav.show(PANEL_GALLERY);
-        galleryEmpty.setVisibility(GONE);
-        setExportEnabled(false);
-        dbExecutor.submit(() -> {
-            SelfieRepository repository = SelfieRepository.get(getContext());
-            List<SelfieEntity> items = repository.getAll();
-            File dir = repository.imagesDir();
-            Set<String> linked = new HashSet<>(RaffleRepository.get(getContext()).linkedSelfieIds());
-            post(() -> {
-                selfieAdapter.setData(items, dir, linked);
-                galleryEmpty.setVisibility(items.isEmpty() ? VISIBLE : GONE);
-                setExportEnabled(!items.isEmpty());
-            });
-        });
-    }
-
-    private void setExportEnabled(boolean enabled) {
-        exportAllButton.setEnabled(enabled);
-        exportAllButton.setAlpha(enabled ? 1f : 0.4f);
-    }
-
-    private void onExportAll() {
-        setExportEnabled(false);
-        exportAllButton.setText(R.string.admin_export_preparing);
-        dbExecutor.submit(() -> {
-            File zip = createSelfiesZip();
-            post(() -> {
-                exportAllButton.setText(R.string.admin_export_all);
-                setExportEnabled(true);
-                if (zip != null) {
-                    shareZip(zip);
-                } else {
-                    Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
-                }
-            });
-        });
-    }
-
-    private void shareZip(File zip) {
-        try {
-            Uri uri = FileProvider.getUriForFile(getContext(),
-                    getContext().getPackageName() + ".fileprovider", zip);
-            Intent share = new Intent(Intent.ACTION_SEND);
-            share.setType("application/zip");
-            share.putExtra(Intent.EXTRA_STREAM, uri);
-            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            Intent chooser = Intent.createChooser(share,
-                    getContext().getString(R.string.admin_export_share_title));
-            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getContext().startActivity(chooser);
-        } catch (Exception e) {
-            Log.w(TAG, "Teilen fehlgeschlagen: " + e.getMessage());
-            Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private File createSelfiesZip() {
-        File imagesDir = SelfieRepository.get(getContext()).imagesDir();
-        File[] files = imagesDir.listFiles();
-        if (files == null || files.length == 0) {
-            return null;
-        }
-        File zipFile = new File(getContext().getCacheDir(), "selfies_export.zip");
-        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
-            byte[] buffer = new byte[8192];
-            for (File file : files) {
-                if (!file.isFile()) {
-                    continue;
-                }
-                try (FileInputStream fis = new FileInputStream(file)) {
-                    zos.putNextEntry(new ZipEntry(file.getName()));
-                    int read;
-                    while ((read = fis.read(buffer)) != -1) {
-                        zos.write(buffer, 0, read);
-                    }
-                    zos.closeEntry();
-                }
-            }
-        } catch (IOException e) {
-            Log.w(TAG, "Selfie-Export fehlgeschlagen: " + e.getMessage());
-            return null;
-        }
-        return zipFile;
-    }
-
-    private void showDetail(SelfieEntity selfie) {
-        if (!detailServerHeld) {
-            SelfieController.get().acquireServer(getContext());
-            detailServerHeld = true;
-        }
-        currentDetail = selfie;
-        panelNav.show(PANEL_DETAIL);
-        detailNumber.setText("#" + selfie.number);
-        detailDate.setText(new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
-                .format(new Date(selfie.createdAt)));
-        updateFavoriteButton();
-        detailImage.setImageBitmap(null);
-        detailQr.setImageBitmap(null);
-        detailQr.setVisibility(GONE);
-        detailQrHint.setVisibility(GONE);
-
-        File file = new File(SelfieRepository.get(getContext()).imagesDir(), selfie.filename);
-        dbExecutor.submit(() -> {
-            Bitmap bitmap = SelfieAdapter.decodeThumb(file, 1000);
-            Bitmap qr = buildSelfieQr(selfie);
-            post(() -> {
-                if (currentDetail == selfie) {
-                    detailImage.setImageBitmap(bitmap);
-                    if (qr != null) {
-                        detailQr.setImageBitmap(qr);
-                        detailQr.setVisibility(VISIBLE);
-                        detailQrHint.setVisibility(GONE);
-                    } else {
-                        detailQr.setImageBitmap(null);
-                        detailQr.setVisibility(GONE);
-                        detailQrHint.setVisibility(VISIBLE);
-                    }
-                }
-            });
-        });
-    }
-
-    private Bitmap buildSelfieQr(SelfieEntity selfie) {
-        String url = SelfieController.get().downloadUrl(getContext(), selfie.filename);
-        if (url == null) {
-            return null;
-        }
-        try {
-            return QrGenerator.encode(url, 500);
-        } catch (Exception e) {
-            Log.w(TAG, "Selfie-QR fehlgeschlagen: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private void updateFavoriteButton() {
-        detailFavorite.setText(currentDetail != null && currentDetail.favorite
-                ? R.string.admin_favorite_remove
-                : R.string.admin_favorite_add);
-    }
-
-    private void toggleFavorite() {
-        SelfieEntity selfie = currentDetail;
-        if (selfie == null) {
-            return;
-        }
-        boolean newFavorite = !selfie.favorite;
-        dbExecutor.submit(() -> {
-            SelfieRepository.get(getContext()).setFavorite(selfie.id, newFavorite);
-            post(() -> {
-                selfie.favorite = newFavorite;
-                updateFavoriteButton();
-            });
-        });
-    }
-
-    private void deleteCurrent() {
-        SelfieEntity selfie = currentDetail;
-        if (selfie == null) {
-            return;
-        }
-        dbExecutor.submit(() -> {
-            SelfieRepository.get(getContext()).delete(selfie.id);
-            post(this::showGallery);
-        });
-    }
 }
