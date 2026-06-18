@@ -4,9 +4,11 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
@@ -23,6 +25,7 @@ final class SpeechSession {
 
     private static final long WATCHDOG_INTERVAL_MS = 5000;
     private static final long WATCHDOG_IDLE_MS = 15000;
+    private static final long RETRY_DELAY_MS = 800;
 
     interface Gate {
         boolean isOverlayOpen();
@@ -30,10 +33,11 @@ final class SpeechSession {
         boolean isBusy();
 
         void onTick();
+
+        void onSpeechResult(String text);
     }
 
     private final Activity activity;
-    private final int speechEvent;
     private final Gate gate;
 
     private SpeechRecognizer recognizer;
@@ -42,30 +46,38 @@ final class SpeechSession {
     private volatile boolean listenPending;
     private volatile long lastListenStartMs;
 
-    private final Handler watchdogHandler = new Handler(Looper.getMainLooper());
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Runnable speechWatchdog = new Runnable() {
         @Override
         public void run() {
             checkSpeechWatchdog();
             gate.onTick();
-            watchdogHandler.postDelayed(this, WATCHDOG_INTERVAL_MS);
+            mainHandler.postDelayed(this, WATCHDOG_INTERVAL_MS);
         }
     };
 
-    SpeechSession(Activity activity, int speechEvent, Gate gate) {
+    SpeechSession(Activity activity, Gate gate) {
         this.activity = activity;
-        this.speechEvent = speechEvent;
         this.gate = gate;
     }
 
     void start() {
         checkPermission();
-        recognizer = SpeechRecognizer.createSpeechRecognizer(activity);
         intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
+        intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, activity.getPackageName());
+        activity.runOnUiThread(this::ensureRecognizer);
         lastListenStartMs = SystemClock.elapsedRealtime();
-        watchdogHandler.postDelayed(speechWatchdog, WATCHDOG_INTERVAL_MS);
+        mainHandler.postDelayed(speechWatchdog, WATCHDOG_INTERVAL_MS);
+    }
+
+    private void ensureRecognizer() {
+        if (recognizer != null) {
+            return;
+        }
+        recognizer = SpeechRecognizer.createSpeechRecognizer(activity);
+        recognizer.setRecognitionListener(new Listener());
     }
 
     Intent recognitionIntent() {
@@ -73,11 +85,13 @@ final class SpeechSession {
     }
 
     void destroy() {
-        watchdogHandler.removeCallbacks(speechWatchdog);
-        if (recognizer != null) {
-            recognizer.cancel();
-            recognizer.destroy();
-        }
+        mainHandler.removeCallbacks(speechWatchdog);
+        activity.runOnUiThread(() -> {
+            if (recognizer != null) {
+                recognizer.destroy();
+                recognizer = null;
+            }
+        });
     }
 
     void listen() {
@@ -92,13 +106,11 @@ final class SpeechSession {
     void pause() {
         listenPending = true;
         activity.runOnUiThread(() -> {
-            boolean wasListening = listening;
             listening = false;
-            if (wasListening) {
-                activity.finishActivity(speechEvent);
-            }
             try {
-                recognizer.cancel();
+                if (recognizer != null) {
+                    recognizer.cancel();
+                }
             } catch (Exception ignored) {
             }
         });
@@ -116,34 +128,32 @@ final class SpeechSession {
         }
     }
 
-    String handleSpeechResult(int resultCode, Intent data) {
-        listening = false;
-        if (resultCode == Activity.RESULT_OK && data != null) {
-            ArrayList<String> results =
-                    data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (results != null && !results.isEmpty()) {
-                String said = results.get(0);
-                DebugLog.get().setStatus("Erkannt: \"" + said + "\"");
-                DebugLog.get().i("MainActivity", "Sprache erkannt: \"" + said + "\"");
-                return said;
-            }
-        }
-        return null;
-    }
-
     private void startSpeechRecognition() {
         activity.runOnUiThread(() -> {
             if (listening || gate.isOverlayOpen()) {
                 return;
             }
-            if (intent != null && intent.resolveActivity(activity.getPackageManager()) != null) {
-                listening = true;
-                lastListenStartMs = SystemClock.elapsedRealtime();
-                DebugLog.get().setStatus("Höre zu …");
-                DebugLog.get().d("MainActivity", "Spracherkennung gestartet");
-                activity.startActivityForResult(intent, speechEvent);
+            ensureRecognizer();
+            listening = true;
+            lastListenStartMs = SystemClock.elapsedRealtime();
+            DebugLog.get().setStatus("Höre zu …");
+            DebugLog.get().d("MainActivity", "Spracherkennung gestartet");
+            try {
+                recognizer.startListening(intent);
+            } catch (Exception e) {
+                listening = false;
+                Log.w("Mainactivity", "startListening failed: " + e.getMessage());
+                scheduleRetry();
             }
         });
+    }
+
+    private void scheduleRetry() {
+        mainHandler.postDelayed(() -> {
+            if (!listening && !gate.isOverlayOpen() && !gate.isBusy()) {
+                listen();
+            }
+        }, RETRY_DELAY_MS);
     }
 
     private void checkSpeechWatchdog() {
@@ -171,6 +181,64 @@ final class SpeechSession {
         }
         if (!missing.isEmpty()) {
             ActivityCompat.requestPermissions(activity, missing.toArray(new String[0]), 1);
+        }
+    }
+
+    private final class Listener implements RecognitionListener {
+        @Override
+        public void onResults(Bundle results) {
+            listening = false;
+            lastListenStartMs = SystemClock.elapsedRealtime();
+            String said = null;
+            if (results != null) {
+                ArrayList<String> list =
+                        results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (list != null && !list.isEmpty()) {
+                    said = list.get(0);
+                }
+            }
+            if (said != null && !said.trim().isEmpty()) {
+                DebugLog.get().setStatus("Erkannt: \"" + said + "\"");
+                DebugLog.get().i("MainActivity", "Sprache erkannt: \"" + said + "\"");
+                gate.onSpeechResult(said);
+            } else {
+                scheduleRetry();
+            }
+        }
+
+        @Override
+        public void onError(int error) {
+            listening = false;
+            lastListenStartMs = SystemClock.elapsedRealtime();
+            scheduleRetry();
+        }
+
+        @Override
+        public void onReadyForSpeech(Bundle params) {
+        }
+
+        @Override
+        public void onBeginningOfSpeech() {
+        }
+
+        @Override
+        public void onRmsChanged(float rmsdB) {
+        }
+
+        @Override
+        public void onBufferReceived(byte[] buffer) {
+        }
+
+        @Override
+        public void onEndOfSpeech() {
+        }
+
+        @Override
+        public void onPartialResults(Bundle partialResults) {
+        }
+
+        @Override
+        public void onEvent(int eventType, Bundle params) {
         }
     }
 }

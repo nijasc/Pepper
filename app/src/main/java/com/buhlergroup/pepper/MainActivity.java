@@ -60,9 +60,8 @@ import com.buhlergroup.pepper.openai.history.HistoryManager;
 import java.util.ArrayList;
 
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
-    private static final int SPEECH_EVENT = 10;
     private static final int DANCE_EDIT_SPEECH_EVENT = 11;
-    private String said = "";
+    private volatile String said = "";
     private ActionHandler executionHandler;
     private LanguageManager languageManager;
     private HistoryManager historyManager;
@@ -131,7 +130,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         HoldController.get().setStateListener(active -> updateHomeControls());
         WinnerController.get().setStateListener(active -> updateHomeControls());
 
-        speech = new SpeechSession(this, SPEECH_EVENT, new SpeechSession.Gate() {
+        speech = new SpeechSession(this, new SpeechSession.Gate() {
             @Override
             public boolean isOverlayOpen() {
                 return MainActivity.this.isOverlayOpen();
@@ -145,6 +144,11 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             @Override
             public void onTick() {
                 tickAttract();
+            }
+
+            @Override
+            public void onSpeechResult(String text) {
+                handleSpeechResult(text);
             }
         });
         speech.start();
@@ -222,20 +226,46 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             if (executionHandler == null) {
                 executionHandler = new ActionHandler(languageManager, historyManager);
             }
-            if (!said.isEmpty()) {
-                AttractController.get().notifyInteraction();
-                processing = true;
-                try {
-                    executionHandler.handleInput(qiContext, said);
-                } finally {
-                    processing = false;
-                }
-                said = "";
-            }
         } catch (Exception e) {
             Log.e("Mainactivity", "OnFocuseGainedError: " + e.getMessage());
         }
-        speech.listen();
+        if (!said.isEmpty()) {
+            String pending = said;
+            said = "";
+            processInput(qiContext, pending);
+        } else {
+            speech.listen();
+        }
+    }
+
+    private void handleSpeechResult(String text) {
+        QiContext qiContext = RobotContext.get();
+        if (qiContext == null || executionHandler == null) {
+            if (text != null && !text.trim().isEmpty()) {
+                said = text;
+            }
+            return;
+        }
+        processInput(qiContext, text);
+    }
+
+    private void processInput(QiContext qiContext, String text) {
+        if (text == null || text.trim().isEmpty() || qiContext == null || executionHandler == null) {
+            speech.listen();
+            return;
+        }
+        AttractController.get().notifyInteraction();
+        processing = true;
+        new Thread(() -> {
+            try {
+                executionHandler.handleInput(qiContext, text);
+            } catch (Exception e) {
+                Log.e("Mainactivity", "handleInput error: " + e.getMessage());
+            } finally {
+                processing = false;
+                speech.listen();
+            }
+        }, "speech-handle").start();
     }
 
     @Override
@@ -345,12 +375,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("Mainactivity", "AActivity result");
 
-        if (requestCode == SPEECH_EVENT) {
-            String recognized = speech.handleSpeechResult(resultCode, data);
-            if (recognized != null) {
-                said = recognized;
-            }
-        } else if (requestCode == DANCE_EDIT_SPEECH_EVENT) {
+        if (requestCode == DANCE_EDIT_SPEECH_EVENT) {
             if (resultCode == RESULT_OK && data != null) {
                 ArrayList<String> results =
                         data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
