@@ -28,7 +28,7 @@ final class SpeechSession {
     private static final long RETRY_DELAY_MS = 800;
 
     interface Gate {
-        boolean isOverlayOpen();
+        boolean isListenSuppressed();
 
         boolean isBusy();
 
@@ -95,7 +95,7 @@ final class SpeechSession {
     }
 
     void listen() {
-        if (gate.isOverlayOpen()) {
+        if (gate.isListenSuppressed()) {
             listenPending = true;
             return;
         }
@@ -117,7 +117,15 @@ final class SpeechSession {
     }
 
     void resumeIfPending() {
-        if (listenPending && !listening && !gate.isOverlayOpen()) {
+        if (listenPending && !listening && !gate.isListenSuppressed()) {
+            listen();
+        }
+    }
+
+    void refreshListening() {
+        if (gate.isListenSuppressed()) {
+            pause();
+        } else if (!listening) {
             listen();
         }
     }
@@ -130,7 +138,7 @@ final class SpeechSession {
 
     private void startSpeechRecognition() {
         activity.runOnUiThread(() -> {
-            if (listening || gate.isOverlayOpen()) {
+            if (listening || gate.isListenSuppressed()) {
                 return;
             }
             ensureRecognizer();
@@ -150,14 +158,14 @@ final class SpeechSession {
 
     private void scheduleRetry() {
         mainHandler.postDelayed(() -> {
-            if (!listening && !gate.isOverlayOpen() && !gate.isBusy()) {
+            if (!listening && !gate.isListenSuppressed() && !gate.isBusy()) {
                 listen();
             }
         }, RETRY_DELAY_MS);
     }
 
     private void checkSpeechWatchdog() {
-        if (listening || gate.isBusy() || gate.isOverlayOpen()) {
+        if (listening || gate.isBusy() || gate.isListenSuppressed()) {
             return;
         }
         long idle = SystemClock.elapsedRealtime() - lastListenStartMs;

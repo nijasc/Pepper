@@ -132,8 +132,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         speech = new SpeechSession(this, new SpeechSession.Gate() {
             @Override
-            public boolean isOverlayOpen() {
-                return MainActivity.this.isOverlayOpen();
+            public boolean isListenSuppressed() {
+                if (MainActivity.this.isOverlayOpen()) {
+                    return true;
+                }
+                AttractController attract = AttractController.get();
+                return attract.isActive() && !attract.isPersonClose();
             }
 
             @Override
@@ -152,6 +156,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
         });
         speech.start();
+        AttractController.get().setListeningRelevanceListener(() -> speech.refreshListening());
         RaffleRepository.purgeExpiredAsync(this);
         SelfieRepository.purgeExpiredAsync(this);
 
@@ -184,6 +189,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         HoldController.get().detachView();
         WinnerController.get().setStateListener(null);
         WinnerController.get().detachView();
+        AttractController.get().setListeningRelevanceListener(null);
         speech.destroy();
         QiSDK.unregister(this);
         super.onDestroy();
@@ -344,11 +350,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             adminButton.setVisibility(visibility);
             languageLabel.setVisibility(visibility);
         });
-        if (overlayOpen) {
-            speech.pause();
-        } else {
-            speech.resumeIfPending();
-        }
+        speech.refreshListening();
     }
 
     private void updateLanguageLabel(SupportedLanguage lang) {

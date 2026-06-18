@@ -54,8 +54,29 @@ public final class AttractController {
         return INSTANCE;
     }
 
+    public interface ListeningRelevanceListener {
+        void onListeningRelevanceChanged();
+    }
+
+    private volatile ListeningRelevanceListener listeningListener;
+
     public boolean isActive() {
         return active;
+    }
+
+    public boolean isPersonClose() {
+        return active && roamPhase == RoamPhase.PERSON_CLOSE;
+    }
+
+    public void setListeningRelevanceListener(ListeningRelevanceListener listener) {
+        this.listeningListener = listener;
+    }
+
+    private void notifyListeningRelevance() {
+        ListeningRelevanceListener l = listeningListener;
+        if (l != null) {
+            l.onListeningRelevanceChanged();
+        }
     }
 
     public void notifyInteraction() {
@@ -97,6 +118,7 @@ public final class AttractController {
         DebugLog.get().setStatus("Attract-Modus gestartet");
         DebugLog.get().i(TAG, "Attract-Modus gestartet");
         startRoaming(context);
+        notifyListeningRelevance();
     }
 
     private void stopAttract() {
@@ -109,6 +131,7 @@ public final class AttractController {
         DebugLog.get().setStatus("Attract-Modus gestoppt");
         DebugLog.get().i(TAG, "Attract-Modus gestoppt");
         cancelGoTo();
+        notifyListeningRelevance();
     }
 
     private void startRoaming(QiContext context) {
@@ -150,6 +173,9 @@ public final class AttractController {
         }
         RoamPhase previous = roamPhase;
         roamPhase = phase;
+        if ((previous == RoamPhase.PERSON_CLOSE) != (phase == RoamPhase.PERSON_CLOSE)) {
+            notifyListeningRelevance();
+        }
         switch (phase) {
             case SEARCHING:
                 DebugLog.get().setStatus("Attract – Suche nach Person");
