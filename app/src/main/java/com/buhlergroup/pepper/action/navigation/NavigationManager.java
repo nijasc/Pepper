@@ -185,6 +185,10 @@ public final class NavigationManager {
         scanner.captureSnapshot();
     }
 
+    public void captureRotation() {
+        scanner.captureRotation();
+    }
+
     public void listScans(Callback<List<RoomScanEntity>> cb) {
         submit(() -> {
             QiContext c = qiContext;
@@ -316,6 +320,10 @@ public final class NavigationManager {
 
     void cancelActiveGoTo() {
         guide.cancelActiveGoTo();
+    }
+
+    void rotateFullCircle(QiContext c, int steps, Runnable onStep) {
+        guide.rotateFullCircle(c, steps, onStep);
     }
 
     private Transform robotInMap(QiContext c) {

@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 final class RobotLocalizer {
 
     private static final String TAG = "Navigation";
+    private static final int ROTATION_STEPS = 8;
 
     private final NavigationManager nav;
     private volatile Future<Void> localizeFuture;
@@ -75,12 +76,23 @@ final class RobotLocalizer {
                     }
                 });
                 scheduleLocalizeTimeout(done, cb, NavigationSettings.getLocalizeTimeoutMs(c));
+                startLocalizeRotation(c, done);
             } catch (Exception e) {
                 nav.releaseAbilities();
                 Log.w(TAG, "localize failed: " + e.getMessage());
                 cb.onError("Lokalisierung fehlgeschlagen.");
             }
         });
+    }
+
+    private void startLocalizeRotation(QiContext c, AtomicBoolean done) {
+        Thread t = new Thread(() -> {
+            if (nav.qiContext() != null && !done.get()) {
+                nav.rotateFullCircle(c, ROTATION_STEPS, null);
+            }
+        }, "localize-rotate");
+        t.setDaemon(true);
+        t.start();
     }
 
     void cancelLocalize() {

@@ -114,6 +114,7 @@
     <string name="nav_wp_save">Position speichern</string>
     <string name="nav_scan_capture">Aktuelle Position erfassen</string>
     <string name="nav_scan_captured">Position erfasst</string>
+    <string name="nav_scan_rotating">Ich scanne die Umgebung – einen Moment.</string>
     <string name="nav_scan_hint_multipoint">Pepper von Hand langsam einmal im Kreis drehen; für Ecken oder Nischen hinschieben und dort erneut drehen, dann „Aktuelle Position erfassen“. Möglichst freie Fläche und kurzer Scan – keine Personen im Sichtfeld. Stopp, wenn alles erfasst ist.</string>
     <string name="nav_close">Schließen</string>
     <string name="nav_activate">Aktivieren</string>

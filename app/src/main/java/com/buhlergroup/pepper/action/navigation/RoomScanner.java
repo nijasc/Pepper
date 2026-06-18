@@ -23,6 +23,7 @@ final class RoomScanner {
 
     private static final String TAG = "Navigation";
     private static final long SNAPSHOT_INTERVAL_MS = 1500;
+    private static final int ROTATION_STEPS = 8;
 
     private final NavigationManager nav;
 
@@ -30,6 +31,7 @@ final class RoomScanner {
     private volatile Future<Void> mappingFuture;
     private volatile boolean scanning;
     private volatile Thread snapshotThread;
+    private volatile Thread rotationThread;
     private volatile Future<ListenResult> scanStopListenFuture;
     private volatile Runnable scanStopCallback;
     private volatile NavigationManager.MapUpdateListener mapUpdateListener;
@@ -119,6 +121,27 @@ final class RoomScanner {
 
     void captureSnapshot() {
         nav.submit(this::publishScanSnapshot);
+    }
+
+    void captureRotation() {
+        Thread running = rotationThread;
+        if (running != null && running.isAlive()) {
+            return;
+        }
+        Thread t = new Thread(() -> {
+            QiContext c = nav.qiContext();
+            if (c == null) {
+                publishScanSnapshot();
+                return;
+            }
+            DebugLog.get().i(TAG, "360°-Erfassung gestartet");
+            nav.rotateFullCircle(c, ROTATION_STEPS, this::publishScanSnapshot);
+            publishScanSnapshot();
+            DebugLog.get().i(TAG, "360°-Erfassung abgeschlossen");
+        }, "scan-rotate");
+        t.setDaemon(true);
+        rotationThread = t;
+        t.start();
     }
 
     void publishMap(ExplorationMap map) {

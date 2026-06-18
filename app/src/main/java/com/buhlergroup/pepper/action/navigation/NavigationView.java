@@ -232,8 +232,8 @@ public class NavigationView extends FrameLayout {
     }
 
     private void capturePosition() {
-        NavigationManager.get().captureSnapshot();
-        announce(R.string.nav_scan_captured);
+        announce(R.string.nav_scan_rotating);
+        NavigationManager.get().captureRotation();
     }
 
     private void saveWaypoint() {

@@ -199,4 +199,37 @@ final class RobotGuide {
         }
         return true;
     }
+
+    void rotateFullCircle(QiContext c, int steps, Runnable onStep) {
+        if (c == null || steps <= 0) {
+            return;
+        }
+        double stepAngle = (2.0 * Math.PI) / steps;
+        for (int i = 0; i < steps; i++) {
+            if (nav.qiContext() == null) {
+                return;
+            }
+            try {
+                Frame robotFrame = c.getActuation().robotFrame();
+                Transform t = TransformBuilder.create().from2DTransform(0.0, 0.0, stepAngle);
+                FreeFrame target = c.getMapping().makeFreeFrame();
+                target.update(robotFrame, t, 0L);
+                Future<Void> future = GoToBuilder.with(c).withFrame(target.frame()).build().async().run();
+                activeGoTo = future;
+                try {
+                    awaitGoTo(future, () -> nav.qiContext() != null);
+                } finally {
+                    if (activeGoTo == future) {
+                        activeGoTo = null;
+                    }
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "rotateFullCircle step failed: " + e.getMessage());
+                return;
+            }
+            if (onStep != null) {
+                onStep.run();
+            }
+        }
+    }
 }
