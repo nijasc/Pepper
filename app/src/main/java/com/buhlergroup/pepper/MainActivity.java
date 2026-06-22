@@ -365,7 +365,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 || AdminController.get().isOpen()
                 || NavigationController.get().isOpen()
                 || DanceLibraryController.get().isOpen()
-                || WinnerController.get().isActive();
+                || WinnerController.get().isActive()
+                || SelfieController.get().isRunning()
+                || RaffleJoinController.get().isBusy();
     }
 
     private void tickAttract() {
