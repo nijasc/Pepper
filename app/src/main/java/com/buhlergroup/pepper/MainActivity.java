@@ -60,6 +60,7 @@ import com.buhlergroup.pepper.openai.history.HistoryManager;
 import java.util.ArrayList;
 
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
+    private static final int SPEECH_EVENT = 10;
     private static final int DANCE_EDIT_SPEECH_EVENT = 11;
     private volatile String said = "";
     private ActionHandler executionHandler;
@@ -130,7 +131,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         HoldController.get().setStateListener(active -> updateHomeControls());
         WinnerController.get().setStateListener(active -> updateHomeControls());
 
-        speech = new SpeechSession(this, new SpeechSession.Gate() {
+        speech = new SpeechSession(this, SPEECH_EVENT, new SpeechSession.Gate() {
             @Override
             public boolean isListenSuppressed() {
                 if (MainActivity.this.isOverlayOpen()) {
@@ -377,6 +378,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("Mainactivity", "AActivity result");
 
+        if (speech.handleActivityResult(requestCode, resultCode, data)) {
+            return;
+        }
         if (requestCode == DANCE_EDIT_SPEECH_EVENT) {
             if (resultCode == RESULT_OK && data != null) {
                 ArrayList<String> results =
