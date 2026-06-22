@@ -30,6 +30,16 @@ public final class AttractController {
     private static final double ROAM_TURN_MAX = 0.6;
     private static final double GREET_DISTANCE_M = 1.5;
     private static final long ROAM_PAUSE_MS = 1500;
+    // Steckenbleiben-Erkennung: macht ein Roam-Schritt weniger als so viele Meter
+    // tatsächlich Strecke, gilt er als blockiert.
+    private static final double STUCK_PROGRESS_M = 0.15;
+    // Nach so vielen aufeinanderfolgenden blockierten Schritten wird ein
+    // Recovery-Manöver ausgelöst.
+    private static final int STUCK_THRESHOLD = 2;
+    // Recovery: kurz zurücksetzen und mit grossem Winkel von der Engstelle wegdrehen.
+    private static final double RECOVERY_BACK_M = 0.25;
+    private static final double RECOVERY_TURN_MIN = 1.6;
+    private static final double RECOVERY_TURN_MAX = 2.8;
 
     private enum RoamPhase {
         SEARCHING,
@@ -46,6 +56,7 @@ public final class AttractController {
     private volatile Thread roamThread;
     private volatile Future<Void> activeGoTo;
     private volatile RoamPhase roamPhase;
+    private volatile int stuckCount;
 
     private AttractController() {
     }
@@ -114,6 +125,7 @@ public final class AttractController {
         }
         active = true;
         roamPhase = null;
+        stuckCount = 0;
         Log.i(TAG, "Attract mode started");
         DebugLog.get().setStatus("Attract-Modus gestartet");
         DebugLog.get().i(TAG, "Attract-Modus gestartet");
@@ -201,18 +213,75 @@ public final class AttractController {
     private void driveRoamStep(QiContext context) {
         try {
             double turn = (Math.random() * 2.0 - 1.0) * ROAM_TURN_MAX;
+            double moved = runStep(context, ROAM_STEP_M, 0.0, turn);
+            if (!Double.isNaN(moved) && moved < STUCK_PROGRESS_M) {
+                stuckCount++;
+                DebugLog.get().i(TAG, String.format(Locale.US,
+                        "Attract – wenig Fortschritt (%.2f m), blockiert=%d", moved, stuckCount));
+                if (stuckCount >= STUCK_THRESHOLD) {
+                    recoverFromStuck(context);
+                    stuckCount = 0;
+                }
+            } else {
+                stuckCount = 0;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Attract roam step failed: " + e.getMessage());
+            sleep(ROAM_PAUSE_MS);
+        }
+    }
+
+    /**
+     * Fährt eine relative Bewegung aus und gibt die tatsächlich zurückgelegte
+     * Strecke (in Metern) zurück – oder {@link Double#NaN} bei Fehler. So lässt
+     * sich erkennen, ob Pepper trotz GoTo blockiert ist (kein Fortschritt).
+     */
+    private double runStep(QiContext context, double x, double y, double theta) {
+        try {
             Frame robotFrame = context.getActuation().robotFrame();
-            Transform transform = TransformBuilder.create().from2DTransform(ROAM_STEP_M, 0.0, turn);
+            FreeFrame start = context.getMapping().makeFreeFrame();
+            start.update(robotFrame, TransformBuilder.create().from2DTransform(0.0, 0.0, 0.0), 0L);
+            Transform transform = TransformBuilder.create().from2DTransform(x, y, theta);
             FreeFrame target = context.getMapping().makeFreeFrame();
             target.update(robotFrame, transform, 0L);
             Future<Void> goTo = GoToBuilder.with(context)
                     .withFrame(target.frame()).build().async().run();
             activeGoTo = goTo;
             awaitGoTo(goTo);
+            return movedDistance(context, start);
         } catch (Exception e) {
-            Log.w(TAG, "Attract roam step failed: " + e.getMessage());
-            sleep(ROAM_PAUSE_MS);
+            Log.w(TAG, "Attract step failed: " + e.getMessage());
+            return Double.NaN;
         }
+    }
+
+    private double movedDistance(QiContext context, FreeFrame start) {
+        try {
+            Frame robotFrame = context.getActuation().robotFrame();
+            Transform t = robotFrame.computeTransform(start.frame()).getTransform();
+            return Math.hypot(t.getTranslation().getX(), t.getTranslation().getY());
+        } catch (Exception e) {
+            return Double.NaN;
+        }
+    }
+
+    /**
+     * Recovery-Manöver bei Steckenbleiben: laufendes GoTo abbrechen, ein Stück
+     * zurücksetzen und mit grossem Winkel von der Engstelle/Ecke wegdrehen, damit
+     * der nächste Roam-Schritt in eine offene Richtung führt.
+     */
+    private void recoverFromStuck(QiContext context) {
+        if (!active) {
+            return;
+        }
+        DebugLog.get().setStatus("Attract – Engstelle, weiche aus");
+        DebugLog.get().i(TAG, "Attract – steckengeblieben, Recovery-Manöver");
+        cancelGoTo();
+        double turn = RECOVERY_TURN_MIN + Math.random() * (RECOVERY_TURN_MAX - RECOVERY_TURN_MIN);
+        if (Math.random() < 0.5) {
+            turn = -turn;
+        }
+        runStep(context, -RECOVERY_BACK_M, 0.0, turn);
     }
 
     private void awaitGoTo(Future<Void> future) {
