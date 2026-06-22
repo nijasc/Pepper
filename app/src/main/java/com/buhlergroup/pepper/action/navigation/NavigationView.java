@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
 import com.buhlergroup.pepper.databinding.ViewNavigationBinding;
@@ -82,7 +83,12 @@ public class NavigationView extends FrameLayout {
         binding.navScanStopBig.setOnClickListener(v -> requestScanStop());
         binding.navScanCapture.setOnClickListener(v -> capturePosition());
         waypointSaveButton.setOnClickListener(v -> saveWaypoint());
-        binding.navClose.setOnClickListener(v -> NavigationController.get().close());
+        // Diese Ansicht ist nur aus dem Admin-Panel erreichbar; beim Schliessen
+        // zurueck ins Admin statt zum Home, damit der Admin-Zugang erhalten bleibt.
+        binding.navClose.setOnClickListener(v -> {
+            NavigationController.get().close();
+            AdminController.get().open();
+        });
 
         NavigationManager.get().setScanStopCallback(() -> post(this::requestScanStop));
     }

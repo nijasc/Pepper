@@ -39,9 +39,9 @@ public final class FollowController {
     private static final double RETARGET_M = 0.40;
     private static final double TURN_THRESHOLD_RAD = Math.toRadians(25);
     private static final long MIN_GOTO_INTERVAL_MS = 800;
-    private static final double TARGET_LOCK_GATE_M = 0.75;
+    private static final double TARGET_LOCK_GATE_M = 1.0;
     private static final long LOOP_PAUSE_MS = 150;
-    private static final int MAX_MISSES = 25;
+    private static final int MAX_MISSES = 40;
     private static final long FOLLOW_CONFIRM_INTERVAL_MS = 30000;
 
     private static final String[] FOLLOW_CONFIRMATIONS = {
@@ -157,6 +157,24 @@ public final class FollowController {
                         lostTarget = true;
                         break;
                     }
+                    // Kurzzeitiger Verlust (Person zu schnell oder zu nah/gross fürs
+                    // Tracking): weiter zur zuletzt bekannten Position fahren, um sie
+                    // wieder einzufangen, statt sofort stehenzubleiben.
+                    if (trackValid) {
+                        long missNow = System.currentTimeMillis();
+                        boolean finished = goToFuture == null || goToFuture.isDone();
+                        if (finished && missNow - lastGoToAtMs > MIN_GOTO_INTERVAL_MS) {
+                            requestCancel(goToFuture);
+                            goToFuture = GoToBuilder.with(context)
+                                    .withFrame(trackFrame.frame())
+                                    .withFinalOrientationPolicy(OrientationPolicy.ALIGN_X)
+                                    .build()
+                                    .async().run();
+                            lastGoToAtMs = missNow;
+                            activeMove = Move.DRIVE;
+                            activeTarget = null;
+                        }
+                    }
                     Thread.sleep(LOOP_PAUSE_MS);
                     continue;
                 }
@@ -170,7 +188,15 @@ public final class FollowController {
                     confirmIndex++;
                 }
 
-                Transform t = human.getHeadFrame().computeTransform(robotFrame).getTransform();
+                Frame headFrame = human.getHeadFrame();
+                if (headFrame == null) {
+                    // Kopf gerade nicht lesbar – wie kurzen Verlust behandeln,
+                    // nicht die ganze Session abbrechen.
+                    misses++;
+                    Thread.sleep(LOOP_PAUSE_MS);
+                    continue;
+                }
+                Transform t = headFrame.computeTransform(robotFrame).getTransform();
                 double x = t.getTranslation().getX();
                 double y = t.getTranslation().getY();
                 double distance = Math.hypot(x, y);
