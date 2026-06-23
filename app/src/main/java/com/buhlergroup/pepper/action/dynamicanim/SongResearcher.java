@@ -50,7 +50,7 @@ public final class SongResearcher {
             body.put("model", ModelSelector.FAST);
             body.put("messages", messages);
 
-            String response = openAi.sendOpenAiRequest("/chat/completions", body, 15000);
+            String response = openAi.chat(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.CLASSIFICATION, body, 15000);
             String content = new JSONObject(response)
                     .getJSONArray("choices")
                     .getJSONObject(0)
@@ -88,7 +88,7 @@ public final class SongResearcher {
             body.put("messages", messages);
             body.put("reasoning_effort", "high");
 
-            String response = openAi.sendOpenAiRequest("/chat/completions", body, RESEARCH_TIMEOUT_MS);
+            String response = openAi.chat(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.GENERATION, body, RESEARCH_TIMEOUT_MS);
             String content = new JSONObject(response)
                     .getJSONArray("choices")
                     .getJSONObject(0)

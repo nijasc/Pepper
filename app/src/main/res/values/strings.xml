@@ -283,4 +283,19 @@
     <string name="profile_resource_failed">Ressource konnte nicht geladen werden</string>
     <string name="profile_delete_confirm_title">Profil löschen?</string>
     <string name="profile_delete_confirm_message">Dieses Profil und seine Ressourcen werden entfernt.</string>
+
+    <string name="admin_models">KI-Modelle</string>
+    <string name="model_providers_label">Anbieter &amp; API-Keys</string>
+    <string name="model_tasks_label">Modell pro Aufgabe</string>
+    <string name="model_api_key_hint">API-Key</string>
+    <string name="model_validate">Validieren</string>
+    <string name="model_valid">✓ %1$d Modelle</string>
+    <string name="model_invalid">✗ %1$s</string>
+    <string name="model_validating">Prüfe …</string>
+    <string name="model_saved">Modell-Einstellungen gespeichert</string>
+    <string name="model_task_conversation">Konversation</string>
+    <string name="model_task_classification">Klassifikation</string>
+    <string name="model_task_rewrite">Umformulierung</string>
+    <string name="model_task_generation">Generierung</string>
+    <string name="model_task_documentation">Dokumentation</string>
 </resources>

@@ -1,6 +1,10 @@
-package com.buhlergroup.pepper.openai;
+package com.buhlergroup.pepper.llm;
 
 import android.util.Log;
+
+import com.buhlergroup.pepper.openai.OpenAIService;
+
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,7 +12,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class OpenAiStreamParser {
+public final class ChatStreamParser {
 
     private static final Pattern LEADING_MARKER =
             Pattern.compile("^\\s*\\[\\[\\s*(lang|action)\\s*:\\s*([^\\]\\s]+)\\s*\\]\\]");
@@ -19,11 +23,11 @@ final class OpenAiStreamParser {
 
     private String lastLanguageTag;
 
-    String lastLanguageTag() {
+    public String lastLanguageTag() {
         return lastLanguageTag;
     }
 
-    String parse(BufferedReader reader, OpenAIService.StreamListener listener, long startedMs)
+    public String parse(BufferedReader reader, OpenAIService.StreamListener listener, long startedMs)
             throws IOException {
         StringBuilder pending = new StringBuilder();
         StringBuilder full = new StringBuilder();
@@ -37,41 +41,35 @@ final class OpenAiStreamParser {
             }
             String data = line.substring(5).trim();
             if (data.isEmpty() || "[DONE]".equals(data)) {
-                break;
-            }
-            org.json.JSONObject event;
-            try {
-                event = new org.json.JSONObject(data);
-            } catch (org.json.JSONException e) {
+                if ("[DONE]".equals(data)) {
+                    break;
+                }
                 continue;
             }
-            String type = event.optString("type", "");
-            if (type.endsWith("output_text.delta")) {
-                pending.append(event.optString("delta", ""));
-                if (markerPhase) {
-                    int state = consumeMarkers(pending, listener);
-                    if (state < 0) {
-                        return null;
-                    }
-                    if (state == 0) {
-                        continue;
-                    }
-                    markerPhase = false;
+            String delta = extractDelta(data);
+            if (delta == null || delta.isEmpty()) {
+                continue;
+            }
+            pending.append(delta);
+            if (markerPhase) {
+                int state = consumeMarkers(pending, listener);
+                if (state < 0) {
+                    return null;
                 }
-                String sentence;
-                while ((sentence = extractSentence(pending, false)) != null) {
-                    if (firstSentence) {
-                        Log.i("LATENCY", "first streamed sentence after "
-                                + (System.currentTimeMillis() - startedMs) + "ms");
-                        firstSentence = false;
-                    }
-                    listener.onSentence(sentence, lastLanguageTag);
-                    full.append(sentence).append(' ');
+                if (state == 0) {
+                    continue;
                 }
-            } else if ("response.completed".equals(type)) {
-                break;
-            } else if ("response.failed".equals(type) || "error".equals(type)) {
-                throw new IOException("Streaming response failed: " + data);
+                markerPhase = false;
+            }
+            String sentence;
+            while ((sentence = extractSentence(pending, false)) != null) {
+                if (firstSentence) {
+                    Log.i("LATENCY", "first streamed sentence after "
+                            + (System.currentTimeMillis() - startedMs) + "ms");
+                    firstSentence = false;
+                }
+                listener.onSentence(sentence, lastLanguageTag);
+                full.append(sentence).append(' ');
             }
         }
 
@@ -84,6 +82,16 @@ final class OpenAiStreamParser {
             full.append(tail).append(' ');
         }
         return ACTION_TAG.matcher(full.toString()).replaceAll("").trim();
+    }
+
+    private String extractDelta(String data) {
+        try {
+            JSONObject choice = new JSONObject(data).getJSONArray("choices").getJSONObject(0);
+            JSONObject delta = choice.optJSONObject("delta");
+            return delta == null ? "" : delta.optString("content", "");
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private int consumeMarkers(StringBuilder pending, OpenAIService.StreamListener listener) {

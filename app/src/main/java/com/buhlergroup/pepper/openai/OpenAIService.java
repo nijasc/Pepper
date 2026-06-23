@@ -7,20 +7,26 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.aldebaran.qi.sdk.QiContext;
-import com.aldebaran.qi.sdk.util.IOUtils;
-import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.profile.ProfileRepository;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.debug.DebugLog;
+import com.buhlergroup.pepper.llm.ChatStreamParser;
+import com.buhlergroup.pepper.llm.LlmHttpClient;
+import com.buhlergroup.pepper.llm.LlmProvider;
+import com.buhlergroup.pepper.llm.LlmService;
+import com.buhlergroup.pepper.llm.ModelSettings;
+import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 import com.buhlergroup.pepper.perception.EmotionReader;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -29,23 +35,22 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OpenAIService {
+public class OpenAIService implements LlmService {
 
     private static final String TAG = "OpenAIService";
     private static final int MAX_OUTPUT_TOKENS = 600;
     private static final int RESPONSE_TIMEOUT_MS = 60000;
+    private static final int DEFAULT_TIMEOUT_MS = 20000;
     private static final OpenAiCircuitBreaker circuitBreaker = new OpenAiCircuitBreaker();
-    private static final OpenAiTokenProvider tokenProvider = new OpenAiTokenProvider();
     private static final Pattern LANG_TAG =
             Pattern.compile("\\[\\[\\s*lang\\s*:\\s*([A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?)\\s*\\]\\]");
     private static final Pattern ACTION_TAG =
             Pattern.compile("\\[\\[\\s*action\\s*:\\s*([A-Za-z0-9_]+)\\s*\\]\\]");
     private static volatile OpenAIService shared;
-    private final ObjectMapper objectMapper = new ObjectMapper();
     private final EmotionReader emotionReader = new EmotionReader();
     private final List<Action> actions;
+    private final LlmHttpClient llmClient = new LlmHttpClient();
     private volatile Context c;
-    private final OpenAiHttpClient httpClient = new OpenAiHttpClient(() -> getAuthToken(this.c));
     private String lastLanguageTag;
 
     public OpenAIService(List<Action> actions) {
@@ -58,7 +63,7 @@ public class OpenAIService {
             synchronized (OpenAIService.class) {
                 instance = shared;
                 if (instance == null) {
-                    instance = new OpenAIService(new java.util.ArrayList<>());
+                    instance = new OpenAIService(new ArrayList<>());
                     shared = instance;
                 }
             }
@@ -67,46 +72,44 @@ public class OpenAIService {
     }
 
     public String getResponse(HistoryManager historyManager, QiContext context) {
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(message("system", formDefaultSystemPrompt(context)));
+        messages.addAll(historyManager.toInput());
+
         Map<String, Object> body = new HashMap<>();
-        body.put("model", ModelSelector.modelFor(ModelSelector.ModelTask.CONVERSATION));
-        body.put("input", historyManager.toInput());
-        body.put("instructions", formDefaultSystemPrompt(context));
-        body.put("max_output_tokens", MAX_OUTPUT_TOKENS);
-        Map<String, Object> reasoning = new HashMap<>();
-        reasoning.put("effort", "low");
-        body.put("reasoning", reasoning);
+        body.put("messages", messages);
+        body.put("max_tokens", MAX_OUTPUT_TOKENS);
+        body.put("reasoning_effort", "low");
 
         long started = System.currentTimeMillis();
         try {
-            String res = sendOpenAiRequest("/responses", body, RESPONSE_TIMEOUT_MS);
-            res = parseOutput(res);
-            res = extractLanguageTag(res);
+            String res = chat(ModelTask.CONVERSATION, body, RESPONSE_TIMEOUT_MS);
+            String text = extractLanguageTag(parseChatContent(res));
             Log.i("LATENCY", "getResponse took " + (System.currentTimeMillis() - started) + "ms");
-            return sanitizeResponse(res);
+            return text;
         } catch (IOException e) {
-            e.printStackTrace();
+            DebugLog.get().w(TAG, "getResponse fehlgeschlagen: " + e.getMessage());
         }
         return "Etwas ist unerwartet schief gelaufen.";
     }
 
-    public String generateText(String instructions, String userInput, int maxTokens) throws IOException {
-        List<Map<String, String>> input = new java.util.ArrayList<>();
-        Map<String, String> userEntry = new HashMap<>();
-        userEntry.put("role", "user");
-        userEntry.put("content", userInput);
-        input.add(userEntry);
+    @Override
+    public String generate(ModelTask task, String systemInstructions, String userInput, int maxTokens)
+            throws IOException {
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(message("system", systemInstructions));
+        messages.add(message("user", userInput));
 
         Map<String, Object> body = new HashMap<>();
-        body.put("model", ModelSelector.modelFor(ModelSelector.ModelTask.GENERATION));
-        body.put("input", input);
-        body.put("instructions", instructions);
-        body.put("max_output_tokens", maxTokens);
-        Map<String, Object> reasoning = new HashMap<>();
-        reasoning.put("effort", "low");
-        body.put("reasoning", reasoning);
+        body.put("messages", messages);
+        body.put("max_tokens", maxTokens);
+        body.put("reasoning_effort", "low");
 
-        String res = sendOpenAiRequest("/responses", body, RESPONSE_TIMEOUT_MS);
-        return parseOutput(res);
+        return parseChatContent(chat(task, body, RESPONSE_TIMEOUT_MS));
+    }
+
+    public String generateText(String instructions, String userInput, int maxTokens) throws IOException {
+        return generate(ModelTask.GENERATION, instructions, userInput, maxTokens);
     }
 
     public String extractLanguageTag(String text) {
@@ -126,37 +129,37 @@ public class OpenAIService {
 
     public String getResponseStreaming(HistoryManager historyManager, QiContext context,
                                        String userMessage, StreamListener listener) throws IOException {
-        List<Map<String, String>> input = new java.util.ArrayList<>(historyManager.toInput());
-        Map<String, String> userEntry = new HashMap<>();
-        userEntry.put("role", "user");
-        userEntry.put("content", userMessage);
-        input.add(userEntry);
+        List<Map<String, String>> messages = new ArrayList<>();
+        messages.add(message("system", formRoutingSystemPrompt(context)));
+        messages.addAll(historyManager.toInput());
+        messages.add(message("user", userMessage));
 
+        Context ctx = ctx();
+        LlmProvider provider = ModelSettings.getProvider(ctx, ModelTask.CONVERSATION);
         Map<String, Object> body = new HashMap<>();
-        body.put("model", ModelSelector.modelFor(ModelSelector.ModelTask.CONVERSATION));
-        body.put("input", input);
-        body.put("instructions", formRoutingSystemPrompt(context));
-        body.put("max_output_tokens", MAX_OUTPUT_TOKENS);
+        body.put("model", ModelSettings.getModel(ctx, ModelTask.CONVERSATION));
+        body.put("messages", messages);
+        body.put("max_tokens", MAX_OUTPUT_TOKENS);
         body.put("stream", true);
-        Map<String, Object> reasoning = new HashMap<>();
-        reasoning.put("effort", "low");
-        body.put("reasoning", reasoning);
+        if (provider.supportsReasoningEffort) {
+            body.put("reasoning_effort", "low");
+        }
 
         long started = System.currentTimeMillis();
         lastLanguageTag = null;
-        DebugLog.get().setStatus("OpenAI – Anfrage läuft …");
-        DebugLog.get().d(TAG, "Streaming-Anfrage gestartet");
+        DebugLog.get().setStatus(provider.displayName + " – Anfrage läuft …");
+        DebugLog.get().d(TAG, "Streaming-Anfrage gestartet (" + provider.displayName + ")");
 
         if (circuitBreaker.isOpen()) {
-            DebugLog.get().w(TAG, "OpenAI-Circuit offen – schneller Fallback");
-            throw new IOException("OpenAI circuit open, failing fast to fallback");
+            DebugLog.get().w(TAG, "LLM-Circuit offen – schneller Fallback");
+            throw new IOException("LLM circuit open, failing fast to fallback");
         }
 
         boolean failed = false;
-        OpenAiHttpClient.EventStream stream = null;
+        LlmHttpClient.EventStream stream = null;
         try {
-            stream = httpClient.openEventStream(body);
-            OpenAiStreamParser parser = new OpenAiStreamParser();
+            stream = llmClient.openChatStream(provider, ModelSettings.getKey(ctx, provider), body);
+            ChatStreamParser parser = new ChatStreamParser();
             String result = parser.parse(stream.reader, listener, started);
             lastLanguageTag = parser.lastLanguageTag();
             if (result == null) {
@@ -164,13 +167,11 @@ public class OpenAIService {
             }
             Log.i("LATENCY", "streamed response complete after "
                     + (System.currentTimeMillis() - started) + "ms");
-            DebugLog.get().setStatus("OpenAI – Antwort erhalten");
-            DebugLog.get().i(TAG, "Streaming-Antwort komplett nach "
-                    + (System.currentTimeMillis() - started) + "ms");
+            DebugLog.get().setStatus(provider.displayName + " – Antwort erhalten");
             return result;
         } catch (IOException e) {
             failed = true;
-            DebugLog.get().w(TAG, "OpenAI-Streaming fehlgeschlagen: " + e.getMessage());
+            DebugLog.get().w(TAG, "LLM-Streaming fehlgeschlagen: " + e.getMessage());
             throw e;
         } finally {
             if (stream != null) {
@@ -184,20 +185,40 @@ public class OpenAIService {
         }
     }
 
-    private String parseOutput(String responseJson) throws IOException {
-        OpenAiResponse res = objectMapper.readValue(responseJson, OpenAiResponse.class);
-        Content out = null;
-        if (res.getOutput() != null) {
-            for (Output currOut : res.getOutput()) {
-                if (currOut.getContent() != null && !currOut.getContent().isEmpty()) {
-                    out = currOut.getContent().get(0);
-                }
-            }
+    @Override
+    public String chat(ModelTask task, Map<String, Object> body) throws IOException {
+        return chat(task, body, DEFAULT_TIMEOUT_MS);
+    }
+
+    public String chat(ModelTask task, Map<String, Object> body, int readTimeoutMs) throws IOException {
+        Context ctx = ctx();
+        LlmProvider provider = ModelSettings.getProvider(ctx, task);
+        body.put("model", ModelSettings.getModel(ctx, task));
+        if (!provider.supportsReasoningEffort) {
+            body.remove("reasoning_effort");
+            body.remove("reasoning");
         }
-        if (out == null || out.getText() == null) {
-            throw new IOException("OpenAI-Antwort ohne Output-Content: " + snippet(responseJson));
+        return llmClient.request(provider, ModelSettings.getKey(ctx, provider),
+                "/chat/completions", body, readTimeoutMs);
+    }
+
+    private String parseChatContent(String responseJson) throws IOException {
+        try {
+            return new JSONObject(responseJson)
+                    .getJSONArray("choices")
+                    .getJSONObject(0)
+                    .getJSONObject("message")
+                    .getString("content");
+        } catch (Exception e) {
+            throw new IOException("Antwort ohne Inhalt: " + snippet(responseJson));
         }
-        return out.getText();
+    }
+
+    private Map<String, String> message(String role, String content) {
+        Map<String, String> map = new HashMap<>();
+        map.put("role", role);
+        map.put("content", content);
+        return map;
     }
 
     private String snippet(String json) {
@@ -205,10 +226,6 @@ public class OpenAIService {
             return "null";
         }
         return json.length() <= 300 ? json : json.substring(0, 300) + "…";
-    }
-
-    private String sanitizeResponse(String originalResponse) {
-        return originalResponse;
     }
 
     public String formDefaultSystemPrompt(QiContext context) {
@@ -299,21 +316,17 @@ public class OpenAIService {
         }
     }
 
+    @Nullable
     public String sendOpenAiRequest(String path, @Nullable Map<String, Object> body) throws IOException {
-        return sendOpenAiRequest(path, body, 20000);
-    }
-
-    public String sendOpenAiRequest(String path, @Nullable Map<String, Object> body, int readTimeoutMs)
-            throws IOException {
-        return httpClient.request(path, body, readTimeoutMs);
-    }
-
-    public String getAuthToken(Context context) {
-        return tokenProvider.getToken(context);
+        return chat(ModelTask.CLASSIFICATION, body == null ? new HashMap<>() : body);
     }
 
     public void setC(Context c) {
         this.c = c == null ? null : c.getApplicationContext();
+    }
+
+    private Context ctx() {
+        return c != null ? c : ModelSettings.app();
     }
 
     public interface StreamListener {

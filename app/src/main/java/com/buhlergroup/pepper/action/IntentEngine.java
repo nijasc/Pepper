@@ -46,7 +46,7 @@ public class IntentEngine {
         body.put("response_format", buildResponseFormat());
 
         try {
-            String response = openAi.sendOpenAiRequest("/chat/completions", body);
+            String response = openAi.chat(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.CLASSIFICATION, body);
             String intentKey = parseIntent(response);
             return intents.get(intentKey);
         } catch (IOException | JSONException e) {

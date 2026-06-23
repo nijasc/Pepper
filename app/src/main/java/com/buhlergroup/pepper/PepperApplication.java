@@ -29,6 +29,7 @@ public class PepperApplication extends Application {
         startElapsedMs = SystemClock.elapsedRealtime();
         DebugLog.get().init(this);
         PDFBoxResourceLoader.init(this);
+        com.buhlergroup.pepper.llm.ModelSettings.ensureSeeded(this);
         installCrashRestart();
     }
 

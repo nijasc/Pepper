@@ -562,6 +562,24 @@
                         android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
+
+                <LinearLayout android:id="@+id/adminModels" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_models"
+                        android:src="@drawable/ic_admin_model" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_models"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
             </GridLayout>
         </LinearLayout>
     </ScrollView>
@@ -1668,6 +1686,61 @@
                     android:layout_marginStart="12dp"
                     android:text="@string/profile_delete" />
             </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <ScrollView
+        android:id="@+id/adminModelsPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
+        android:paddingTop="@dimen/admin_content_top"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/model_providers_label"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/adminModelProviderList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/model_tasks_label"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/adminModelTaskList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminModelSave"
+                style="@style/AdminPrimaryButton"
+                android:layout_marginTop="24dp"
+                android:text="@string/raffle_save" />
 
         </LinearLayout>
     </ScrollView>

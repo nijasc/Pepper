@@ -88,7 +88,7 @@ public final class SystemSpeechRewriter {
         body.put("model", MODEL);
         body.put("messages", messages);
 
-        String response = openAi.sendOpenAiRequest("/chat/completions", body);
+        String response = openAi.chat(ModelSelector.ModelTask.REWRITE, body);
         return parseContent(response);
     }
 

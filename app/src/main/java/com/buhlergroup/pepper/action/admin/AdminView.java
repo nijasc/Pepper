@@ -14,6 +14,7 @@ import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_NAV;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PIN;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PROFILES;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PROFILE_EDIT;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_MODELS;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE_CREATE;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATS;
@@ -62,6 +63,7 @@ public class AdminView extends FrameLayout {
     private CameraPanelController camera;
     private DiagnosticsController diagnostics;
     private ProfilePanelController profiles;
+    private ModelPanelController models;
 
     public AdminView(Context context) {
         super(context);
@@ -102,6 +104,7 @@ public class AdminView extends FrameLayout {
         View navPanel = binding.adminNavPanel;
         View profilesPanel = binding.adminProfilesPanel;
         View profileEditPanel = binding.adminProfileEditPanel;
+        View modelsPanel = binding.adminModelsPanel;
 
         View adminHeader = binding.adminHeader;
         TextView adminHeaderTitle = binding.adminHeaderTitle;
@@ -127,6 +130,7 @@ public class AdminView extends FrameLayout {
         panelNav.register(PANEL_NAV, navPanel);
         panelNav.register(PANEL_PROFILES, profilesPanel);
         panelNav.register(PANEL_PROFILE_EDIT, profileEditPanel);
+        panelNav.register(PANEL_MODELS, modelsPanel);
 
         pinController = new PinController(this, () -> panelNav.show(PANEL_MENU));
         dashboard = new DashboardController(this, dbExecutor);
@@ -140,6 +144,7 @@ public class AdminView extends FrameLayout {
         camera = new CameraPanelController(this, dbExecutor, panelNav);
         diagnostics = new DiagnosticsController(this, panelNav);
         profiles = new ProfilePanelController(this, dbExecutor, panelNav);
+        models = new ModelPanelController(this, dbExecutor, panelNav);
         binding.adminPinCancel.setOnClickListener(v -> hide());
         binding.adminClose.setOnClickListener(v -> hide());
         binding.adminDevLogs.setOnClickListener(v -> diagnostics.showDevLog());
@@ -161,6 +166,7 @@ public class AdminView extends FrameLayout {
         binding.adminDsgvo.setOnClickListener(v -> showDsgvoAccessDialog());
         binding.adminChangePin.setOnClickListener(v -> showChangePinDialog());
         binding.adminProfiles.setOnClickListener(v -> profiles.showProfiles());
+        binding.adminModels.setOnClickListener(v -> models.showModels());
     }
 
     public void onProfileDocumentPicked(android.net.Uri uri) {
