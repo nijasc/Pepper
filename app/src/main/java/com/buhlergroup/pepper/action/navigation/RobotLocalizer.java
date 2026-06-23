@@ -22,6 +22,7 @@ final class RobotLocalizer {
 
     private final NavigationManager nav;
     private volatile Future<Void> localizeFuture;
+    private volatile Localize currentLocalize;
 
     RobotLocalizer(NavigationManager nav) {
         this.nav = nav;
@@ -51,8 +52,12 @@ final class RobotLocalizer {
                 DebugLog.get().i(TAG, "Lokalisierung gestartet: " + scan.name);
 
                 Localize localize = LocalizeBuilder.with(c).withMap(map).build();
+                currentLocalize = localize;
                 AtomicBoolean done = new AtomicBoolean(false);
                 localize.addOnStatusChangedListener(status -> {
+                    if (nav.qiContext() == null) {
+                        return;
+                    }
                     if (status == LocalizationStatus.LOCALIZED) {
                         boolean recovered = done.get() && !nav.isLocalized();
                         nav.setLocalized(true);
@@ -96,6 +101,14 @@ final class RobotLocalizer {
     }
 
     void cancelLocalize() {
+        Localize l = currentLocalize;
+        currentLocalize = null;
+        if (l != null) {
+            try {
+                l.removeAllOnStatusChangedListeners();
+            } catch (Exception ignored) {
+            }
+        }
         Future<Void> f = localizeFuture;
         localizeFuture = null;
         if (f != null && !f.isDone()) {

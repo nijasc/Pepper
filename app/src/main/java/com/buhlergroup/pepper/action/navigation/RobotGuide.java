@@ -170,7 +170,7 @@ final class RobotGuide {
 
     private void awaitGoTo(Future<Void> future, Condition condition) {
         while (!future.isDone()) {
-            if (condition.shouldContinue()) {
+            if (!condition.shouldContinue()) {
                 future.requestCancellation();
                 break;
             }

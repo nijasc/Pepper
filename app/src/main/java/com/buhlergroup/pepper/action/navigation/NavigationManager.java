@@ -120,14 +120,12 @@ public final class NavigationManager {
         if (c == null || text == null || text.trim().isEmpty()) {
             return;
         }
-        Thread t = new Thread(() -> {
+        submit(() -> {
             try {
                 SpeechManager.getInstance().say(c, text);
             } catch (Exception ignored) {
             }
-        }, "nav-speak");
-        t.setDaemon(true);
-        t.start();
+        });
     }
 
     public boolean isLocalized() {

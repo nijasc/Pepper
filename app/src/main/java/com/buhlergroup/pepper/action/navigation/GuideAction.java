@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class GuideAction extends Action {
 
     private static final long WAYPOINT_TIMEOUT_MS = 8000;
+    private static final long GUIDE_TIMEOUT_MS = 180000;
     private static final Set<String> FILLERS = new HashSet<>(Arrays.asList(
             "bring", "bringe", "bringst", "mich", "mir", "uns", "zum", "zur", "zu", "den", "dem",
             "die", "der", "das", "wo", "finde", "findest", "ich", "ist", "sich", "befindet",
@@ -73,9 +74,12 @@ public class GuideAction extends Action {
             }
         });
         try {
-            latch.await();
+            if (!latch.await(GUIDE_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                return NavigationManager.GuideOutcome.LOST;
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            return NavigationManager.GuideOutcome.LOST;
         }
         return ref.get();
     }
