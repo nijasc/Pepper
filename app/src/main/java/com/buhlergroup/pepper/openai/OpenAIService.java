@@ -43,7 +43,7 @@ public class OpenAIService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final EmotionReader emotionReader = new EmotionReader();
     private final List<Action> actions;
-    private Context c;
+    private volatile Context c;
     private final OpenAiHttpClient httpClient = new OpenAiHttpClient(() -> getAuthToken(this.c));
     private String lastLanguageTag;
 
@@ -307,7 +307,7 @@ public class OpenAIService {
     }
 
     public void setC(Context c) {
-        this.c = c;
+        this.c = c == null ? null : c.getApplicationContext();
     }
 
     public interface StreamListener {
