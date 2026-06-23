@@ -23,7 +23,6 @@ public class SelfieView extends FrameLayout {
     private View shareBlock;
     private View previewBlock;
     private TextView statusView;
-    private TextView okayButton;
     private TextView saveButton;
     private TextView retakeButton;
     private TextView shareRetakeButton;
@@ -57,7 +56,7 @@ public class SelfieView extends FrameLayout {
         shareBlock = findViewById(R.id.selfieShareBlock);
         previewBlock = findViewById(R.id.selfiePreviewBlock);
         statusView = findViewById(R.id.selfieStatus);
-        okayButton = findViewById(R.id.selfieOkay);
+        TextView okayButton = findViewById(R.id.selfieOkay);
         saveButton = findViewById(R.id.selfieSave);
         retakeButton = findViewById(R.id.selfieRetake);
         shareRetakeButton = findViewById(R.id.selfieShareRetake);

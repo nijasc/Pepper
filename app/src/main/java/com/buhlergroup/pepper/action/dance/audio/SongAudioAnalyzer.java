@@ -14,24 +14,6 @@ public final class SongAudioAnalyzer {
     private static final double HOOK_WINDOW_SECONDS = 4.0;
     private static final long MIN_REMAINING_MS = 12000;
 
-    public static final class Result {
-        public final int bpm;
-        public final long hookStartMs;
-
-        Result(int bpm, long hookStartMs) {
-            this.bpm = bpm;
-            this.hookStartMs = hookStartMs;
-        }
-
-        public boolean hasBpm() {
-            return bpm > 0;
-        }
-
-        public boolean hasHook() {
-            return hookStartMs >= 0;
-        }
-    }
-
     private SongAudioAnalyzer() {
     }
 
@@ -161,5 +143,23 @@ public final class SongAudioAnalyzer {
             }
         }
         return Math.round(bestStart / frameRate * 1000.0);
+    }
+
+    public static final class Result {
+        public final int bpm;
+        public final long hookStartMs;
+
+        Result(int bpm, long hookStartMs) {
+            this.bpm = bpm;
+            this.hookStartMs = hookStartMs;
+        }
+
+        public boolean hasBpm() {
+            return bpm > 0;
+        }
+
+        public boolean hasHook() {
+            return hookStartMs >= 0;
+        }
     }
 }

@@ -27,10 +27,6 @@ import java.util.Locale;
 
 public final class HoldController {
 
-    public interface HoldStateListener {
-        void onHoldStateChanged(boolean active);
-    }
-
     private static final String TAG = "HoldMyBeer";
     private static final long LOOP_PAUSE_MS = 200;
     private static final long WAIT_FOR_OBJECT_MS = 15000;
@@ -39,9 +35,7 @@ public final class HoldController {
     private static final long[] ESCALATION_AT_MS = {60000, 180000, 300000};
     private static final String PREFS = "pepper_hold";
     private static final String KEY_HELD_COUNT = "beers_held";
-
     private static final HoldController INSTANCE = new HoldController();
-
     private final HoldQuotes quotes = new HoldQuotes();
     private volatile boolean sessionRunning;
     private volatile boolean objectConfirmed;
@@ -50,7 +44,6 @@ public final class HoldController {
     private volatile Thread loopThread;
     private volatile HoldView view;
     private volatile HoldStateListener stateListener;
-
     private HoldController() {
     }
 
@@ -379,5 +372,9 @@ public final class HoldController {
         if (listener != null) {
             listener.onHoldStateChanged(active);
         }
+    }
+
+    public interface HoldStateListener {
+        void onHoldStateChanged(boolean active);
     }
 }

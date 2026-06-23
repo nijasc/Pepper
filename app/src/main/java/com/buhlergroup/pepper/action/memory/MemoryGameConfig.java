@@ -13,7 +13,7 @@ public final class MemoryGameConfig {
     public final long inputTimeoutMs;
 
     private MemoryGameConfig(String label, int startLength, long flashOnMs, long gapMs,
-                            long minFlashMs, double speedUpFactor, long inputTimeoutMs) {
+                             long minFlashMs, double speedUpFactor, long inputTimeoutMs) {
         this.label = label;
         this.startLength = startLength;
         this.flashOnMs = flashOnMs;

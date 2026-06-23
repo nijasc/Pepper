@@ -11,22 +11,22 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DynamicAnimationAction extends Action {
-
-    public DynamicAnimationAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
-        super(historyManager);
-    }
 
     private static final String TAG = "DynAnim";
     private static final Pattern SECONDS = Pattern.compile(
             "(\\d+)\\s*(?:sekunden?|seconds?|secs?|sek\\b|s\\b)", Pattern.CASE_INSENSITIVE);
     private static final Pattern MINUTES = Pattern.compile(
             "(\\d+)\\s*(?:minuten?|minutes?|mins?\\b)", Pattern.CASE_INSENSITIVE);
-
     private final AnimationGenerator generator = new AnimationGenerator();
+
+    public DynamicAnimationAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
 
     @Override
     public void execute(QiContext context, String input) {
@@ -62,14 +62,14 @@ public class DynamicAnimationAction extends Action {
         Matcher minutes = MINUTES.matcher(input);
         if (minutes.find()) {
             try {
-                return Integer.parseInt(minutes.group(1)) * 60;
+                return Integer.parseInt(Objects.requireNonNull(minutes.group(1))) * 60;
             } catch (NumberFormatException ignored) {
             }
         }
         Matcher seconds = SECONDS.matcher(input);
         if (seconds.find()) {
             try {
-                return Integer.parseInt(seconds.group(1));
+                return Integer.parseInt(Objects.requireNonNull(seconds.group(1)));
             } catch (NumberFormatException ignored) {
             }
         }

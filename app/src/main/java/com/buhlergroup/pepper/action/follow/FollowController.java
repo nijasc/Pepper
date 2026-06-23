@@ -28,12 +28,7 @@ import java.util.List;
 
 public final class FollowController {
 
-    public interface FollowStateListener {
-        void onFollowStateChanged(boolean following);
-    }
-
     private static final String TAG = "FollowController";
-
     private static final double STAND_OFF_M = 0.7;
     private static final double DEAD_ZONE_M = 0.15;
     private static final double RETARGET_M = 0.40;
@@ -43,22 +38,17 @@ public final class FollowController {
     private static final long LOOP_PAUSE_MS = 150;
     private static final int MAX_MISSES = 40;
     private static final long FOLLOW_CONFIRM_INTERVAL_MS = 30000;
-
     private static final String[] FOLLOW_CONFIRMATIONS = {
             "Ich folge dir.",
             "Ich bin noch hinter dir.",
             "Ich bleibe an deiner Seite."
     };
-
-    private enum Move { STOP, ROTATE, DRIVE }
-
     private static final FollowController INSTANCE = new FollowController();
     private volatile boolean wantFollow = false;
     private volatile boolean sessionRunning = false;
     private volatile int generation = 0;
     private volatile FollowStateListener stateListener;
     private Thread loopThread;
-
     private FollowController() {
     }
 
@@ -374,5 +364,11 @@ public final class FollowController {
             return closestToLast;
         }
         return closestToRobot;
+    }
+
+    private enum Move {STOP, ROTATE, DRIVE}
+
+    public interface FollowStateListener {
+        void onFollowStateChanged(boolean following);
     }
 }

@@ -2,16 +2,10 @@ package com.buhlergroup.pepper.action.navigation;
 
 public final class NavigationController {
 
-    public interface StateListener {
-        void onNavigationStateChanged(boolean open);
-    }
-
     private static final NavigationController INSTANCE = new NavigationController();
-
     private volatile NavigationView view;
     private volatile boolean open;
     private volatile StateListener stateListener;
-
     private NavigationController() {
     }
 
@@ -59,5 +53,9 @@ public final class NavigationController {
         if (l != null) {
             l.onNavigationStateChanged(value);
         }
+    }
+
+    public interface StateListener {
+        void onNavigationStateChanged(boolean open);
     }
 }

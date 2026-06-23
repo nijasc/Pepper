@@ -40,16 +40,6 @@ public final class LocalImageServer {
         this.secret = toHex(random, random.length);
     }
 
-    public String tokenFor(String filename) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest((secret + ":" + filename).getBytes(StandardCharsets.UTF_8));
-            return toHex(hash, 8);
-        } catch (NoSuchAlgorithmException e) {
-            return "";
-        }
-    }
-
     private static String toHex(byte[] bytes, int count) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < count && i < bytes.length; i++) {
@@ -59,17 +49,27 @@ public final class LocalImageServer {
         return sb.toString();
     }
 
-    private static String paramValue(String query, String key) {
+    private static String paramValue(String query) {
         if (query.isEmpty()) {
             return "";
         }
         for (String pair : query.split("&")) {
             int eq = pair.indexOf('=');
-            if (eq > 0 && pair.substring(0, eq).equals(key)) {
+            if (eq > 0 && pair.substring(0, eq).equals("token")) {
                 return pair.substring(eq + 1);
             }
         }
         return "";
+    }
+
+    public String tokenFor(String filename) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest((secret + ":" + filename).getBytes(StandardCharsets.UTF_8));
+            return toHex(hash, 8);
+        } catch (NoSuchAlgorithmException e) {
+            return "";
+        }
     }
 
     public synchronized void start() throws IOException {
@@ -140,7 +140,7 @@ public final class LocalImageServer {
                 return;
             }
 
-            String token = paramValue(query, "token");
+            String token = paramValue(query);
             if (token.isEmpty() || !token.equals(tokenFor(name))) {
                 writeStatus(out, "403 Forbidden");
                 return;

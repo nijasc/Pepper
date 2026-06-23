@@ -16,23 +16,6 @@ public final class PreviewAudioDecoder {
     private static final long DEQUEUE_TIMEOUT_US = 10000;
     private static final int MAX_SAMPLES = 60 * 48000;
 
-    public static final class Pcm {
-        public final float[] samples;
-        public final int sampleRate;
-
-        Pcm(float[] samples, int sampleRate) {
-            this.samples = samples;
-            this.sampleRate = sampleRate;
-        }
-
-        public long durationMs() {
-            if (sampleRate <= 0) {
-                return 0;
-            }
-            return (long) samples.length * 1000L / sampleRate;
-        }
-    }
-
     private PreviewAudioDecoder() {
     }
 
@@ -169,5 +152,22 @@ public final class PreviewAudioDecoder {
             offset += chunk.length;
         }
         return out;
+    }
+
+    public static final class Pcm {
+        public final float[] samples;
+        public final int sampleRate;
+
+        Pcm(float[] samples, int sampleRate) {
+            this.samples = samples;
+            this.sampleRate = sampleRate;
+        }
+
+        public long durationMs() {
+            if (sampleRate <= 0) {
+                return 0;
+            }
+            return (long) samples.length * 1000L / sampleRate;
+        }
     }
 }

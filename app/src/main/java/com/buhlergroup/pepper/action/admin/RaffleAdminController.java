@@ -59,8 +59,6 @@ final class RaffleAdminController {
     private final EditText raffleRetentionDays;
     private final TextView raffleCreateError;
     private final Button raffleCreateSave;
-    private long raffleEndDateMillis;
-
     private final TextView raffleOverviewTitle;
     private final TextView raffleOverviewStatus;
     private final LinearLayout raffleEntries;
@@ -71,6 +69,7 @@ final class RaffleAdminController {
     private final Button raffleRedrawButton;
     private final Button raffleEmailButton;
     private final TextView raffleWinnerView;
+    private long raffleEndDateMillis;
     private long currentRaffleId;
     private String currentRaffleTitle;
     private RaffleEntryEntity currentWinner;

@@ -23,27 +23,14 @@ final class SpeechSession {
     private static final long WATCHDOG_INTERVAL_MS = 5000;
     private static final long WATCHDOG_IDLE_MS = 15000;
     private static final long RETRY_DELAY_MS = 800;
-
-    interface Gate {
-        boolean isListenSuppressed();
-
-        boolean isBusy();
-
-        void onTick();
-
-        void onSpeechResult(String text);
-    }
-
     private final Activity activity;
     private final int speechEvent;
     private final Gate gate;
-
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private Intent intent;
     private volatile boolean listening;
     private volatile boolean listenPending;
     private volatile long lastListenStartMs;
-
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Runnable speechWatchdog = new Runnable() {
         @Override
         public void run() {
@@ -52,7 +39,6 @@ final class SpeechSession {
             mainHandler.postDelayed(this, WATCHDOG_INTERVAL_MS);
         }
     };
-
     SpeechSession(Activity activity, int speechEvent, Gate gate) {
         this.activity = activity;
         this.speechEvent = speechEvent;
@@ -205,5 +191,15 @@ final class SpeechSession {
         if (!missing.isEmpty()) {
             ActivityCompat.requestPermissions(activity, missing.toArray(new String[0]), 1);
         }
+    }
+
+    interface Gate {
+        boolean isListenSuppressed();
+
+        boolean isBusy();
+
+        void onTick();
+
+        void onSpeechResult(String text);
     }
 }

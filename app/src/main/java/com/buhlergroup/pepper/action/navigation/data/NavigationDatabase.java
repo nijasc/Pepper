@@ -11,20 +11,20 @@ public abstract class NavigationDatabase extends RoomDatabase {
 
     private static volatile NavigationDatabase instance;
 
-    public abstract NavigationDao navigationDao();
-
     public static NavigationDatabase get(Context context) {
         if (instance == null) {
             synchronized (NavigationDatabase.class) {
                 if (instance == null) {
                     instance = Room.databaseBuilder(
-                                    context.getApplicationContext(),
-                                    NavigationDatabase.class,
-                                    "navigation.db")
+                            context.getApplicationContext(),
+                            NavigationDatabase.class,
+                            "navigation.db")
                             .build();
                 }
             }
         }
         return instance;
     }
+
+    public abstract NavigationDao navigationDao();
 }

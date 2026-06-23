@@ -7,6 +7,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,7 +51,7 @@ public class ChangeVolumeAction extends Action {
         Matcher matcher = Pattern.compile("(\\d+)").matcher(text);
 
         if (matcher.find()) {
-            return Integer.parseInt(matcher.group(1));
+            return Integer.parseInt(Objects.requireNonNull(matcher.group(1)));
         }
 
         return NumberWords.parse(text);

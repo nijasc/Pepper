@@ -40,15 +40,7 @@ public final class AttractController {
     private static final double RECOVERY_BACK_M = 0.25;
     private static final double RECOVERY_TURN_MIN = 1.6;
     private static final double RECOVERY_TURN_MAX = 2.8;
-
-    private enum RoamPhase {
-        SEARCHING,
-        PERSON_FAR,
-        PERSON_CLOSE
-    }
-
     private static final AttractController INSTANCE = new AttractController();
-
     private volatile long lastInteractionMs = SystemClock.elapsedRealtime();
     private volatile long lastGreetMs;
     private volatile boolean active;
@@ -57,6 +49,7 @@ public final class AttractController {
     private volatile Future<Void> activeGoTo;
     private volatile RoamPhase roamPhase;
     private volatile int stuckCount;
+    private volatile ListeningRelevanceListener listeningListener;
 
     private AttractController() {
     }
@@ -64,12 +57,6 @@ public final class AttractController {
     public static AttractController get() {
         return INSTANCE;
     }
-
-    public interface ListeningRelevanceListener {
-        void onListeningRelevanceChanged();
-    }
-
-    private volatile ListeningRelevanceListener listeningListener;
 
     public boolean isActive() {
         return active;
@@ -213,7 +200,7 @@ public final class AttractController {
     private void driveRoamStep(QiContext context) {
         try {
             double turn = (Math.random() * 2.0 - 1.0) * ROAM_TURN_MAX;
-            double moved = runStep(context, ROAM_STEP_M, 0.0, turn);
+            double moved = runStep(context, ROAM_STEP_M, turn);
             if (!Double.isNaN(moved) && moved < STUCK_PROGRESS_M) {
                 stuckCount++;
                 DebugLog.get().i(TAG, String.format(Locale.US,
@@ -236,12 +223,12 @@ public final class AttractController {
      * Strecke (in Metern) zurück – oder {@link Double#NaN} bei Fehler. So lässt
      * sich erkennen, ob Pepper trotz GoTo blockiert ist (kein Fortschritt).
      */
-    private double runStep(QiContext context, double x, double y, double theta) {
+    private double runStep(QiContext context, double x, double theta) {
         try {
             Frame robotFrame = context.getActuation().robotFrame();
             FreeFrame start = context.getMapping().makeFreeFrame();
             start.update(robotFrame, TransformBuilder.create().from2DTransform(0.0, 0.0, 0.0), 0L);
-            Transform transform = TransformBuilder.create().from2DTransform(x, y, theta);
+            Transform transform = TransformBuilder.create().from2DTransform(x, 0.0, theta);
             FreeFrame target = context.getMapping().makeFreeFrame();
             target.update(robotFrame, transform, 0L);
             Future<Void> goTo = GoToBuilder.with(context)
@@ -281,7 +268,7 @@ public final class AttractController {
         if (Math.random() < 0.5) {
             turn = -turn;
         }
-        runStep(context, -RECOVERY_BACK_M, 0.0, turn);
+        runStep(context, -RECOVERY_BACK_M, turn);
     }
 
     private void awaitGoTo(Future<Void> future) {
@@ -373,5 +360,15 @@ public final class AttractController {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private enum RoamPhase {
+        SEARCHING,
+        PERSON_FAR,
+        PERSON_CLOSE
+    }
+
+    public interface ListeningRelevanceListener {
+        void onListeningRelevanceChanged();
     }
 }

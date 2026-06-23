@@ -18,7 +18,6 @@ public class CareerView extends FrameLayout {
 
     private ImageView qrView;
     private TextView hintView;
-    private TextView okayButton;
     private volatile Runnable closeListener;
 
     public CareerView(Context context) {
@@ -44,7 +43,7 @@ public class CareerView extends FrameLayout {
 
         qrView = findViewById(R.id.careerQr);
         hintView = findViewById(R.id.careerHint);
-        okayButton = findViewById(R.id.careerOkay);
+        TextView okayButton = findViewById(R.id.careerOkay);
         okayButton.setOnClickListener(v -> {
             Runnable listener = closeListener;
             if (listener != null) {

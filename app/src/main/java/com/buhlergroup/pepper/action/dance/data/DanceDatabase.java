@@ -12,15 +12,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 @Database(entities = {DanceEntity.class}, version = 6)
 public abstract class DanceDatabase extends RoomDatabase {
 
-    private static volatile DanceDatabase instance;
-
     private static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE dances ADD COLUMN preview_url TEXT");
         }
     };
-
     private static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
@@ -35,7 +32,6 @@ public abstract class DanceDatabase extends RoomDatabase {
             database.execSQL("ALTER TABLE `dances_new` RENAME TO `dances`");
         }
     };
-
     private static final Migration MIGRATION_3_4 = new Migration(3, 4) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
@@ -43,31 +39,28 @@ public abstract class DanceDatabase extends RoomDatabase {
                     + "INTEGER NOT NULL DEFAULT 0");
         }
     };
-
     private static final Migration MIGRATION_4_5 = new Migration(4, 5) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE `dances` ADD COLUMN `audio_path` TEXT");
         }
     };
-
     private static final Migration MIGRATION_5_6 = new Migration(5, 6) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE `dances` ADD COLUMN `bpm` INTEGER NOT NULL DEFAULT 0");
         }
     };
-
-    public abstract DanceDao danceDao();
+    private static volatile DanceDatabase instance;
 
     public static DanceDatabase get(Context context) {
         if (instance == null) {
             synchronized (DanceDatabase.class) {
                 if (instance == null) {
                     instance = Room.databaseBuilder(
-                                    context.getApplicationContext(),
-                                    DanceDatabase.class,
-                                    "dances.db")
+                            context.getApplicationContext(),
+                            DanceDatabase.class,
+                            "dances.db")
                             .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4,
                                     MIGRATION_4_5, MIGRATION_5_6)
                             .build();
@@ -76,4 +69,6 @@ public abstract class DanceDatabase extends RoomDatabase {
         }
         return instance;
     }
+
+    public abstract DanceDao danceDao();
 }

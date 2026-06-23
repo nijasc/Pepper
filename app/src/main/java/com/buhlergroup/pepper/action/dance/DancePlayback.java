@@ -15,6 +15,7 @@ import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.io.File;
+import java.util.Objects;
 
 public final class DancePlayback {
 
@@ -28,7 +29,7 @@ public final class DancePlayback {
     public static void play(QiContext context, DanceEntity dance) throws Exception {
         DebugLog.get().setStatus("Tanz: " + dance.songName);
         DebugLog.get().i(TAG, "Tanz gestartet: " + dance.songName);
-        String qianim = DanceRepository.readQianim(new File(dance.qianimPath));
+        String qianim = DanceRepository.readQianim(new File(Objects.requireNonNull(dance.qianimPath)));
         Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
         Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 

@@ -3,6 +3,7 @@ package com.buhlergroup.pepper.action.volume;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -98,7 +99,7 @@ final class NumberWords {
 
         Matcher m = COMPOUND.matcher(t);
         if (m.find()) {
-            Integer unit = UNITS.get(m.group(1).replace("und", ""));
+            Integer unit = UNITS.get(Objects.requireNonNull(m.group(1)).replace("und", ""));
             Integer tens = TENS.get(m.group(2));
             if (tens != null) {
                 return tens + (unit != null ? unit : 0);

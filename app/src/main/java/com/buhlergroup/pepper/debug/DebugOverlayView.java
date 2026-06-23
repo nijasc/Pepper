@@ -19,9 +19,8 @@ public class DebugOverlayView extends FrameLayout implements DebugLog.Listener {
     private TextView statusBox;
     private TextView logText;
     private ScrollView logScroll;
-    private boolean suppressed = false;
-
     private final Runnable refresh = this::rebuild;
+    private boolean suppressed = false;
 
     public DebugOverlayView(Context context) {
         super(context);

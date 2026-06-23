@@ -24,17 +24,6 @@ public class RaffleJoinView extends FrameLayout {
     public static final int STEP_NAME = 0;
     public static final int STEP_EMAIL = 1;
     public static final int STEP_PHONE = 2;
-
-    public interface Listener {
-        void onStepShown(int stepType);
-
-        void onValidationError(int stepType);
-
-        void onSubmit(String name, String email, String phone);
-
-        void onCancel();
-    }
-
     private View card;
     private View stepContainer;
     private View consentContainer;
@@ -50,14 +39,12 @@ public class RaffleJoinView extends FrameLayout {
     private Button cancelButton;
     private Button backButton;
     private Button nextButton;
-
     private volatile Listener listener;
     private int[] steps = {STEP_NAME, STEP_EMAIL};
     private int index;
     private String name = "";
     private String email = "";
     private String phone = "";
-
     public RaffleJoinView(Context context) {
         super(context);
         init(context);
@@ -413,5 +400,15 @@ public class RaffleJoinView extends FrameLayout {
             default:
                 return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PERSON_NAME;
         }
+    }
+
+    public interface Listener {
+        void onStepShown(int stepType);
+
+        void onValidationError(int stepType);
+
+        void onSubmit(String name, String email, String phone);
+
+        void onCancel();
     }
 }

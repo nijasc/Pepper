@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public final class QianimPostProcessor {
@@ -76,7 +77,7 @@ public final class QianimPostProcessor {
 
         TreeMap<Integer, Element> byFrame = new TreeMap<>();
         for (Element key : rawKeys) {
-            int frame = parseInt(key.getAttribute("frame"), -1);
+            int frame = parseInt(key.getAttribute("frame"));
             if (frame < 0 || byFrame.containsKey(frame)) {
                 curve.removeChild(key);
                 continue;
@@ -89,7 +90,7 @@ public final class QianimPostProcessor {
         for (int i = 0; i < frames.size(); i++) {
             Element key = byFrame.get(frames.get(i));
             clampValue(key, limits);
-            removeTangents(key);
+            removeTangents(Objects.requireNonNull(key));
             if (i > 0) {
                 float abscissa = -(frames.get(i) - frames.get(i - 1)) / 3f;
                 key.appendChild(makeTangent(doc, "left", abscissa));
@@ -143,11 +144,11 @@ public final class QianimPostProcessor {
         return tangent;
     }
 
-    private static int parseInt(String value, int fallback) {
+    private static int parseInt(String value) {
         try {
             return Integer.parseInt(value.trim());
         } catch (Exception e) {
-            return fallback;
+            return -1;
         }
     }
 

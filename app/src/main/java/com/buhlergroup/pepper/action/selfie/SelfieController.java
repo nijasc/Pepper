@@ -50,22 +50,10 @@ public final class SelfieController {
     private static final int MAX_CAPTURES = 3;
     private static final long PREVIEW_TIMEOUT_MS = 20000;
     private static final SelfieController INSTANCE = new SelfieController();
-
-    public interface StateListener {
-        void onSelfieStateChanged(boolean active);
-    }
-
-    private enum PreviewDecision {
-        SAVE,
-        RETAKE,
-        TIMEOUT
-    }
-
-    private volatile SelfieView view;
     private final SelfieShareServer shareServer = new SelfieShareServer();
+    private volatile SelfieView view;
     private volatile boolean running = false;
     private volatile StateListener stateListener;
-
     private SelfieController() {
     }
 
@@ -108,8 +96,8 @@ public final class SelfieController {
         shareServer.release();
     }
 
-    public SelfieEntity takeSelfie(QiContext context) {
-        return takeSelfie(context, true);
+    public void takeSelfie(QiContext context) {
+        takeSelfie(context, true);
     }
 
     public SelfieEntity takeSelfieForRaffle(QiContext context) {
@@ -144,7 +132,7 @@ public final class SelfieController {
                 say(context, "Klar, machen wir ein Selfie! Stell dich vor mich und schau in meine Augen.");
             }
 
-            SelfieEntity entity = null;
+            SelfieEntity entity;
             while (true) {
                 Bitmap composed = captureConfirmed(context, board, externalCam);
                 if (composed == null) {
@@ -319,7 +307,7 @@ public final class SelfieController {
     }
 
     private Future<ListenResult> startPreviewVoiceListener(QiContext context,
-            AtomicReference<PreviewDecision> ref, CountDownLatch latch, boolean canRetake) {
+                                                           AtomicReference<PreviewDecision> ref, CountDownLatch latch, boolean canRetake) {
         try {
             List<String> texts = new ArrayList<>(Arrays.asList(
                     "passt", "speichern", "ja", "perfekt", "super", "behalten", "save", "yes"));
@@ -475,5 +463,15 @@ public final class SelfieController {
         } catch (Exception e) {
             Log.w(TAG, "say failed: " + e.getMessage());
         }
+    }
+
+    private enum PreviewDecision {
+        SAVE,
+        RETAKE,
+        TIMEOUT
+    }
+
+    public interface StateListener {
+        void onSelfieStateChanged(boolean active);
     }
 }

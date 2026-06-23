@@ -50,7 +50,6 @@ final class SelfieGalleryController {
 
     private final TextView galleryEmpty;
     private final Button exportAllButton;
-    private final RecyclerView selfieGrid;
     private final SelfieAdapter selfieAdapter;
 
     private final ImageView detailImage;
@@ -69,7 +68,7 @@ final class SelfieGalleryController {
 
         galleryEmpty = root.findViewById(R.id.adminGalleryEmpty);
         exportAllButton = root.findViewById(R.id.adminExportAll);
-        selfieGrid = root.findViewById(R.id.adminSelfieGrid);
+        RecyclerView selfieGrid = root.findViewById(R.id.adminSelfieGrid);
         detailImage = root.findViewById(R.id.adminDetailImage);
         detailQr = root.findViewById(R.id.adminDetailQr);
         detailQrHint = root.findViewById(R.id.adminDetailQrHint);

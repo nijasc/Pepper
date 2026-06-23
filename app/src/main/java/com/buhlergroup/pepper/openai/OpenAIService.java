@@ -28,35 +28,24 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.github.cdimascio.dotenv.Dotenv;
-
 public class OpenAIService {
 
     private static final String TAG = "OpenAIService";
     private static final int MAX_OUTPUT_TOKENS = 600;
     private static final int RESPONSE_TIMEOUT_MS = 60000;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private final EmotionReader emotionReader = new EmotionReader();
-    private final OpenAiHttpClient httpClient = new OpenAiHttpClient(() -> getAuthToken(this.c));
-    private final List<Action> actions;
-    private Context c;
-
     private static final OpenAiCircuitBreaker circuitBreaker = new OpenAiCircuitBreaker();
     private static final OpenAiTokenProvider tokenProvider = new OpenAiTokenProvider();
-
     private static final Pattern LANG_TAG =
             Pattern.compile("\\[\\[\\s*lang\\s*:\\s*([A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?)\\s*\\]\\]");
     private static final Pattern ACTION_TAG =
             Pattern.compile("\\[\\[\\s*action\\s*:\\s*([A-Za-z0-9_]+)\\s*\\]\\]");
-    private String lastLanguageTag;
-
-    public interface StreamListener {
-        boolean onAction(String actionName);
-
-        void onSentence(String sentence, String languageTag);
-    }
-
     private static volatile OpenAIService shared;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final EmotionReader emotionReader = new EmotionReader();
+    private final List<Action> actions;
+    private Context c;
+    private final OpenAiHttpClient httpClient = new OpenAiHttpClient(() -> getAuthToken(this.c));
+    private String lastLanguageTag;
 
     public OpenAIService(List<Action> actions) {
         this.actions = actions;
@@ -165,7 +154,7 @@ public class OpenAIService {
         boolean failed = false;
         OpenAiHttpClient.EventStream stream = null;
         try {
-            stream = httpClient.openEventStream("/responses", body);
+            stream = httpClient.openEventStream(body);
             OpenAiStreamParser parser = new OpenAiStreamParser();
             String result = parser.parse(stream.reader, listener, started);
             lastLanguageTag = parser.lastLanguageTag();
@@ -282,7 +271,7 @@ public class OpenAIService {
                 prompt.append("\n## Active Raffle\n")
                         .append("There is currently an active raffle the visitor can join: \"")
                         .append(raffle.title).append("\". ");
-                if (raffle.description != null && !raffle.description.isEmpty()) {
+                if (!raffle.description.isEmpty()) {
                     prompt.append(raffle.description).append(' ');
                 }
                 prompt.append("It ends on ").append(end).append(". ")
@@ -319,5 +308,11 @@ public class OpenAIService {
 
     public void setC(Context c) {
         this.c = c;
+    }
+
+    public interface StreamListener {
+        boolean onAction(String actionName);
+
+        void onSentence(String sentence, String languageTag);
     }
 }

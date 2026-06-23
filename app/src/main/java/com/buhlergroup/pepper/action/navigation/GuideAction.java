@@ -16,12 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class GuideAction extends Action {
 
-    public GuideAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
-        super(historyManager);
-    }
-
     private static final long WAYPOINT_TIMEOUT_MS = 8000;
-
     private static final Set<String> FILLERS = new HashSet<>(Arrays.asList(
             "bring", "bringe", "bringst", "mich", "mir", "uns", "zum", "zur", "zu", "den", "dem",
             "die", "der", "das", "wo", "finde", "findest", "ich", "ist", "sich", "befindet",
@@ -29,6 +24,10 @@ public class GuideAction extends Action {
             "fuhr", "geh", "gehe", "gehen", "fuhre", "fuhren", "lotse", "fuehre", "fuhrst",
             "take", "me", "us", "to", "the", "a", "an", "where", "is", "find", "please", "go",
             "lead", "guide", "show", "of"));
+
+    public GuideAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
 
     @Override
     public void execute(QiContext context, String input) {
@@ -82,7 +81,7 @@ public class GuideAction extends Action {
     }
 
     private void announceOutcome(QiContext context, WaypointEntity target,
-                                NavigationManager.GuideOutcome outcome) {
+                                 NavigationManager.GuideOutcome outcome) {
         if (outcome == NavigationManager.GuideOutcome.ARRIVED) {
             SpeechManager.getInstance().systemSay(context,
                     "Wir sind da! Hier ist " + target.name + ". Kann ich sonst noch helfen?");

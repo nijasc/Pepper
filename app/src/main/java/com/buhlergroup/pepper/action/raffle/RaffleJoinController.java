@@ -22,16 +22,10 @@ public final class RaffleJoinController {
     private static final long JOIN_TIMEOUT_MS = 60000;
 
     private static final RaffleJoinController INSTANCE = new RaffleJoinController();
-
-    public interface StateListener {
-        void onJoinStateChanged(boolean active);
-    }
-
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private volatile RaffleJoinView view;
     private volatile boolean busy = false;
     private volatile StateListener stateListener;
-
     private RaffleJoinController() {
     }
 
@@ -205,5 +199,9 @@ public final class RaffleJoinController {
         } catch (Exception e) {
             Log.w(TAG, "say failed: " + e.getMessage());
         }
+    }
+
+    public interface StateListener {
+        void onJoinStateChanged(boolean active);
     }
 }

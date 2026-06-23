@@ -18,10 +18,6 @@ import java.util.List;
 
 public class QuizView extends FrameLayout {
 
-    public interface OnOptionListener {
-        void onOption(int index);
-    }
-
     private TextView progressView;
     private TextView scoreView;
     private TextView questionView;
@@ -29,7 +25,6 @@ public class QuizView extends FrameLayout {
     private LinearLayout optionsContainer;
     private volatile boolean inputEnabled = false;
     private OnOptionListener listener;
-
     public QuizView(Context context) {
         super(context);
         init(context);
@@ -152,5 +147,9 @@ public class QuizView extends FrameLayout {
 
     private int dp(int value) {
         return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    public interface OnOptionListener {
+        void onOption(int index);
     }
 }

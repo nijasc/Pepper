@@ -26,25 +26,10 @@ import java.util.concurrent.Executors;
 public final class NavigationManager {
 
     private static final String TAG = "Navigation";
-
-    public interface Callback<T> {
-        void onResult(T value);
-
-        void onError(String error);
-    }
-
-    public enum GuideOutcome {
-        ARRIVED,
-        STOPPED,
-        LOST
-    }
-
-    public interface MapUpdateListener {
-        void onMapBitmap(Bitmap bitmap);
-    }
-
     private static final NavigationManager INSTANCE = new NavigationManager();
-
+    private final RoomScanner scanner = new RoomScanner(this);
+    private final RobotLocalizer localizer = new RobotLocalizer(this);
+    private final RobotGuide guide = new RobotGuide(this);
     private volatile ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private volatile QiContext qiContext;
@@ -52,10 +37,6 @@ public final class NavigationManager {
     private volatile ExplorationMap activeMap;
     private volatile RoomScanEntity activeScan;
     private volatile boolean localized;
-
-    private final RoomScanner scanner = new RoomScanner(this);
-    private final RobotLocalizer localizer = new RobotLocalizer(this);
-    private final RobotGuide guide = new RobotGuide(this);
 
     private NavigationManager() {
     }
@@ -91,7 +72,7 @@ public final class NavigationManager {
             return;
         }
         String scanId = NavigationSettings.getDefaultScanId(c);
-        if (scanId == null || scanId.isEmpty()) {
+        if (scanId.isEmpty()) {
             return;
         }
         submit(() -> {
@@ -153,16 +134,16 @@ public final class NavigationManager {
         return localized;
     }
 
+    void setLocalized(boolean value) {
+        this.localized = value;
+    }
+
     public boolean isScanning() {
         return scanner.isScanning();
     }
 
     public RoomScanEntity getActiveScan() {
         return activeScan;
-    }
-
-    void setLocalized(boolean value) {
-        this.localized = value;
     }
 
     void setActiveScan(RoomScanEntity scan) {
@@ -244,8 +225,7 @@ public final class NavigationManager {
                 double[] pose = pose2d(t);
                 WaypointEntity wp = new WaypointEntity(
                         scan.id, name, type, pose[0], pose[1], pose[2], System.currentTimeMillis());
-                long id = dao(c).insertWaypoint(wp);
-                wp.id = id;
+                wp.id = dao(c).insertWaypoint(wp);
                 cb.onResult(wp);
             } catch (Exception e) {
                 Log.w(TAG, "saveWaypoint failed: " + e.getMessage());
@@ -298,8 +278,8 @@ public final class NavigationManager {
         return guide.hasFotostand(context);
     }
 
-    public boolean driveToFotostandIfPossible(QiContext context) {
-        return guide.driveToFotostandIfPossible(context);
+    public void driveToFotostandIfPossible(QiContext context) {
+        guide.driveToFotostandIfPossible(context);
     }
 
     public void getRobotPose(Callback<double[]> cb) {
@@ -416,5 +396,21 @@ public final class NavigationManager {
 
     com.buhlergroup.pepper.action.navigation.data.NavigationDao dao(Context context) {
         return NavigationDatabase.get(context).navigationDao();
+    }
+
+    public enum GuideOutcome {
+        ARRIVED,
+        STOPPED,
+        LOST
+    }
+
+    public interface Callback<T> {
+        void onResult(T value);
+
+        void onError(String error);
+    }
+
+    public interface MapUpdateListener {
+        void onMapBitmap(Bitmap bitmap);
     }
 }

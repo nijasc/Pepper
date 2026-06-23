@@ -66,7 +66,7 @@ public final class QianimValidator {
                 return "unknown actuator '" + actuator + "'";
             }
 
-            int fps = parseInt(curve.getAttribute("fps"), -1);
+            int fps = parseInt(curve.getAttribute("fps"));
             if (fps < MIN_FPS || fps > MAX_FPS) {
                 return "invalid fps '" + curve.getAttribute("fps") + "' on " + actuator;
             }
@@ -81,7 +81,7 @@ public final class QianimValidator {
                     continue;
                 }
                 Element key = (Element) keyNode;
-                int frame = parseInt(key.getAttribute("frame"), -1);
+                int frame = parseInt(key.getAttribute("frame"));
                 if (frame < 0 || frame > MAX_FRAME) {
                     return "frame '" + key.getAttribute("frame") + "' out of range on " + actuator;
                 }
@@ -103,11 +103,11 @@ public final class QianimValidator {
         return null;
     }
 
-    private static int parseInt(String s, int fallback) {
+    private static int parseInt(String s) {
         try {
             return Integer.parseInt(s.trim());
         } catch (Exception e) {
-            return fallback;
+            return -1;
         }
     }
 

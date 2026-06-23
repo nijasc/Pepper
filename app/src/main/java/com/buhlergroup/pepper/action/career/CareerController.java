@@ -26,10 +26,10 @@ public final class CareerController {
         this.view = null;
     }
 
-    public boolean present(Bitmap qr, String hint, long displayMs) {
+    public void present(Bitmap qr, String hint, long displayMs) {
         CareerView board = view;
         if (board == null) {
-            return false;
+            return;
         }
         CountDownLatch dismiss = new CountDownLatch(1);
         board.setOnCloseListener(dismiss::countDown);
@@ -41,6 +41,5 @@ public final class CareerController {
         }
         board.setOnCloseListener(null);
         board.hide();
-        return true;
     }
 }

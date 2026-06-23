@@ -26,17 +26,11 @@ final class PanelNavigator {
     public static final int PANEL_DEBUG = 13;
     public static final int PANEL_DANCE = 14;
     public static final int PANEL_NAV = 15;
-
-    interface OnPanelShown {
-        void onPanelShown(int which);
-    }
-
     private final Map<Integer, View> panels = new LinkedHashMap<>();
     private final View header;
     private final TextView headerTitle;
     private final OnPanelShown onPanelShown;
     private int currentPanel = PANEL_PIN;
-
     PanelNavigator(View header, TextView headerTitle, OnPanelShown onPanelShown) {
         this.header = header;
         this.headerTitle = headerTitle;
@@ -103,5 +97,9 @@ final class PanelNavigator {
             default:
                 return R.string.admin_menu_title;
         }
+    }
+
+    interface OnPanelShown {
+        void onPanelShown(int which);
     }
 }

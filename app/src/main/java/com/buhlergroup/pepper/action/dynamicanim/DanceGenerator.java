@@ -18,30 +18,21 @@ import java.util.Map;
 public final class DanceGenerator extends GeneratorBase {
 
     private static final int DANCE_TIMEOUT_MS = 180000;
-
-    public enum Stage {
-        SEARCH,
-        ANALYZE,
-        CHOREOGRAPH,
-        AUDIO,
-        BEAT
-    }
-
-    public interface ProgressListener {
-        void onStage(Stage stage);
-    }
-
-    public static final class DanceEdit {
-        public final Integer startSeconds;
-        public final String choreography;
-
-        public DanceEdit(Integer startSeconds, String choreography) {
-            this.startSeconds = startSeconds;
-            this.choreography = choreography;
-        }
-    }
-
     private final SongResearcher songResearcher = new SongResearcher();
+
+    public static int beatFrameStep(int bpm) {
+        if (bpm <= 0) {
+            return 0;
+        }
+        double framesPerBeat = 25.0 * 60.0 / bpm;
+        double step = framesPerBeat;
+        if (step < 11) {
+            step = framesPerBeat * 2;
+        } else if (step > 22) {
+            step = framesPerBeat / 2;
+        }
+        return (int) Math.max(10, Math.min(25, Math.round(step)));
+    }
 
     public String generateValidatedDance(Context context, String songName, int seconds) {
         return generateValidatedDance(context, songName, seconds, null, null);
@@ -246,20 +237,6 @@ public final class DanceGenerator extends GeneratorBase {
         return content.substring(start, end + 1);
     }
 
-    public static int beatFrameStep(int bpm) {
-        if (bpm <= 0) {
-            return 0;
-        }
-        double framesPerBeat = 25.0 * 60.0 / bpm;
-        double step = framesPerBeat;
-        if (step < 11) {
-            step = framesPerBeat * 2;
-        } else if (step > 22) {
-            step = framesPerBeat / 2;
-        }
-        return (int) Math.max(10, Math.min(25, Math.round(step)));
-    }
-
     private String buildDanceXml(JSONObject plan, int targetSeconds, int beatFrameStep) throws Exception {
         int frameStep = beatFrameStep > 0
                 ? beatFrameStep
@@ -319,5 +296,27 @@ public final class DanceGenerator extends GeneratorBase {
         }
         sb.append("</Animation>");
         return sb.toString();
+    }
+
+    public enum Stage {
+        SEARCH,
+        ANALYZE,
+        CHOREOGRAPH,
+        AUDIO,
+        BEAT
+    }
+
+    public interface ProgressListener {
+        void onStage(Stage stage);
+    }
+
+    public static final class DanceEdit {
+        public final Integer startSeconds;
+        public final String choreography;
+
+        public DanceEdit(Integer startSeconds, String choreography) {
+            this.startSeconds = startSeconds;
+            this.choreography = choreography;
+        }
     }
 }

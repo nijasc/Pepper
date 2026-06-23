@@ -22,15 +22,9 @@ import com.buhlergroup.pepper.debug.DebugLog;
 final class RobotGuide {
 
     private static final String TAG = "Navigation";
-
-    interface Condition {
-        boolean shouldContinue();
-    }
-
     private final NavigationManager nav;
     private volatile Future<Void> activeGoTo;
     private volatile boolean stopGuideRequested;
-
     RobotGuide(NavigationManager nav) {
         this.nav = nav;
     }
@@ -98,24 +92,22 @@ final class RobotGuide {
         }
     }
 
-    boolean driveToFotostandIfPossible(QiContext context) {
+    void driveToFotostandIfPossible(QiContext context) {
         if (context == null || !nav.isLocalized()) {
-            return false;
+            return;
         }
         RoomScanEntity scan = nav.getActiveScan();
         if (scan == null) {
-            return false;
+            return;
         }
         try {
             WaypointEntity wp = nav.dao(context).getWaypointByType(scan.id, WaypointEntity.TYPE_FOTOSTAND);
             if (wp == null) {
-                return false;
+                return;
             }
             driveTo(context, wp);
-            return true;
         } catch (Exception e) {
             Log.w(TAG, "driveToFotostand failed: " + e.getMessage());
-            return false;
         }
     }
 
@@ -176,9 +168,9 @@ final class RobotGuide {
         }
     }
 
-    private boolean awaitGoTo(Future<Void> future, Condition condition) {
+    private void awaitGoTo(Future<Void> future, Condition condition) {
         while (!future.isDone()) {
-            if (!condition.shouldContinue()) {
+            if (condition.shouldContinue()) {
                 future.requestCancellation();
                 break;
             }
@@ -191,13 +183,11 @@ final class RobotGuide {
             }
         }
         if (!future.isDone() || future.isCancelled()) {
-            return false;
+            return;
         }
         if (future.hasError()) {
             DebugLog.get().w(TAG, "GoTo fehlgeschlagen: " + future.getError().getMessage());
-            return false;
         }
-        return true;
     }
 
     void rotateFullCircle(QiContext c, int steps, Runnable onStep) {
@@ -231,5 +221,9 @@ final class RobotGuide {
                 onStep.run();
             }
         }
+    }
+
+    interface Condition {
+        boolean shouldContinue();
     }
 }

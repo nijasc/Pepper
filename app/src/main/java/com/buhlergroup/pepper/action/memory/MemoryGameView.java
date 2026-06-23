@@ -14,13 +14,8 @@ import com.buhlergroup.pepper.R;
 
 public class MemoryGameView extends FrameLayout {
 
-    public interface OnPadListener {
-        void onPad(int index);
-    }
-
     private static final float DIM_ALPHA = 0.35f;
     private static final long TOUCH_FLASH_MS = 220;
-
     private final View[] pads = new View[4];
     private final TonePlayer tonePlayer = new TonePlayer();
     private TextView statusView;
@@ -29,7 +24,6 @@ public class MemoryGameView extends FrameLayout {
     private TextView hintView;
     private volatile boolean inputEnabled = false;
     private OnPadListener padListener;
-
     public MemoryGameView(Context context) {
         super(context);
         init(context);
@@ -150,5 +144,9 @@ public class MemoryGameView extends FrameLayout {
             pad.setScaleX(1f);
             pad.setScaleY(1f);
         }
+    }
+
+    public interface OnPadListener {
+        void onPad(int index);
     }
 }

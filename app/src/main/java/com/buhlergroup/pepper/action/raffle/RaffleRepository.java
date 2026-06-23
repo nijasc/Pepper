@@ -20,21 +20,12 @@ import java.util.concurrent.Executors;
 
 public final class RaffleRepository {
 
-    private static volatile RaffleRepository instance;
     private static final ExecutorService maintenanceExecutor = Executors.newSingleThreadExecutor();
-
-    public enum JoinResult {
-        SUCCESS,
-        NOT_ACTIVE,
-        DUPLICATE_EMAIL,
-        DUPLICATE_PHONE
-    }
-
+    private static volatile RaffleRepository instance;
     private final Context appContext;
     private final RaffleDatabase database;
     private final RaffleDao raffleDao;
     private final RaffleEntryDao entryDao;
-
     private RaffleRepository(Context context) {
         this.appContext = context.getApplicationContext();
         this.database = RaffleDatabase.get(context);
@@ -51,6 +42,17 @@ public final class RaffleRepository {
             }
         }
         return instance;
+    }
+
+    public static void purgeExpiredAsync(Context context) {
+        Context app = context.getApplicationContext();
+        maintenanceExecutor.submit(() -> {
+            try {
+                get(app).purgeExpired();
+            } catch (Exception e) {
+                Log.w("RaffleRepository", "purgeExpired failed: " + e.getMessage());
+            }
+        });
     }
 
     public long createRaffle(String title, String description, boolean requiresSelfie,
@@ -97,17 +99,6 @@ public final class RaffleRepository {
 
     public void finishRaffle(long raffleId) {
         raffleDao.setFinished(raffleId, System.currentTimeMillis());
-    }
-
-    public static void purgeExpiredAsync(Context context) {
-        Context app = context.getApplicationContext();
-        maintenanceExecutor.submit(() -> {
-            try {
-                get(app).purgeExpired();
-            } catch (Exception e) {
-                Log.w("RaffleRepository", "purgeExpired failed: " + e.getMessage());
-            }
-        });
     }
 
     public void purgeExpired() {
@@ -257,5 +248,12 @@ public final class RaffleRepository {
             return null;
         }
         return entryDao.findEntry(raffle.winnerId);
+    }
+
+    public enum JoinResult {
+        SUCCESS,
+        NOT_ACTIVE,
+        DUPLICATE_EMAIL,
+        DUPLICATE_PHONE
     }
 }

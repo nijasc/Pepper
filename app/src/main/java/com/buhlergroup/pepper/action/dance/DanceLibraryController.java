@@ -4,18 +4,12 @@ import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 
 public final class DanceLibraryController {
 
-    public interface StateListener {
-        void onDanceLibraryStateChanged(boolean open);
-    }
-
     private static final DanceLibraryController INSTANCE = new DanceLibraryController();
-
     private volatile DanceLibraryView view;
     private volatile boolean open;
     private volatile StateListener stateListener;
     private volatile Runnable voiceRequester;
     private volatile DanceEntity pendingEdit;
-
     private DanceLibraryController() {
     }
 
@@ -84,5 +78,9 @@ public final class DanceLibraryController {
         if (l != null) {
             l.onDanceLibraryStateChanged(value);
         }
+    }
+
+    public interface StateListener {
+        void onDanceLibraryStateChanged(boolean open);
     }
 }

@@ -15,11 +15,11 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 
 public class SaxophoneAction extends Action {
 
+    private static final long MAX_PLAY_MS = 35000;
+
     public SaxophoneAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
         super(historyManager);
     }
-
-    private static final long MAX_PLAY_MS = 35000;
 
     @Override
     public void execute(QiContext context, String input) {

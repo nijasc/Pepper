@@ -66,22 +66,22 @@ final class NavigationPanelController {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         navDefaultScan.setAdapter(adapter);
         int index = scanIds.indexOf(NavigationSettings.getDefaultScanId(root.getContext()));
-        navDefaultScan.setSelection(index >= 0 ? index : 0);
+        navDefaultScan.setSelection(Math.max(index, 0));
     }
 
     private void saveNavigation() {
         int pos = navDefaultScan.getSelectedItemPosition();
         String id = pos >= 0 && pos < scanIds.size() ? scanIds.get(pos) : "";
-        int timeout = parseIntOr(navLocalizeTimeout, NavigationSettings.DEFAULT_LOCALIZE_TIMEOUT_SECONDS);
+        int timeout = parseIntOr(navLocalizeTimeout);
         NavigationSettings.save(root.getContext(), navAutoLocalize.isChecked(), id, timeout);
         Toast.makeText(root.getContext(), R.string.nav_settings_saved, Toast.LENGTH_SHORT).show();
     }
 
-    private int parseIntOr(EditText field, int fallback) {
+    private int parseIntOr(EditText field) {
         try {
             return Integer.parseInt(field.getText().toString().trim());
         } catch (NumberFormatException e) {
-            return fallback;
+            return NavigationSettings.DEFAULT_LOCALIZE_TIMEOUT_SECONDS;
         }
     }
 }

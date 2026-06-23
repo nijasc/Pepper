@@ -11,16 +11,14 @@ public abstract class SelfieDatabase extends RoomDatabase {
 
     private static volatile SelfieDatabase instance;
 
-    public abstract SelfieDao selfieDao();
-
     public static SelfieDatabase get(Context context) {
         if (instance == null) {
             synchronized (SelfieDatabase.class) {
                 if (instance == null) {
                     instance = Room.databaseBuilder(
-                                    context.getApplicationContext(),
-                                    SelfieDatabase.class,
-                                    "selfies.db")
+                            context.getApplicationContext(),
+                            SelfieDatabase.class,
+                            "selfies.db")
                             .addMigrations(Migrations.ALL)
                             .build();
                 }
@@ -28,4 +26,6 @@ public abstract class SelfieDatabase extends RoomDatabase {
         }
         return instance;
     }
+
+    public abstract SelfieDao selfieDao();
 }

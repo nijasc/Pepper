@@ -19,7 +19,7 @@ public final class AdminSettings {
 
     public static String getPin(Context context) {
         String pin = prefs(context).getString(KEY_PIN, DEFAULT_PIN);
-        return pin == null || pin.isEmpty() ? DEFAULT_PIN : pin;
+        return pin.isEmpty() ? DEFAULT_PIN : pin;
     }
 
     public static void setPin(Context context, String pin) {

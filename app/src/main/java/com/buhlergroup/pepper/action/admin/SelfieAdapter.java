@@ -27,11 +27,6 @@ import java.util.concurrent.Executors;
 public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHolder> {
 
     private static final int THUMB_SIZE = 240;
-
-    public interface OnSelfieClick {
-        void onClick(SelfieEntity selfie);
-    }
-
     private static final LruCache<String, Bitmap> THUMB_CACHE =
             new LruCache<String, Bitmap>((int) (Runtime.getRuntime().maxMemory() / 1024 / 8)) {
                 @Override
@@ -39,15 +34,30 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
                     return value.getByteCount() / 1024;
                 }
             };
-
     private final List<SelfieEntity> items = new ArrayList<>();
     private final Set<String> raffleLinkedIds = new HashSet<>();
     private final ExecutorService decodeExecutor = Executors.newFixedThreadPool(2);
     private final OnSelfieClick onClick;
     private File imagesDir;
-
     public SelfieAdapter(OnSelfieClick onClick) {
         this.onClick = onClick;
+    }
+
+    public static Bitmap decodeThumb(File file, int reqSize) {
+        if (file == null || !file.exists()) {
+            return null;
+        }
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(file.getPath(), bounds);
+        int sample = 1;
+        int largest = Math.max(bounds.outWidth, bounds.outHeight);
+        while (largest / sample > reqSize) {
+            sample *= 2;
+        }
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = sample;
+        return BitmapFactory.decodeFile(file.getPath(), options);
     }
 
     public void setData(List<SelfieEntity> data, File imagesDir, Set<String> linkedSelfieIds) {
@@ -105,21 +115,8 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
         });
     }
 
-    public static Bitmap decodeThumb(File file, int reqSize) {
-        if (file == null || !file.exists()) {
-            return null;
-        }
-        BitmapFactory.Options bounds = new BitmapFactory.Options();
-        bounds.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(file.getPath(), bounds);
-        int sample = 1;
-        int largest = Math.max(bounds.outWidth, bounds.outHeight);
-        while (largest / sample > reqSize) {
-            sample *= 2;
-        }
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = sample;
-        return BitmapFactory.decodeFile(file.getPath(), options);
+    public interface OnSelfieClick {
+        void onClick(SelfieEntity selfie);
     }
 
     static class SelfieHolder extends RecyclerView.ViewHolder {

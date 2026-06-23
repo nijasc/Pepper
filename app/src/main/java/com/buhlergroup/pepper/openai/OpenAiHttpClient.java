@@ -22,25 +22,6 @@ final class OpenAiHttpClient {
 
     private static final String TAG = "OpenAIService";
     private static final String BASE_URL = "https://api.openai.com/v1";
-
-    interface TokenSupplier {
-        String token();
-    }
-
-    static final class EventStream {
-        final BufferedReader reader;
-        private final HttpURLConnection connection;
-
-        EventStream(BufferedReader reader, HttpURLConnection connection) {
-            this.reader = reader;
-            this.connection = connection;
-        }
-
-        void disconnect() {
-            connection.disconnect();
-        }
-    }
-
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TokenSupplier tokenSupplier;
 
@@ -65,9 +46,8 @@ final class OpenAiHttpClient {
 
             String json = objectMapper.writeValueAsString(body);
             if (BuildConfig.DEBUG) {
-                Map<String, Object> f = body;
-                f.remove("instructions");
-                Log.i("OPENREQ", objectMapper.writeValueAsString(f));
+                body.remove("instructions");
+                Log.i("OPENREQ", objectMapper.writeValueAsString(body));
             }
 
             try (OutputStream os = con.getOutputStream()) {
@@ -99,8 +79,8 @@ final class OpenAiHttpClient {
         return content.toString();
     }
 
-    EventStream openEventStream(String path, Map<String, Object> body) throws IOException {
-        HttpURLConnection con = (HttpURLConnection) new URL(BASE_URL + path).openConnection();
+    EventStream openEventStream(Map<String, Object> body) throws IOException {
+        HttpURLConnection con = (HttpURLConnection) new URL(BASE_URL + "/responses").openConnection();
         con.setConnectTimeout(8000);
         con.setReadTimeout(30000);
         con.setRequestMethod("POST");
@@ -125,6 +105,24 @@ final class OpenAiHttpClient {
         } catch (IOException e) {
             con.disconnect();
             throw e;
+        }
+    }
+
+    interface TokenSupplier {
+        String token();
+    }
+
+    static final class EventStream {
+        final BufferedReader reader;
+        private final HttpURLConnection connection;
+
+        EventStream(BufferedReader reader, HttpURLConnection connection) {
+            this.reader = reader;
+            this.connection = connection;
+        }
+
+        void disconnect() {
+            connection.disconnect();
         }
     }
 }

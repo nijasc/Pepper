@@ -21,20 +21,6 @@ public final class ITunesSearch {
     private static final int MAX_ATTEMPTS = 3;
     private static final long INITIAL_BACKOFF_MS = 500L;
 
-    public static final class Result {
-        public final String trackId;
-        public final String title;
-        public final String previewUrl;
-        public final long durationMs;
-
-        Result(String trackId, String title, String previewUrl, long durationMs) {
-            this.trackId = trackId;
-            this.title = title;
-            this.previewUrl = previewUrl;
-            this.durationMs = durationMs;
-        }
-    }
-
     public Result search(String query) throws IOException {
         Log.i(TAG, "Searching iTunes for: '" + query + "'");
         String response = fetch(SEARCH_URL + "?entity=song&limit=10&term="
@@ -76,7 +62,7 @@ public final class ITunesSearch {
                 }
             }
         }
-        throw last != null ? last : new IOException("iTunes ist nicht erreichbar.");
+        throw last;
     }
 
     private String fetchOnce(String urlString) throws IOException {
@@ -123,6 +109,20 @@ public final class ITunesSearch {
             Thread.sleep(ms);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+    }
+
+    public static final class Result {
+        public final String trackId;
+        public final String title;
+        public final String previewUrl;
+        public final long durationMs;
+
+        Result(String trackId, String title, String previewUrl, long durationMs) {
+            this.trackId = trackId;
+            this.title = title;
+            this.previewUrl = previewUrl;
+            this.durationMs = durationMs;
         }
     }
 

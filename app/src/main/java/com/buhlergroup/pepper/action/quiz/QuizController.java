@@ -23,15 +23,9 @@ public final class QuizController {
     private static final long FEEDBACK_PAUSE_MS = 2200;
 
     private static final QuizController INSTANCE = new QuizController();
-
-    public interface StateListener {
-        void onQuizStateChanged(boolean active);
-    }
-
     private volatile QuizView view;
     private volatile boolean running = false;
     private volatile StateListener stateListener;
-
     private QuizController() {
     }
 
@@ -98,7 +92,7 @@ public final class QuizController {
                 board.setScore(scoreText(lang, score));
                 say(context, question.question);
 
-                Integer choice = awaitAnswer(answers, ANSWER_TIMEOUT_MS);
+                Integer choice = awaitAnswer(answers);
                 int chosen = choice == null ? -1 : choice;
                 boolean correct = chosen == question.correctIndex;
                 if (correct) {
@@ -107,7 +101,7 @@ public final class QuizController {
                 board.revealAnswer(question.correctIndex, chosen);
                 board.setScore(scoreText(lang, score));
                 sayFeedback(context, lang, correct, chosen < 0, question);
-                sleep(FEEDBACK_PAUSE_MS);
+                sleep();
             }
 
             announceFinal(context, lang, score, questions.size());
@@ -135,10 +129,10 @@ public final class QuizController {
             }
             say(context, lang == SupportedLanguage.ENGLISH
                     ? "Great result! Since you did so well, would you like to enter our raffle? "
-                            + "You can sign up right here on my tablet, or tap cancel."
+                    + "You can sign up right here on my tablet, or tap cancel."
                     : "Tolles Ergebnis! Weil du so gut warst – möchtest du an unserer Verlosung "
-                            + "teilnehmen? Du kannst dich direkt auf meinem Tablet eintragen, "
-                            + "oder tippe auf Abbrechen.");
+                    + "teilnehmen? Du kannst dich direkt auf meinem Tablet eintragen, "
+                    + "oder tippe auf Abbrechen.");
             RaffleJoinController.get().join(context, raffle);
         } catch (Exception e) {
             Log.w(TAG, "Raffle offer after quiz failed: " + e.getMessage());
@@ -210,8 +204,8 @@ public final class QuizController {
                 : "Danke fürs Mitmachen, versuch es gern noch einmal!";
     }
 
-    private Integer awaitAnswer(BlockingQueue<Integer> queue, long timeoutMs) {
-        long deadline = System.currentTimeMillis() + timeoutMs;
+    private Integer awaitAnswer(BlockingQueue<Integer> queue) {
+        long deadline = System.currentTimeMillis() + QuizController.ANSWER_TIMEOUT_MS;
         while (System.currentTimeMillis() < deadline) {
             try {
                 Integer value = queue.poll(200, TimeUnit.MILLISECONDS);
@@ -234,11 +228,15 @@ public final class QuizController {
         }
     }
 
-    private void sleep(long ms) {
+    private void sleep() {
         try {
-            Thread.sleep(ms);
+            Thread.sleep(QuizController.FEEDBACK_PAUSE_MS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    public interface StateListener {
+        void onQuizStateChanged(boolean active);
     }
 }

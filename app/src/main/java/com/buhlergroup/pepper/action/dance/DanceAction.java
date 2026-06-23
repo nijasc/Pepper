@@ -28,22 +28,19 @@ import java.util.Set;
 
 public class DanceAction extends Action {
 
-    public DanceAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
-        super(historyManager);
-    }
-
     private static final String TAG = "Dance";
     private static final long MAX_PLAY_MS = 35000;
     private static final long MIN_PLAY_MS = 5000;
-
     private static final Set<String> GENERIC_TERMS = new HashSet<>(Arrays.asList(
             "tanz", "tanze", "tanzen", "dance", "bitte", "los", "mal", "etwas", "ein", "eine",
             "einen", "mir", "uns", "jetzt", "für", "mich", "for", "me", "please", "song", "lied",
             "music", "musik", "doch", "kurz", "zu", "the", "a", "mach", "leg"));
-
     private final DanceRepository repository = new DanceRepository();
     private final Object audioLock = new Object();
     private MediaPlayer mediaPlayer;
+    public DanceAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
 
     @Override
     public void execute(QiContext context, String input) {
@@ -103,7 +100,7 @@ public class DanceAction extends Action {
 
     private DanceEntity defaultDance(QiContext context, List<DanceEntity> playable) {
         String id = DanceSettings.getDefaultDanceId(context);
-        if (id == null || id.isEmpty()) {
+        if (id.isEmpty()) {
             return null;
         }
         for (DanceEntity dance : playable) {
@@ -119,7 +116,7 @@ public class DanceAction extends Action {
         DanceEntity best = null;
         int bestLen = 0;
         for (DanceEntity dance : dances) {
-            String name = dance.songName == null ? "" : dance.songName.toLowerCase(Locale.ROOT);
+            String name = dance.songName.toLowerCase(Locale.ROOT);
             if (!name.isEmpty() && needle.contains(name) && name.length() > bestLen) {
                 best = dance;
                 bestLen = name.length();
@@ -131,7 +128,11 @@ public class DanceAction extends Action {
     private void playDance(QiContext context, DanceEntity dance) {
         Future<Void> animationFuture = null;
         try {
+            if (dance.qianimPath == null) {
+                return;
+            }
             String qianim = DanceRepository.readQianim(new File(dance.qianimPath));
+
             Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 
@@ -172,7 +173,7 @@ public class DanceAction extends Action {
             if (animationFuture == null || animationFuture.isDone()) {
                 return;
             }
-            sleep(100);
+            sleep();
         }
     }
 
@@ -271,9 +272,9 @@ public class DanceAction extends Action {
         }
     }
 
-    private void sleep(long ms) {
+    private void sleep() {
         try {
-            Thread.sleep(ms);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

@@ -5,14 +5,9 @@ import android.speech.RecognizerIntent;
 
 public class LanguageManager {
 
-    public interface LanguageChangeListener {
-        void onLanguageChanged(SupportedLanguage lang);
-    }
-
     private final Intent intent;
     private SupportedLanguage current;
     private LanguageChangeListener listener;
-
     public LanguageManager(Intent intent) {
         this.intent = intent;
     }
@@ -35,5 +30,9 @@ public class LanguageManager {
             applyLanguage(SupportedLanguage.GERMAN);
         }
         return current;
+    }
+
+    public interface LanguageChangeListener {
+        void onLanguageChanged(SupportedLanguage lang);
     }
 }

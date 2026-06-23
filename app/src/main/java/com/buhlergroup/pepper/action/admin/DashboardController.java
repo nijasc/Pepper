@@ -31,6 +31,10 @@ final class DashboardController {
     private final View root;
     private final Executor executor;
     private final Handler dashHandler = new Handler(Looper.getMainLooper());
+    private final TextView dashWifi;
+    private final TextView dashOpenAi;
+    private final TextView dashBattery;
+    private final TextView dashUptime;
     private final Runnable dashRefresh = new Runnable() {
         @Override
         public void run() {
@@ -38,11 +42,6 @@ final class DashboardController {
             dashHandler.postDelayed(this, DASH_REFRESH_MS);
         }
     };
-
-    private final TextView dashWifi;
-    private final TextView dashOpenAi;
-    private final TextView dashBattery;
-    private final TextView dashUptime;
     private final TextView statusWifi;
     private final TextView statusOpenAi;
     private final TextView statusBattery;

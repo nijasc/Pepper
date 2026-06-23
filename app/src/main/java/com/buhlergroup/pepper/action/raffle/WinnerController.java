@@ -8,17 +8,10 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 public final class WinnerController {
 
     private static final String TAG = "WinnerController";
-
-    public interface StateListener {
-        void onWinnerStateChanged(boolean active);
-    }
-
     private static final WinnerController INSTANCE = new WinnerController();
-
     private volatile WinnerView view;
     private volatile boolean active;
     private volatile StateListener stateListener;
-
     private WinnerController() {
     }
 
@@ -89,5 +82,9 @@ public final class WinnerController {
         } catch (Exception e) {
             Log.w(TAG, "say failed: " + e.getMessage());
         }
+    }
+
+    public interface StateListener {
+        void onWinnerStateChanged(boolean active);
     }
 }

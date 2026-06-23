@@ -38,13 +38,11 @@ public class SystemInfoAction extends Action {
     }
 
     private String buildSystemInfo(QiContext context) {
-        return new StringBuilder()
-                .append("Du hast folgende Informationen zur Verfügung, ")
-                .append("beantworte dem Benutzer die unten gestellte Frage basierend auf ihnen:\n")
-                .append("- Current history length: ").append(getHistoryManager().historySize()).append('\n')
-                .append("- Current language set to: ").append(lm.getCurrent().name()).append('\n')
-                .append("- Current system volume: ").append(describeVolume(context)).append('\n')
-                .toString();
+        return "Du hast folgende Informationen zur Verfügung, " +
+                "beantworte dem Benutzer die unten gestellte Frage basierend auf ihnen:\n" +
+                "- Current history length: " + getHistoryManager().historySize() + '\n' +
+                "- Current language set to: " + lm.getCurrent().name() + '\n' +
+                "- Current system volume: " + describeVolume(context) + '\n';
     }
 
     private String describeVolume(Context context) {

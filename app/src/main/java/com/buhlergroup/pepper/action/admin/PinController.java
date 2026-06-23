@@ -11,11 +11,6 @@ final class PinController {
 
     private static final int MAX_PIN_ATTEMPTS = 5;
     private static final long PIN_LOCKOUT_MS = 60000;
-
-    interface OnUnlocked {
-        void onUnlocked();
-    }
-
     private final Context context;
     private final TextView pinDots;
     private final TextView pinError;
@@ -23,7 +18,6 @@ final class PinController {
     private final StringBuilder entered = new StringBuilder();
     private int pinAttempts = 0;
     private long pinLockoutUntil = 0;
-
     PinController(View root, OnUnlocked onUnlocked) {
         this.context = root.getContext();
         this.onUnlocked = onUnlocked;
@@ -117,5 +111,9 @@ final class PinController {
             }
         }
         pinDots.setText(dots.toString());
+    }
+
+    interface OnUnlocked {
+        void onUnlocked();
     }
 }

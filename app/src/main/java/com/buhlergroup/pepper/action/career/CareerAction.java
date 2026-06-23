@@ -12,13 +12,12 @@ import com.buhlergroup.pepper.lang.SupportedLanguage;
 
 public class CareerAction extends Action {
 
-    public CareerAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
-        super(historyManager);
-    }
-
     private static final String TAG = "Career";
     private static final String CAREER_URL_KEY = "PEPPER_CAREER_URL";
     private static final long DISPLAY_MS = 30000;
+    public CareerAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+        super(historyManager);
+    }
 
     @Override
     public void execute(QiContext context, String input) {
@@ -27,7 +26,7 @@ public class CareerAction extends Action {
         boolean hasQr = isValidUrl(url);
         SpeechManager.getInstance().systemSay(context, answer(lang, hasQr));
         if (hasQr) {
-            showQr(context, lang, url);
+            showQr(lang, url);
         }
     }
 
@@ -35,7 +34,7 @@ public class CareerAction extends Action {
         return url.startsWith("http://") || url.startsWith("https://");
     }
 
-    private void showQr(QiContext context, SupportedLanguage lang, String url) {
+    private void showQr(SupportedLanguage lang, String url) {
         try {
             Bitmap qr = QrGenerator.encode(url, 600);
             CareerController.get().present(qr, hint(lang), DISPLAY_MS);

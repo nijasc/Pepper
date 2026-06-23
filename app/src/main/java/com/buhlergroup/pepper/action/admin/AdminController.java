@@ -10,18 +10,12 @@ import java.util.List;
 
 public final class AdminController {
 
-    public interface AdminStateListener {
-        void onAdminStateChanged(boolean open);
-    }
-
     private static final AdminController INSTANCE = new AdminController();
-
     private volatile AdminView view;
     private volatile HistoryManager historyManager;
     private volatile LanguageManager languageManager;
     private volatile boolean open = false;
     private volatile AdminStateListener stateListener;
-
     private AdminController() {
     }
 
@@ -105,5 +99,9 @@ public final class AdminController {
             return Collections.emptyList();
         }
         return hm.getConversation();
+    }
+
+    public interface AdminStateListener {
+        void onAdminStateChanged(boolean open);
     }
 }

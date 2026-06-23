@@ -14,8 +14,8 @@ import com.buhlergroup.pepper.action.highfive.HighFiveAction;
 import com.buhlergroup.pepper.action.hold.HoldMyBeerAction;
 import com.buhlergroup.pepper.action.lang.ChangeLanguageAction;
 import com.buhlergroup.pepper.action.memory.MemoryGameAction;
-import com.buhlergroup.pepper.action.navigation.GuideAction;
 import com.buhlergroup.pepper.action.names.SiriAction;
+import com.buhlergroup.pepper.action.navigation.GuideAction;
 import com.buhlergroup.pepper.action.quiz.QuizAction;
 import com.buhlergroup.pepper.action.raffle.JoinRaffleAction;
 import com.buhlergroup.pepper.action.raffle.RaffleInfoAction;
@@ -26,10 +26,10 @@ import com.buhlergroup.pepper.action.system.SystemInfoAction;
 import com.buhlergroup.pepper.action.test.TestAction;
 import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.action.volume.ChangeVolumeAction;
+import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
-import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SystemMessages;
 import com.buhlergroup.pepper.net.Connectivity;
 import com.buhlergroup.pepper.openai.OpenAIService;
@@ -45,20 +45,12 @@ import java.util.Map;
 public class ActionHandler {
     private static final int MAX_ATTEMPTS = 2;
     private static final long RETRY_BACKOFF_MS = 600;
-
-    private enum CombinedResult {
-        HANDLED,
-        NOT_HANDLED,
-        NETWORK_ERROR
-    }
-
     private static final List<Action> actions = new ArrayList<>();
     private final Map<String, Action> actionsByName = new HashMap<>();
     private final IntentEngine intentEngine;
     private final HistoryManager historyManager;
     private final LanguageManager languageManager;
     private final OpenAIService routingService;
-
     public ActionHandler(LanguageManager languageManager, HistoryManager historyManager) {
         this.historyManager = historyManager;
         this.languageManager = languageManager;
@@ -266,5 +258,11 @@ public class ActionHandler {
         for (Action action : actions) {
             Log.i("ActionHandler", "Registered action: " + action.getClass().getSimpleName());
         }
+    }
+
+    private enum CombinedResult {
+        HANDLED,
+        NOT_HANDLED,
+        NETWORK_ERROR
     }
 }

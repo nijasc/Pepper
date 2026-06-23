@@ -11,9 +11,8 @@ public final class DialogueController {
     private static final DialogueController INSTANCE = new DialogueController();
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private final Runnable hideRunnable = this::hideNow;
-
     private volatile DialogueView view;
+    private final Runnable hideRunnable = this::hideNow;
     private volatile boolean suppressed;
     private String[] words = new String[0];
 

@@ -63,7 +63,7 @@ public class SpeechManager {
     }
 
     private void speak(QiContext context, String toSay, Locale locale, SupportedLanguage fallback) {
-        speak(context, toSay, locale, fallback, BodyLanguageOption.BODY_TALK);
+        speak(context, toSay, locale, fallback, BodyLanguageOption.NEUTRAL);
     }
 
     private void speak(QiContext context, String toSay, Locale locale, SupportedLanguage fallback,

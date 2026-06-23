@@ -20,6 +20,12 @@ public final class SongResearch {
         this.structure = structure;
     }
 
+    private static void line(StringBuilder sb, String label, String value) {
+        if (value != null && !value.trim().isEmpty()) {
+            sb.append("- ").append(label).append(": ").append(value.trim()).append('\n');
+        }
+    }
+
     String brief() {
         StringBuilder sb = new StringBuilder();
         line(sb, "Genre", genre);
@@ -30,11 +36,5 @@ public final class SongResearch {
         line(sb, "Signature/iconic dance moves", signatureMoves);
         line(sb, "Song structure / hook timing", structure);
         return sb.toString();
-    }
-
-    private static void line(StringBuilder sb, String label, String value) {
-        if (value != null && !value.trim().isEmpty()) {
-            sb.append("- ").append(label).append(": ").append(value.trim()).append('\n');
-        }
     }
 }

@@ -23,7 +23,7 @@ public final class MemoryGameController {
     private static final String TAG = "MemoryGame";
     private static final MemoryGameController INSTANCE = new MemoryGameController();
 
-    private static final String[] PAD_NAMES = {"Grün", "Rot", "Gelb", "Blau"};
+    private static final int AMOUNT_PADS = 4;
 
     private final Random random = new Random();
     private volatile MemoryGameView view;
@@ -49,19 +49,15 @@ public final class MemoryGameController {
         aborted = true;
     }
 
-    public boolean isRunning() {
-        return running;
-    }
-
-    public int play(QiContext context, MemoryGameConfig config) {
+    public void play(QiContext context, MemoryGameConfig config) {
         MemoryGameView board = view;
         if (board == null) {
             say(context, "Mein Tablet ist gerade nicht bereit, deshalb kann ich Memory nicht starten.");
-            return 0;
+            return;
         }
         if (running) {
             say(context, "Wir spielen doch schon!");
-            return 0;
+            return;
         }
 
         running = true;
@@ -81,7 +77,7 @@ public final class MemoryGameController {
 
         List<Integer> sequence = new ArrayList<>();
         for (int i = 0; i < config.startLength; i++) {
-            sequence.add(random.nextInt(PAD_NAMES.length));
+            sequence.add(random.nextInt(AMOUNT_PADS));
         }
 
         int completed = 0;
@@ -90,7 +86,7 @@ public final class MemoryGameController {
         try {
             while (!aborted) {
                 if (completed > 0) {
-                    sequence.add(random.nextInt(PAD_NAMES.length));
+                    sequence.add(random.nextInt(AMOUNT_PADS));
                 }
 
                 int round = sequence.size();
@@ -146,7 +142,7 @@ public final class MemoryGameController {
 
         if (aborted) {
             board.hide();
-            return completed;
+            return;
         }
 
         boolean record = MemoryHighscore.submit(context, config.label, completed);
@@ -157,7 +153,6 @@ public final class MemoryGameController {
         endGame(context, completed, record);
         sleep(4500);
         board.hide();
-        return completed;
     }
 
     private void celebrateRound(QiContext context, int completed, MemoryGameView board) {

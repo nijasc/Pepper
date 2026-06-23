@@ -23,11 +23,10 @@ public final class AnimationGenerator extends GeneratorBase {
 
     public String generateValidated(Context context, String command, int targetSeconds) {
         int seconds = Math.min(MAX_SECONDS, Math.max(0, targetSeconds));
-        return generate(context, gestureSystemPrompt(seconds), "Movement request: " + command, false);
+        return generate(context, gestureSystemPrompt(seconds), "Movement request: " + command);
     }
 
-    private String generate(Context context, String systemPrompt, String userBase,
-                            boolean normalizeBody) {
+    private String generate(Context context, String systemPrompt, String userBase) {
         openAi.setC(context);
         String lastValidationError = null;
         for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
@@ -43,7 +42,7 @@ public final class AnimationGenerator extends GeneratorBase {
                     error = "not parseable: " + e.getMessage();
                 }
                 if (error == null) {
-                    return postProcess(doc, qianim, normalizeBody);
+                    return postProcess(doc, qianim, false);
                 }
                 Log.w(TAG, "Attempt " + attempt + " invalid: " + error);
                 lastValidationError = error;

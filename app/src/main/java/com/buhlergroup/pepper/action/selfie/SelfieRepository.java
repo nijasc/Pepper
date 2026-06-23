@@ -20,9 +20,8 @@ import java.util.concurrent.Executors;
 
 public final class SelfieRepository {
 
-    private static volatile SelfieRepository instance;
     private static final ExecutorService maintenanceExecutor = Executors.newSingleThreadExecutor();
-
+    private static volatile SelfieRepository instance;
     private final SelfieDao dao;
     private final File imagesDir;
 
@@ -43,6 +42,22 @@ public final class SelfieRepository {
             }
         }
         return instance;
+    }
+
+    public static void purgeExpiredAsync(Context context) {
+        Context app = context.getApplicationContext();
+        maintenanceExecutor.submit(() -> {
+            try {
+                int days = SelfieSettings.getRetentionDays(app);
+                if (days <= 0) {
+                    return;
+                }
+                Set<String> protectedIds = new HashSet<>(RaffleRepository.get(app).linkedSelfieIds());
+                get(app).purgeExpired(days, protectedIds);
+            } catch (Exception e) {
+                Log.w("SelfieRepository", "purgeExpired failed: " + e.getMessage());
+            }
+        });
     }
 
     public SelfieEntity save(byte[] jpeg) throws IOException {
@@ -78,22 +93,6 @@ public final class SelfieRepository {
 
     public File imagesDir() {
         return imagesDir;
-    }
-
-    public static void purgeExpiredAsync(Context context) {
-        Context app = context.getApplicationContext();
-        maintenanceExecutor.submit(() -> {
-            try {
-                int days = SelfieSettings.getRetentionDays(app);
-                if (days <= 0) {
-                    return;
-                }
-                Set<String> protectedIds = new HashSet<>(RaffleRepository.get(app).linkedSelfieIds());
-                get(app).purgeExpired(days, protectedIds);
-            } catch (Exception e) {
-                Log.w("SelfieRepository", "purgeExpired failed: " + e.getMessage());
-            }
-        });
     }
 
     public void purgeExpired(int days, Set<String> protectedIds) {

@@ -98,7 +98,7 @@ public final class WifiCameraManager {
             }
 
             byte[] jpeg = executeCommandWithDataIn(OP_GET_OBJECT, objectHandle);
-            if (jpeg == null || jpeg.length == 0) {
+            if (jpeg.length == 0) {
                 return null;
             }
             return BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length);

@@ -14,34 +14,28 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 @TypeConverters(RaffleConverters.class)
 public abstract class RaffleDatabase extends RoomDatabase {
 
-    private static volatile RaffleDatabase instance;
-
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE raffles ADD COLUMN winnerId INTEGER");
         }
     };
-
     static final Migration MIGRATION_2_3 = new Migration(2, 3) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE raffles ADD COLUMN finished_at INTEGER NOT NULL DEFAULT 0");
         }
     };
-
-    public abstract RaffleDao raffleDao();
-
-    public abstract RaffleEntryDao raffleEntryDao();
+    private static volatile RaffleDatabase instance;
 
     public static RaffleDatabase get(Context context) {
         if (instance == null) {
             synchronized (RaffleDatabase.class) {
                 if (instance == null) {
                     instance = Room.databaseBuilder(
-                                    context.getApplicationContext(),
-                                    RaffleDatabase.class,
-                                    "raffle.db")
+                            context.getApplicationContext(),
+                            RaffleDatabase.class,
+                            "raffle.db")
                             .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                             .build();
                 }
@@ -49,4 +43,8 @@ public abstract class RaffleDatabase extends RoomDatabase {
         }
         return instance;
     }
+
+    public abstract RaffleDao raffleDao();
+
+    public abstract RaffleEntryDao raffleEntryDao();
 }

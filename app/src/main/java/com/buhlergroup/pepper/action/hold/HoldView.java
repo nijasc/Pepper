@@ -18,7 +18,6 @@ public class HoldView extends FrameLayout {
     private TextView statusText;
     private TextView timerText;
     private AppCompatButton confirmButton;
-    private AppCompatButton stopButton;
 
     public HoldView(Context context) {
         super(context);
@@ -70,7 +69,7 @@ public class HoldView extends FrameLayout {
         confirmParams.bottomMargin = 32;
         column.addView(confirmButton, confirmParams);
 
-        stopButton = new AppCompatButton(context);
+        AppCompatButton stopButton = new AppCompatButton(context);
         stopButton.setBackgroundResource(R.drawable.bg_pill_red);
         stopButton.setText("STOP");
         stopButton.setTextColor(Color.WHITE);

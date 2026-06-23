@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +81,7 @@ public class IntentEngine {
         Map<String, Object> schema = new HashMap<>();
         schema.put("type", "object");
         schema.put("properties", properties);
-        schema.put("required", Arrays.asList("value"));
+        schema.put("required", Collections.singletonList("value"));
         schema.put("additionalProperties", false);
 
         Map<String, Object> jsonSchema = new HashMap<>();
@@ -110,7 +110,7 @@ public class IntentEngine {
         }
     }
 
-    class Message {
+    static class Message {
         private String role;
         private String content;
 

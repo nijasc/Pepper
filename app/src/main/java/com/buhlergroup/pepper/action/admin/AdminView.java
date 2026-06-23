@@ -1,5 +1,22 @@
 package com.buhlergroup.pepper.action.admin;
 
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_ATTRACT;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_CAMERA;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DANCE;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEBUG;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DETAIL;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEVLOG;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_GALLERY;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_HISTORY;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_LANG;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_MENU;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_NAV;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PIN;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE_CREATE;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATS;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATUS;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -24,23 +41,6 @@ import com.buhlergroup.pepper.databinding.ViewAdminBinding;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PIN;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_MENU;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEVLOG;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_GALLERY;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DETAIL;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_LANG;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_HISTORY;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE_CREATE;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_CAMERA;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATUS;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATS;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_ATTRACT;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEBUG;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DANCE;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_NAV;
-
 public class AdminView extends FrameLayout {
 
     private static final String TAG = "AdminView";
@@ -49,24 +49,6 @@ public class AdminView extends FrameLayout {
     private PinController pinController;
     private DashboardController dashboard;
 
-    private View pinPanel;
-    private View menuPanel;
-    private View devLogPanel;
-    private View galleryPanel;
-    private View detailPanel;
-    private View langPanel;
-    private View historyPanel;
-    private View raffleCreatePanel;
-    private View rafflePanel;
-    private View cameraPanel;
-    private View statusPanel;
-    private View statsPanel;
-    private View debugPanel;
-    private View attractPanel;
-    private View dancePanel;
-    private View navPanel;
-    private View adminHeader;
-    private TextView adminHeaderTitle;
     private PanelNavigator panelNav;
     private SelfieGalleryController galleryController;
     private RaffleAdminController raffleAdmin;
@@ -99,25 +81,25 @@ public class AdminView extends FrameLayout {
         setClickable(true);
         setFocusable(true);
 
-        pinPanel = binding.adminPinPanel;
-        menuPanel = binding.adminMenuPanel;
-        devLogPanel = binding.adminDevLogPanel;
-        galleryPanel = binding.adminGalleryPanel;
-        detailPanel = binding.adminDetailPanel;
-        langPanel = binding.adminLangPanel;
-        historyPanel = binding.adminHistoryPanel;
-        raffleCreatePanel = binding.adminRaffleCreatePanel;
-        rafflePanel = binding.adminRafflePanel;
-        cameraPanel = binding.adminCameraPanel;
-        statusPanel = binding.adminStatusPanel;
-        statsPanel = binding.adminStatsPanel;
-        debugPanel = binding.adminDebugPanel;
-        attractPanel = binding.adminAttractPanel;
-        dancePanel = binding.adminDancePanel;
-        navPanel = binding.adminNavPanel;
+        View pinPanel = binding.adminPinPanel;
+        View menuPanel = binding.adminMenuPanel;
+        View devLogPanel = binding.adminDevLogPanel;
+        View galleryPanel = binding.adminGalleryPanel;
+        View detailPanel = binding.adminDetailPanel;
+        View langPanel = binding.adminLangPanel;
+        View historyPanel = binding.adminHistoryPanel;
+        View raffleCreatePanel = binding.adminRaffleCreatePanel;
+        View rafflePanel = binding.adminRafflePanel;
+        View cameraPanel = binding.adminCameraPanel;
+        View statusPanel = binding.adminStatusPanel;
+        View statsPanel = binding.adminStatsPanel;
+        View debugPanel = binding.adminDebugPanel;
+        View attractPanel = binding.adminAttractPanel;
+        View dancePanel = binding.adminDancePanel;
+        View navPanel = binding.adminNavPanel;
 
-        adminHeader = binding.adminHeader;
-        adminHeaderTitle = binding.adminHeaderTitle;
+        View adminHeader = binding.adminHeader;
+        TextView adminHeaderTitle = binding.adminHeaderTitle;
         binding.adminHeaderBack.setOnClickListener(v -> goBack());
         binding.adminHeaderClose.setOnClickListener(v -> hide());
 

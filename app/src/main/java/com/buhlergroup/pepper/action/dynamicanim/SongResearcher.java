@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -134,7 +135,7 @@ public final class SongResearcher {
         } catch (Exception e) {
             Matcher matcher = Pattern.compile("startSeconds\"?\\s*[:=]\\s*(\\d{1,3})").matcher(content);
             if (matcher.find()) {
-                startSeconds = Integer.parseInt(matcher.group(1));
+                startSeconds = Integer.parseInt(Objects.requireNonNull(matcher.group(1)));
             }
         }
         if (query == null || query.trim().isEmpty()) {

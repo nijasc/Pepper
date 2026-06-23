@@ -30,7 +30,6 @@ final class RoomScanner {
     private volatile LocalizeAndMap currentMapping;
     private volatile Future<Void> mappingFuture;
     private volatile boolean scanning;
-    private volatile Thread snapshotThread;
     private volatile Thread rotationThread;
     private volatile Future<ListenResult> scanStopListenFuture;
     private volatile Runnable scanStopCallback;
@@ -183,7 +182,6 @@ final class RoomScanner {
             }
         }, "scan-snapshot");
         t.setDaemon(true);
-        snapshotThread = t;
         t.start();
     }
 

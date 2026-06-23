@@ -61,22 +61,22 @@ final class DancePanelController {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         danceDefault.setAdapter(adapter);
         int index = danceIds.indexOf(DanceSettings.getDefaultDanceId(root.getContext()));
-        danceDefault.setSelection(index >= 0 ? index : 0);
+        danceDefault.setSelection(Math.max(index, 0));
     }
 
     private void saveDance() {
         int pos = danceDefault.getSelectedItemPosition();
         String id = pos >= 0 && pos < danceIds.size() ? danceIds.get(pos) : "";
-        int duration = parseIntOr(danceDuration, DanceSettings.DEFAULT_DURATION_SECONDS);
+        int duration = parseIntOr(danceDuration);
         DanceSettings.save(root.getContext(), id, duration);
         Toast.makeText(root.getContext(), R.string.dance_settings_saved, Toast.LENGTH_SHORT).show();
     }
 
-    private int parseIntOr(EditText field, int fallback) {
+    private int parseIntOr(EditText field) {
         try {
             return Integer.parseInt(field.getText().toString().trim());
         } catch (NumberFormatException e) {
-            return fallback;
+            return DanceSettings.DEFAULT_DURATION_SECONDS;
         }
     }
 }

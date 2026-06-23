@@ -3,10 +3,10 @@ package com.buhlergroup.pepper.action.dance;
 import android.content.Context;
 import android.util.Log;
 
+import com.buhlergroup.pepper.action.dance.audio.SongAudioAnalyzer;
 import com.buhlergroup.pepper.action.dance.data.DanceDao;
 import com.buhlergroup.pepper.action.dance.data.DanceDatabase;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
-import com.buhlergroup.pepper.action.dance.audio.SongAudioAnalyzer;
 import com.buhlergroup.pepper.action.dance.itunes.ITunesSearch;
 import com.buhlergroup.pepper.action.dynamicanim.DanceGenerator;
 import com.buhlergroup.pepper.action.dynamicanim.SongPlan;
@@ -33,6 +33,21 @@ public final class DanceRepository {
     private final DanceGenerator generator = new DanceGenerator();
     private final SongResearcher songResearcher = new SongResearcher();
 
+    public static String readQianim(File file) throws Exception {
+        byte[] bytes = new byte[(int) file.length()];
+        try (FileInputStream in = new FileInputStream(file)) {
+            int read = 0;
+            while (read < bytes.length) {
+                int r = in.read(bytes, read, bytes.length - read);
+                if (r < 0) {
+                    break;
+                }
+                read += r;
+            }
+            return new String(bytes, 0, read, StandardCharsets.UTF_8);
+        }
+    }
+
     public void ensureBuiltInDances(Context context) {
         try {
             seedBuiltIn(context, BUILTIN_HULA_ID, "Hula",
@@ -47,7 +62,7 @@ public final class DanceRepository {
     }
 
     private void seedBuiltIn(Context context, String id, String name, int rawRes, int audioRawRes,
-            long durationMs) throws IOException {
+                             long durationMs) throws IOException {
         DanceDao dao = DanceDatabase.get(context).danceDao();
         DanceEntity existing = dao.findById(id);
         if (existing != null && existing.qianimPath != null
@@ -171,20 +186,6 @@ public final class DanceRepository {
         return entity;
     }
 
-    private static final class SongSource {
-        final String sourceId;
-        final String title;
-        final String previewUrl;
-        final long durationMs;
-
-        SongSource(String sourceId, String title, String previewUrl, long durationMs) {
-            this.sourceId = sourceId;
-            this.title = title;
-            this.previewUrl = previewUrl;
-            this.durationMs = durationMs;
-        }
-    }
-
     private SongSource resolveSource(String query) throws Exception {
         ITunesSearch.Result track = new ITunesSearch().search(query);
         Log.i(TAG, "Selected '" + track.title + "' (" + track.trackId + ")");
@@ -271,7 +272,7 @@ public final class DanceRepository {
             Log.i(TAG, "Playing '" + dance.songName + "' from local cache");
             return;
         }
-        if (dance.youtubeId == null || !dance.youtubeId.startsWith(BUILTIN_PREFIX)) {
+        if (!dance.youtubeId.startsWith(BUILTIN_PREFIX)) {
             try {
                 ITunesSearch.Result track = new ITunesSearch().search(dance.songName);
                 dance.previewUrl = track.previewUrl;
@@ -315,7 +316,7 @@ public final class DanceRepository {
     }
 
     private void backfillAudioCache(Context context, DanceEntity dance, String previewUrl) {
-        if (previewUrl == null || previewUrl.isEmpty() || dance.youtubeId == null) {
+        if (previewUrl == null || previewUrl.isEmpty()) {
             return;
         }
         try {
@@ -360,21 +361,6 @@ public final class DanceRepository {
         }
     }
 
-    public static String readQianim(File file) throws Exception {
-        byte[] bytes = new byte[(int) file.length()];
-        try (FileInputStream in = new FileInputStream(file)) {
-            int read = 0;
-            while (read < bytes.length) {
-                int r = in.read(bytes, read, bytes.length - read);
-                if (r < 0) {
-                    break;
-                }
-                read += r;
-            }
-            return new String(bytes, 0, read, StandardCharsets.UTF_8);
-        }
-    }
-
     private File danceDir(Context context) {
         File dir = new File(context.getFilesDir(), "dances");
         if (!dir.exists()) {
@@ -399,6 +385,20 @@ public final class DanceRepository {
                 f.delete();
             }
         } catch (Exception ignored) {
+        }
+    }
+
+    private static final class SongSource {
+        final String sourceId;
+        final String title;
+        final String previewUrl;
+        final long durationMs;
+
+        SongSource(String sourceId, String title, String previewUrl, long durationMs) {
+            this.sourceId = sourceId;
+            this.title = title;
+            this.previewUrl = previewUrl;
+            this.durationMs = durationMs;
         }
     }
 }

@@ -17,7 +17,6 @@ import java.util.List;
 public class WaypointMapView extends View {
 
     private final List<WaypointEntity> waypoints = new ArrayList<>();
-    private double[] robotPose;
     private final Paint originPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint waypointPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint fotostandPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -25,6 +24,7 @@ public class WaypointMapView extends View {
     private final Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint gridPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint gridTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private double[] robotPose;
 
     public WaypointMapView(Context context) {
         super(context);

@@ -18,16 +18,16 @@ public class PepperApplication extends Application {
 
     private static long startElapsedMs;
 
+    public static long startElapsedMs() {
+        return startElapsedMs;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
         startElapsedMs = SystemClock.elapsedRealtime();
         DebugLog.get().init(this);
         installCrashRestart();
-    }
-
-    public static long startElapsedMs() {
-        return startElapsedMs;
     }
 
     private void installCrashRestart() {

@@ -4,6 +4,7 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -93,7 +94,7 @@ final class OpenAiStreamParser {
                 String value = matcher.group(2);
                 pending.delete(0, matcher.end());
                 if ("lang".equals(kind)) {
-                    if (LANG_VALUE.matcher(value).matches()) {
+                    if (LANG_VALUE.matcher(Objects.requireNonNull(value)).matches()) {
                         lastLanguageTag = value;
                     }
                 } else if (!listener.onAction(value)) {

@@ -15,25 +15,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class DebugLog {
 
-    public interface Listener {
-        void onEntry(String formattedLine);
-
-        void onStatus(String status);
-
-        void onEnabledChanged(boolean enabled);
-    }
-
     private static final DebugLog INSTANCE = new DebugLog();
     private static final int MAX_ENTRIES = 1000;
-
     private final Deque<String> entries = new ArrayDeque<>();
     private final CopyOnWriteArrayList<Listener> listeners = new CopyOnWriteArrayList<>();
     private final SimpleDateFormat lineFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
     private final SimpleDateFormat stampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-
     private volatile boolean enabled = DebugSettings.DEFAULT_ENABLED;
     private volatile String status = "";
-
     private DebugLog() {
     }
 
@@ -71,16 +60,16 @@ public final class DebugLog {
         listeners.remove(listener);
     }
 
+    public String getStatus() {
+        return status;
+    }
+
     public void setStatus(String newStatus) {
         status = newStatus == null ? "" : newStatus;
         for (Listener listener : listeners) {
             listener.onStatus(status);
         }
         append('S', "Status", status);
-    }
-
-    public String getStatus() {
-        return status;
     }
 
     public void d(String tag, String message) {
@@ -163,5 +152,13 @@ public final class DebugLog {
             sb.append(entry).append('\n');
         }
         return sb.toString();
+    }
+
+    public interface Listener {
+        void onEntry(String formattedLine);
+
+        void onStatus(String status);
+
+        void onEnabledChanged(boolean enabled);
     }
 }
