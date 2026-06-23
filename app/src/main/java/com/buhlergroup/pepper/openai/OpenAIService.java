@@ -4,8 +4,6 @@ package com.buhlergroup.pepper.openai;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.profile.ProfileRepository;
@@ -13,11 +11,8 @@ import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.debug.DebugLog;
-import com.buhlergroup.pepper.llm.ChatStreamParser;
-import com.buhlergroup.pepper.llm.LlmHttpClient;
-import com.buhlergroup.pepper.llm.LlmProvider;
 import com.buhlergroup.pepper.llm.LlmService;
-import com.buhlergroup.pepper.llm.ModelSettings;
+import com.buhlergroup.pepper.llm.OpenAiCompatibleLlmService;
 import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 import com.buhlergroup.pepper.perception.EmotionReader;
@@ -35,13 +30,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OpenAIService implements LlmService {
+public class OpenAIService {
 
     private static final String TAG = "OpenAIService";
     private static final int MAX_OUTPUT_TOKENS = 600;
     private static final int RESPONSE_TIMEOUT_MS = 60000;
-    private static final int DEFAULT_TIMEOUT_MS = 20000;
-    private static final OpenAiCircuitBreaker circuitBreaker = new OpenAiCircuitBreaker();
     private static final Pattern LANG_TAG =
             Pattern.compile("\\[\\[\\s*lang\\s*:\\s*([A-Za-z]{2,3}(?:[-_][A-Za-z]{2,4})?)\\s*\\]\\]");
     private static final Pattern ACTION_TAG =
@@ -49,8 +42,7 @@ public class OpenAIService implements LlmService {
     private static volatile OpenAIService shared;
     private final EmotionReader emotionReader = new EmotionReader();
     private final List<Action> actions;
-    private final LlmHttpClient llmClient = new LlmHttpClient();
-    private volatile Context c;
+    private final LlmService llm = new OpenAiCompatibleLlmService();
     private String lastLanguageTag;
 
     public OpenAIService(List<Action> actions) {
@@ -83,8 +75,7 @@ public class OpenAIService implements LlmService {
 
         long started = System.currentTimeMillis();
         try {
-            String res = chat(ModelTask.CONVERSATION, body, RESPONSE_TIMEOUT_MS);
-            String text = extractLanguageTag(parseChatContent(res));
+            String text = extractLanguageTag(parseChatContent(llm.chat(ModelTask.CONVERSATION, body, RESPONSE_TIMEOUT_MS)));
             Log.i("LATENCY", "getResponse took " + (System.currentTimeMillis() - started) + "ms");
             return text;
         } catch (IOException e) {
@@ -93,23 +84,20 @@ public class OpenAIService implements LlmService {
         return "Etwas ist unerwartet schief gelaufen.";
     }
 
-    @Override
-    public String generate(ModelTask task, String systemInstructions, String userInput, int maxTokens)
-            throws IOException {
-        List<Map<String, String>> messages = new ArrayList<>();
-        messages.add(message("system", systemInstructions));
-        messages.add(message("user", userInput));
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("messages", messages);
-        body.put("max_tokens", maxTokens);
-        body.put("reasoning_effort", "low");
-
-        return parseChatContent(chat(task, body, RESPONSE_TIMEOUT_MS));
+    public String generateText(String instructions, String userInput, int maxTokens) throws IOException {
+        return llm.generate(ModelTask.GENERATION, instructions, userInput, maxTokens);
     }
 
-    public String generateText(String instructions, String userInput, int maxTokens) throws IOException {
-        return generate(ModelTask.GENERATION, instructions, userInput, maxTokens);
+    public String chat(ModelTask task, Map<String, Object> body) throws IOException {
+        return llm.chat(task, body);
+    }
+
+    public String chat(ModelTask task, Map<String, Object> body, int timeoutMs) throws IOException {
+        return llm.chat(task, body, timeoutMs);
+    }
+
+    public String chatStrongest(ModelTask task, Map<String, Object> body, int timeoutMs) throws IOException {
+        return llm.chatStrongest(task, body, timeoutMs);
     }
 
     public String extractLanguageTag(String text) {
@@ -133,73 +121,8 @@ public class OpenAIService implements LlmService {
         messages.add(message("system", formRoutingSystemPrompt(context)));
         messages.addAll(historyManager.toInput());
         messages.add(message("user", userMessage));
-
-        Context ctx = ctx();
-        LlmProvider provider = ModelSettings.getProvider(ctx, ModelTask.CONVERSATION);
-        Map<String, Object> body = new HashMap<>();
-        body.put("model", ModelSettings.getModel(ctx, ModelTask.CONVERSATION));
-        body.put("messages", messages);
-        body.put("max_tokens", MAX_OUTPUT_TOKENS);
-        body.put("stream", true);
-        if (provider.supportsReasoningEffort) {
-            body.put("reasoning_effort", "low");
-        }
-
-        long started = System.currentTimeMillis();
         lastLanguageTag = null;
-        DebugLog.get().setStatus(provider.displayName + " – Anfrage läuft …");
-        DebugLog.get().d(TAG, "Streaming-Anfrage gestartet (" + provider.displayName + ")");
-
-        if (circuitBreaker.isOpen()) {
-            DebugLog.get().w(TAG, "LLM-Circuit offen – schneller Fallback");
-            throw new IOException("LLM circuit open, failing fast to fallback");
-        }
-
-        boolean failed = false;
-        LlmHttpClient.EventStream stream = null;
-        try {
-            stream = llmClient.openChatStream(provider, ModelSettings.getKey(ctx, provider), body);
-            ChatStreamParser parser = new ChatStreamParser();
-            String result = parser.parse(stream.reader, listener, started);
-            lastLanguageTag = parser.lastLanguageTag();
-            if (result == null) {
-                return null;
-            }
-            Log.i("LATENCY", "streamed response complete after "
-                    + (System.currentTimeMillis() - started) + "ms");
-            DebugLog.get().setStatus(provider.displayName + " – Antwort erhalten");
-            return result;
-        } catch (IOException e) {
-            failed = true;
-            DebugLog.get().w(TAG, "LLM-Streaming fehlgeschlagen: " + e.getMessage());
-            throw e;
-        } finally {
-            if (stream != null) {
-                stream.disconnect();
-            }
-            if (failed) {
-                circuitBreaker.recordFailure();
-            } else {
-                circuitBreaker.recordSuccess();
-            }
-        }
-    }
-
-    @Override
-    public String chat(ModelTask task, Map<String, Object> body) throws IOException {
-        return chat(task, body, DEFAULT_TIMEOUT_MS);
-    }
-
-    public String chat(ModelTask task, Map<String, Object> body, int readTimeoutMs) throws IOException {
-        Context ctx = ctx();
-        LlmProvider provider = ModelSettings.getProvider(ctx, task);
-        body.put("model", ModelSettings.getModel(ctx, task));
-        if (!provider.supportsReasoningEffort) {
-            body.remove("reasoning_effort");
-            body.remove("reasoning");
-        }
-        return llmClient.request(provider, ModelSettings.getKey(ctx, provider),
-                "/chat/completions", body, readTimeoutMs);
+        return llm.streamChat(ModelTask.CONVERSATION, messages, MAX_OUTPUT_TOKENS, listener);
     }
 
     private String parseChatContent(String responseJson) throws IOException {
@@ -316,17 +239,8 @@ public class OpenAIService implements LlmService {
         }
     }
 
-    @Nullable
-    public String sendOpenAiRequest(String path, @Nullable Map<String, Object> body) throws IOException {
-        return chat(ModelTask.CLASSIFICATION, body == null ? new HashMap<>() : body);
-    }
-
     public void setC(Context c) {
-        this.c = c == null ? null : c.getApplicationContext();
-    }
-
-    private Context ctx() {
-        return c != null ? c : ModelSettings.app();
+        llm.setContext(c);
     }
 
     public interface StreamListener {

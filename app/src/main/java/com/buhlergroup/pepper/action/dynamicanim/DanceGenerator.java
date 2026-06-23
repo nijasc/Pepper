@@ -90,7 +90,7 @@ public final class DanceGenerator extends GeneratorBase {
                 body.put("messages", messages);
                 body.put("reasoning_effort", "high");
 
-                String response = openAi.chat(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.GENERATION, body, DANCE_TIMEOUT_MS);
+                String response = openAi.chatStrongest(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.GENERATION, body, DANCE_TIMEOUT_MS);
                 String content = new JSONObject(response)
                         .getJSONArray("choices")
                         .getJSONObject(0)

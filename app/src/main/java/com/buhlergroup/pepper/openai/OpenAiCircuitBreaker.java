@@ -2,7 +2,7 @@ package com.buhlergroup.pepper.openai;
 
 import android.util.Log;
 
-final class OpenAiCircuitBreaker {
+public final class OpenAiCircuitBreaker {
 
     private static final String TAG = "OpenAIService";
     private static final int FAILURE_THRESHOLD = 3;
@@ -11,16 +11,16 @@ final class OpenAiCircuitBreaker {
     private int consecutiveFailures;
     private long circuitOpenUntilMs;
 
-    synchronized boolean isOpen() {
+    public synchronized boolean isOpen() {
         return System.currentTimeMillis() < circuitOpenUntilMs;
     }
 
-    synchronized void recordSuccess() {
+    public synchronized void recordSuccess() {
         consecutiveFailures = 0;
         circuitOpenUntilMs = 0;
     }
 
-    synchronized void recordFailure() {
+    public synchronized void recordFailure() {
         consecutiveFailures++;
         if (consecutiveFailures >= FAILURE_THRESHOLD) {
             circuitOpenUntilMs = System.currentTimeMillis() + COOLDOWN_MS;
