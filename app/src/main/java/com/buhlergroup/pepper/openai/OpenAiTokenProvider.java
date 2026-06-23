@@ -10,11 +10,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
-final class OpenAiTokenProvider {
+public final class OpenAiTokenProvider {
 
     private String cachedToken;
 
-    synchronized String getToken(Context context) {
+    public synchronized String getToken(Context context) {
         if (cachedToken != null) {
             return cachedToken;
         }

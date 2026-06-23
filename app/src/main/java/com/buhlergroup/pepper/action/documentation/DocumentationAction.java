@@ -69,17 +69,22 @@ public class DocumentationAction extends Action {
         userMessage.put("role", "user");
         userMessage.put("content", input);
 
-        List<Object> conversation = new ArrayList<>(getHistoryManager().toInput());
+        Map<String, Object> systemMessage = new HashMap<>();
+        systemMessage.put("role", "system");
+        systemMessage.put("content", service.formDefaultSystemPrompt(context));
+
+        List<Object> conversation = new ArrayList<>();
+        conversation.add(systemMessage);
+        conversation.addAll(getHistoryManager().toInput());
         conversation.add(docMessage);
         conversation.add(userMessage);
 
         Map<String, Object> body = new HashMap<>();
-        body.put("model", ModelSelector.modelFor(ModelSelector.ModelTask.DOCUMENTATION));
-        body.put("instructions", service.formDefaultSystemPrompt(context));
-        body.put("input", conversation);
+        body.put("messages", conversation);
 
         try {
-            String response = service.sendOpenAiRequest("/responses", body, ANSWER_TIMEOUT_MS);
+            String response = service.chat(
+                    com.buhlergroup.pepper.openai.ModelSelector.ModelTask.DOCUMENTATION, body, ANSWER_TIMEOUT_MS);
             String answer = service.extractLanguageTag(parseAnswer(response));
             getHistoryManager().addUser(input);
             getHistoryManager().addAssistant(answer, this);
@@ -135,17 +140,11 @@ public class DocumentationAction extends Action {
             throw new JSONException("OpenAI error: " + error.optString("message"));
         }
 
-        JSONArray output = json.getJSONArray("output");
-        for (int i = 0; i < output.length(); i++) {
-            JSONArray content = output.getJSONObject(i).optJSONArray("content");
-            if (content == null) {
-                continue;
-            }
-            for (int j = 0; j < content.length(); j++) {
-                JSONObject part = content.getJSONObject(j);
-                if ("output_text".equals(part.optString("type"))) {
-                    return part.getString("text");
-                }
+        JSONArray choices = json.optJSONArray("choices");
+        if (choices != null && choices.length() > 0) {
+            JSONObject message = choices.getJSONObject(0).optJSONObject("message");
+            if (message != null) {
+                return message.optString("content", "");
             }
         }
         throw new JSONException("No output_text in response");

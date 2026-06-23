@@ -71,7 +71,7 @@ public final class AnimationGenerator extends GeneratorBase {
         body.put("messages", messages);
         body.put("reasoning_effort", "low");
 
-        String response = openAi.sendOpenAiRequest("/chat/completions", body, GENERATION_TIMEOUT_MS);
+        String response = openAi.chat(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.GENERATION, body, GENERATION_TIMEOUT_MS);
         return new JSONObject(response)
                 .getJSONArray("choices")
                 .getJSONObject(0)

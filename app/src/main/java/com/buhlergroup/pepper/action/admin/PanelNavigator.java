@@ -28,6 +28,7 @@ final class PanelNavigator {
     public static final int PANEL_NAV = 15;
     public static final int PANEL_PROFILES = 16;
     public static final int PANEL_PROFILE_EDIT = 17;
+    public static final int PANEL_MODELS = 18;
     private final Map<Integer, View> panels = new LinkedHashMap<>();
     private final View header;
     private final TextView headerTitle;
@@ -100,6 +101,8 @@ final class PanelNavigator {
                 return R.string.admin_profiles;
             case PANEL_PROFILE_EDIT:
                 return R.string.profile_edit_title;
+            case PANEL_MODELS:
+                return R.string.admin_models;
             default:
                 return R.string.admin_menu_title;
         }

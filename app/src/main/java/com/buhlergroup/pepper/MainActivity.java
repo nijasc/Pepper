@@ -207,7 +207,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
 
         OpenAIService s = OpenAIService.shared();
         s.setC(qiContext);
-        s.getAuthToken(qiContext);
         Log.d("Mainactivity", "AFocus Gained");
         DebugLog.get().setStatus("Roboter-Fokus erhalten");
         DebugLog.get().i("MainActivity", "Roboter-Fokus erhalten");
