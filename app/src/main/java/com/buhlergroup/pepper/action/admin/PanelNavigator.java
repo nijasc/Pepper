@@ -26,6 +26,8 @@ final class PanelNavigator {
     public static final int PANEL_DEBUG = 13;
     public static final int PANEL_DANCE = 14;
     public static final int PANEL_NAV = 15;
+    public static final int PANEL_PROFILES = 16;
+    public static final int PANEL_PROFILE_EDIT = 17;
     private final Map<Integer, View> panels = new LinkedHashMap<>();
     private final View header;
     private final TextView headerTitle;
@@ -94,6 +96,10 @@ final class PanelNavigator {
                 return R.string.admin_dance_settings;
             case PANEL_NAV:
                 return R.string.admin_navigation_settings;
+            case PANEL_PROFILES:
+                return R.string.admin_profiles;
+            case PANEL_PROFILE_EDIT:
+                return R.string.profile_edit_title;
             default:
                 return R.string.admin_menu_title;
         }

@@ -10,6 +10,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.buhlergroup.pepper.debug.DebugLog;
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader;
 
 public class PepperApplication extends Application {
 
@@ -27,6 +28,7 @@ public class PepperApplication extends Application {
         super.onCreate();
         startElapsedMs = SystemClock.elapsedRealtime();
         DebugLog.get().init(this);
+        PDFBoxResourceLoader.init(this);
         installCrashRestart();
     }
 

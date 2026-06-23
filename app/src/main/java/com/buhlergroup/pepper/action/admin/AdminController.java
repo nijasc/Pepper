@@ -10,6 +10,8 @@ import java.util.List;
 
 public final class AdminController {
 
+    public static final int REQUEST_PROFILE_DOCUMENT = 0x9101;
+
     private static final AdminController INSTANCE = new AdminController();
     private volatile AdminView view;
     private volatile HistoryManager historyManager;
@@ -72,6 +74,13 @@ public final class AdminController {
 
     public boolean isOpen() {
         return open;
+    }
+
+    public void onProfileDocumentPicked(android.net.Uri uri) {
+        AdminView current = view;
+        if (current != null) {
+            current.onProfileDocumentPicked(uri);
+        }
     }
 
     void markClosed() {
