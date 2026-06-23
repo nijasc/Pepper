@@ -86,7 +86,13 @@ final class RoomScanner {
             QiContext c = nav.qiContext();
             LocalizeAndMap lam = currentMapping;
             if (c == null || lam == null) {
-                cb.onError("Es läuft gerade kein Scan.");
+                try {
+                    cb.onError("Es läuft gerade kein Scan.");
+                } finally {
+                    cancelMapping();
+                    nav.releaseAbilities();
+                    scanning = false;
+                }
                 return;
             }
             try {
