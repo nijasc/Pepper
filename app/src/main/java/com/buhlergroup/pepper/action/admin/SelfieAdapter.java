@@ -34,6 +34,8 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
                     return value.getByteCount() / 1024;
                 }
             };
+    private static final Set<SelfieAdapter> INSTANCES =
+            Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
     private final List<SelfieEntity> items = new ArrayList<>();
     private final Set<String> raffleLinkedIds = new HashSet<>();
     private final ExecutorService decodeExecutor = Executors.newFixedThreadPool(2);
@@ -41,6 +43,19 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
     private File imagesDir;
     public SelfieAdapter(OnSelfieClick onClick) {
         this.onClick = onClick;
+        INSTANCES.add(this);
+    }
+
+    public static void shutdownAll() {
+        for (SelfieAdapter adapter : INSTANCES) {
+            adapter.shutdown();
+        }
+        INSTANCES.clear();
+    }
+
+    public void shutdown() {
+        decodeExecutor.shutdownNow();
+        INSTANCES.remove(this);
     }
 
     public static Bitmap decodeThumb(File file, int reqSize) {

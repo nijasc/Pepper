@@ -175,6 +175,17 @@ public class AdminView extends FrameLayout {
         post(() -> setVisibility(GONE));
     }
 
+    public void onDestroy() {
+        if (galleryController != null) {
+            galleryController.releaseDetailServer();
+        }
+        if (dashboard != null) {
+            dashboard.stopRefresh();
+        }
+        SelfieAdapter.shutdownAll();
+        dbExecutor.shutdownNow();
+    }
+
     private void openNavigation() {
         NavigationController.get().open();
         hide();

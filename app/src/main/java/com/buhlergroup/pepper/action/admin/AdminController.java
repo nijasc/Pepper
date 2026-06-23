@@ -32,6 +32,10 @@ public final class AdminController {
     }
 
     public void detachView() {
+        AdminView current = view;
+        if (current != null) {
+            current.onDestroy();
+        }
         this.view = null;
         this.open = false;
     }
