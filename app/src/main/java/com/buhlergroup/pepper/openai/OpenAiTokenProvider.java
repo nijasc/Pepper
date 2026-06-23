@@ -3,6 +3,8 @@ package com.buhlergroup.pepper.openai;
 import android.content.Context;
 import android.util.Log;
 
+import com.buhlergroup.pepper.BuildConfig;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,7 +44,13 @@ final class OpenAiTokenProvider {
         } catch (IOException e) {
             Log.e("TOKENAUTH", "Failed to read env asset", e);
         }
-        Log.i("TOKENAUTH", cachedToken == null ? "no token" : "token loaded (" + mask(cachedToken) + ")");
+        if (cachedToken == null) {
+            Log.i("TOKENAUTH", "no token");
+        } else if (BuildConfig.DEBUG) {
+            Log.i("TOKENAUTH", "token loaded (" + mask(cachedToken) + ")");
+        } else {
+            Log.i("TOKENAUTH", "token loaded");
+        }
         return cachedToken;
     }
 

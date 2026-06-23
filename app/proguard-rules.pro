@@ -19,3 +19,25 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keepattributes Signature,*Annotation*,EnclosingMethod,InnerClasses
+
+-keep class com.aldebaran.** { *; }
+-dontwarn com.aldebaran.**
+
+-keep class com.fasterxml.jackson.** { *; }
+-keepclassmembers class com.fasterxml.jackson.** { *; }
+-dontwarn com.fasterxml.jackson.**
+-keepnames class com.buhlergroup.pepper.openai.** { *; }
+-keepclassmembers class com.buhlergroup.pepper.openai.** {
+    <init>(...);
+    <fields>;
+    void set*(***);
+    *** get*();
+    *** is*();
+}
+
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep @androidx.room.Entity class * { *; }
+-keepclassmembers @androidx.room.Entity class * { *; }
+-dontwarn androidx.room.paging.**
