@@ -4,10 +4,19 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public final class TonePlayer {
 
     private static final int SAMPLE_RATE = 44100;
     private static final double[] PAD_FREQUENCIES = {329.63, 261.63, 392.00, 196.00};
+
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "MemoryTone");
+        t.setDaemon(true);
+        return t;
+    });
 
     public void playPadTone(int padIndex, long durationMs) {
         if (padIndex < 0 || padIndex >= PAD_FREQUENCIES.length) {
@@ -23,16 +32,16 @@ public final class TonePlayer {
 
     public void playSuccess() {
         final double[] notes = {523.25, 659.25, 783.99};
-        new Thread(() -> {
+        executor.execute(() -> {
             for (double note : notes) {
                 emit(note, 140, 0.4);
                 sleepQuietly(150);
             }
-        }, "MemorySuccessTone").start();
+        });
     }
 
     public void playTone(double frequencyHz, long durationMs, double amplitude) {
-        new Thread(() -> emit(frequencyHz, durationMs, amplitude), "MemoryTone").start();
+        executor.execute(() -> emit(frequencyHz, durationMs, amplitude));
     }
 
     private void emit(double frequencyHz, long durationMs, double amplitude) {
