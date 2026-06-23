@@ -13,17 +13,19 @@ import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.openai.SystemSpeechRewriter;
 
 public class SpeechManager {
-    private static SpeechManager instance;
     private static LanguageManager languageManager;
+
+    private final Object speechLock = new Object();
 
     private SpeechManager() {
     }
 
+    private static final class Holder {
+        private static final SpeechManager INSTANCE = new SpeechManager();
+    }
+
     public static SpeechManager getInstance() {
-        if (instance == null) {
-            instance = new SpeechManager();
-        }
-        return instance;
+        return Holder.INSTANCE;
     }
 
     public void setLanguageManager(LanguageManager lm) {
@@ -68,32 +70,34 @@ public class SpeechManager {
 
     private void speak(QiContext context, String toSay, Locale locale, SupportedLanguage fallback,
                        BodyLanguageOption bodyLanguage) {
-        ThinkingController.get().stop();
-        DialogueController.get().beginUtterance(toSay);
-        AudioCoordinator.get().onSpeechStart();
-        try {
-            Say answerSay = SayBuilder.with(context)
-                    .withText(toSay)
-                    .withLocale(locale)
-                    .withBodyLanguageOption(bodyLanguage)
-                    .build();
-            answerSay.run();
-        } catch (Exception e) {
-            Log.w("SAYING", "Say failed for requested locale, falling back to " + fallback.name() + ": " + e.getMessage());
+        synchronized (speechLock) {
+            ThinkingController.get().stop();
+            DialogueController.get().beginUtterance(toSay);
+            AudioCoordinator.get().onSpeechStart();
             try {
-                Locale fallbackLocale = new Locale(fallback.getQiLang(), fallback.getRegion());
-                Say fallbackSay = SayBuilder.with(context)
+                Say answerSay = SayBuilder.with(context)
                         .withText(toSay)
-                        .withLocale(fallbackLocale)
+                        .withLocale(locale)
                         .withBodyLanguageOption(bodyLanguage)
                         .build();
-                fallbackSay.run();
-            } catch (Exception e2) {
-                Log.e("SAYING", "Fallback say failed: " + e2.getMessage());
+                answerSay.run();
+            } catch (Exception e) {
+                Log.w("SAYING", "Say failed for requested locale, falling back to " + fallback.name() + ": " + e.getMessage());
+                try {
+                    Locale fallbackLocale = new Locale(fallback.getQiLang(), fallback.getRegion());
+                    Say fallbackSay = SayBuilder.with(context)
+                            .withText(toSay)
+                            .withLocale(fallbackLocale)
+                            .withBodyLanguageOption(bodyLanguage)
+                            .build();
+                    fallbackSay.run();
+                } catch (Exception e2) {
+                    Log.e("SAYING", "Fallback say failed: " + e2.getMessage());
+                }
+            } finally {
+                AudioCoordinator.get().onSpeechEnd();
+                DialogueController.get().endUtterance();
             }
-        } finally {
-            AudioCoordinator.get().onSpeechEnd();
-            DialogueController.get().endUtterance();
         }
     }
 }
