@@ -1,7 +1,6 @@
 package com.buhlergroup.pepper.action.admin;
 
 import android.content.Context;
-import android.os.SystemClock;
 import android.view.View;
 import android.widget.TextView;
 
@@ -16,8 +15,6 @@ final class PinController {
     private final TextView pinError;
     private final OnUnlocked onUnlocked;
     private final StringBuilder entered = new StringBuilder();
-    private int pinAttempts = 0;
-    private long pinLockoutUntil = 0;
     PinController(View root, OnUnlocked onUnlocked) {
         this.context = root.getContext();
         this.onUnlocked = onUnlocked;
@@ -32,7 +29,7 @@ final class PinController {
     }
 
     boolean isLocked() {
-        return SystemClock.elapsedRealtime() < pinLockoutUntil;
+        return System.currentTimeMillis() < AdminSettings.getLockoutUntil(context);
     }
 
     void clearError() {
@@ -40,7 +37,7 @@ final class PinController {
     }
 
     void showLockoutMessage() {
-        long remaining = Math.max(0, pinLockoutUntil - SystemClock.elapsedRealtime());
+        long remaining = Math.max(0, AdminSettings.getLockoutUntil(context) - System.currentTimeMillis());
         int seconds = (int) Math.ceil(remaining / 1000.0);
         pinError.setText(context.getString(R.string.admin_pin_locked, seconds));
         pinError.setVisibility(View.VISIBLE);
@@ -83,17 +80,17 @@ final class PinController {
     }
 
     private void checkPin() {
-        if (AdminSettings.getPin(context).contentEquals(entered)) {
-            pinAttempts = 0;
-            pinLockoutUntil = 0;
+        if (AdminSettings.verifyPin(context, entered)) {
+            AdminSettings.resetAttempts(context);
+            AdminSettings.setLockoutUntil(context, 0);
             resetEntry();
             onUnlocked.onUnlocked();
         } else {
             resetEntry();
-            pinAttempts++;
-            if (pinAttempts >= MAX_PIN_ATTEMPTS) {
-                pinAttempts = 0;
-                pinLockoutUntil = SystemClock.elapsedRealtime() + PIN_LOCKOUT_MS;
+            int attempts = AdminSettings.incrementAttempts(context);
+            if (attempts >= MAX_PIN_ATTEMPTS) {
+                AdminSettings.resetAttempts(context);
+                AdminSettings.setLockoutUntil(context, System.currentTimeMillis() + PIN_LOCKOUT_MS);
                 showLockoutMessage();
             } else {
                 pinError.setText(R.string.admin_pin_error);
