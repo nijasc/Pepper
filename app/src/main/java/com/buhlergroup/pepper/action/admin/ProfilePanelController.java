@@ -125,6 +125,12 @@ final class ProfilePanelController {
 
             Button remove = new Button(ctx());
             remove.setText(R.string.profile_resource_remove);
+            remove.setTextSize(13);
+            remove.setMinWidth(0);
+            remove.setMinHeight(0);
+            int hp = (int) (12 * ctx().getResources().getDisplayMetrics().density);
+            int vp = (int) (4 * ctx().getResources().getDisplayMetrics().density);
+            remove.setPadding(hp, vp, hp, vp);
             remove.setOnClickListener(v -> removeResource(res.id));
             row.addView(remove);
 

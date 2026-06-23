@@ -1525,7 +1525,7 @@
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/adminProfileNew"
-            style="@style/AdminMenuButton"
+            style="@style/AdminPrimaryButton"
             android:layout_gravity="start"
             android:text="@string/profile_new" />
 
@@ -1629,19 +1629,19 @@
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/adminProfileAddResource"
-                    style="@style/AdminMenuButton"
+                    style="@style/AdminPrimaryButton"
                     android:text="@string/profile_add_resource" />
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/adminProfileRebuild"
-                    style="@style/AdminMenuButton"
+                    style="@style/AdminPrimaryButton"
                     android:layout_marginStart="12dp"
                     android:text="@string/profile_rebuild_summary" />
             </LinearLayout>
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/adminProfileSave"
-                style="@style/AdminMenuButton"
+                style="@style/AdminPrimaryButton"
                 android:layout_marginTop="24dp"
                 android:text="@string/raffle_save" />
 
@@ -1653,18 +1653,18 @@
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/adminProfileActivate"
-                    style="@style/AdminMenuButton"
+                    style="@style/AdminPrimaryButton"
                     android:text="@string/profile_activate" />
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/adminProfileClone"
-                    style="@style/AdminMenuButton"
+                    style="@style/AdminPrimaryButton"
                     android:layout_marginStart="12dp"
                     android:text="@string/profile_clone" />
 
                 <androidx.appcompat.widget.AppCompatButton
                     android:id="@+id/adminProfileDelete"
-                    style="@style/AdminMenuButton"
+                    style="@style/AdminPrimaryButton"
                     android:layout_marginStart="12dp"
                     android:text="@string/profile_delete" />
             </LinearLayout>
