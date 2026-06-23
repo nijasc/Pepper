@@ -268,6 +268,24 @@
                         android:textColor="@color/text_primary"
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
+
+                <LinearLayout android:id="@+id/adminProfiles" style="@style/AdminMenuTile">
+                    <ImageView
+                        android:layout_width="@dimen/admin_tile_icon"
+                        android:layout_height="@dimen/admin_tile_icon"
+                        android:contentDescription="@string/admin_profiles"
+                        android:src="@drawable/ic_admin_profile" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_s"
+                        android:gravity="center"
+                        android:maxLines="2"
+                        android:text="@string/admin_profiles"
+                        android:textColor="@color/text_primary"
+                        android:textSize="@dimen/text_small" />
+                </LinearLayout>
             </GridLayout>
 
             <TextView
@@ -1493,6 +1511,166 @@
             android:text="@string/raffle_save" />
 
     </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/adminProfilesPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
+        android:paddingTop="@dimen/admin_content_top"
+        android:visibility="gone">
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/adminProfileNew"
+            style="@style/AdminMenuButton"
+            android:layout_gravity="start"
+            android:text="@string/profile_new" />
+
+        <TextView
+            android:id="@+id/adminProfileEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/profile_empty"
+            android:textColor="@color/text_muted"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/adminProfileList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="12dp" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/adminProfileEditPanel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="24dp"
+        android:paddingRight="24dp"
+        android:paddingBottom="24dp"
+        android:paddingTop="@dimen/admin_content_top"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/profile_name_label"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/adminProfileName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/profile_name_label"
+                android:inputType="text"
+                android:textColor="@color/white"
+                android:textColorHint="@color/text_muted" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/profile_instructions_label"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <EditText
+                android:id="@+id/adminProfileInstructions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="top"
+                android:hint="@string/profile_instructions_hint"
+                android:inputType="textMultiLine"
+                android:minLines="6"
+                android:textColor="@color/white"
+                android:textColorHint="@color/text_muted" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/profile_resources_label"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/adminProfileSummaryStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/text_muted"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:id="@+id/adminProfileResourceList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/adminProfileAddResource"
+                    style="@style/AdminMenuButton"
+                    android:text="@string/profile_add_resource" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/adminProfileRebuild"
+                    style="@style/AdminMenuButton"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/profile_rebuild_summary" />
+            </LinearLayout>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminProfileSave"
+                style="@style/AdminMenuButton"
+                android:layout_marginTop="24dp"
+                android:text="@string/raffle_save" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/adminProfileActivate"
+                    style="@style/AdminMenuButton"
+                    android:text="@string/profile_activate" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/adminProfileClone"
+                    style="@style/AdminMenuButton"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/profile_clone" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/adminProfileDelete"
+                    style="@style/AdminMenuButton"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/profile_delete" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
 
     <LinearLayout
         android:id="@+id/adminStatsPanel"

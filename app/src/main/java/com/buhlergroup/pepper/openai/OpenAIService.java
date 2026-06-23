@@ -10,6 +10,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.util.IOUtils;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.action.profile.ProfileRepository;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
@@ -219,8 +220,13 @@ public class OpenAIService {
     }
 
     private String buildSystemPrompt(QiContext context, boolean withRouting) {
-        String instructions = IOUtils.fromRaw(context, R.raw.instructions);
+        ProfileRepository profiles = ProfileRepository.get(context);
+        String instructions = profiles.getActiveInstructions(context);
         StringBuilder prompt = new StringBuilder(instructions);
+        String contentSummary = profiles.getActiveContentSummary(context);
+        if (contentSummary != null && !contentSummary.trim().isEmpty()) {
+            prompt.append("\n## Wissensbasis\n").append(contentSummary).append("\n");
+        }
         for (Action action : actions) {
             prompt.append("- ").append(action.getDescription()).append("\n");
         }

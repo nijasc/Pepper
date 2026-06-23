@@ -23,6 +23,7 @@ import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.buhlergroup.pepper.action.ActionHandler;
 import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
+import com.buhlergroup.pepper.action.profile.ProfileRepository;
 import com.buhlergroup.pepper.action.attract.AttractController;
 import com.buhlergroup.pepper.action.career.CareerController;
 import com.buhlergroup.pepper.action.career.CareerView;
@@ -163,6 +164,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         AttractController.get().setListeningRelevanceListener(() -> speech.refreshListening());
         RaffleRepository.purgeExpiredAsync(this);
         SelfieRepository.purgeExpiredAsync(this);
+        ProfileRepository.ensureSeededAsync(this);
 
         DanceLibraryController.get().setVoiceRequester(() ->
                 runOnUiThread(() -> speech.requestDanceEdit(DANCE_EDIT_SPEECH_EVENT)));
@@ -391,6 +393,12 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         Log.d("Mainactivity", "AActivity result");
 
         if (speech.handleActivityResult(requestCode, resultCode, data)) {
+            return;
+        }
+        if (requestCode == AdminController.REQUEST_PROFILE_DOCUMENT) {
+            if (resultCode == RESULT_OK && data != null && data.getData() != null) {
+                AdminController.get().onProfileDocumentPicked(data.getData());
+            }
             return;
         }
         if (requestCode == DANCE_EDIT_SPEECH_EVENT) {
