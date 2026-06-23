@@ -1,6 +1,7 @@
 package com.buhlergroup.pepper.action.raffle;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.util.Log;
 
 import com.buhlergroup.pepper.action.raffle.data.RaffleDao;
@@ -10,8 +11,10 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleEntryDao;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
+import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -20,6 +23,8 @@ import java.util.concurrent.Executors;
 
 public final class RaffleRepository {
 
+    private static final String TAG = "RaffleRepository";
+    private static final int MAX_RETENTION_MULTIPLIER = 4;
     private static final ExecutorService maintenanceExecutor = Executors.newSingleThreadExecutor();
     private static volatile RaffleRepository instance;
     private final Context appContext;
@@ -106,11 +111,40 @@ public final class RaffleRepository {
         if (days <= 0) {
             return;
         }
-        long cutoff = System.currentTimeMillis() - days * 24L * 60L * 60L * 1000L;
+        long now = System.currentTimeMillis();
+        long cutoff = now - days * 24L * 60L * 60L * 1000L;
         List<RaffleEntity> expired = raffleDao.getFinishedBefore(cutoff);
         for (RaffleEntity raffle : expired) {
             deleteRaffleCompletely(raffle.id);
         }
+        purgeAbandoned(now, days);
+    }
+
+    private void purgeAbandoned(long now, int days) {
+        long maxCutoff = now - days * (long) MAX_RETENTION_MULTIPLIER * 24L * 60L * 60L * 1000L;
+        List<Long> stale = staleRaffleIds(maxCutoff);
+        if (stale.isEmpty()) {
+            return;
+        }
+        DebugLog.get().w(TAG, "Erzwinge Aufbewahrungslimit für " + stale.size() + " überfällige Verlosung(en)");
+        for (long id : stale) {
+            deleteRaffleCompletely(id);
+        }
+    }
+
+    private List<Long> staleRaffleIds(long maxCutoff) {
+        List<Long> ids = new ArrayList<>();
+        Cursor cursor = database.query(
+                "SELECT id FROM raffles WHERE created_at > 0 AND created_at < ?",
+                new Object[]{maxCutoff});
+        try {
+            while (cursor.moveToNext()) {
+                ids.add(cursor.getLong(0));
+            }
+        } finally {
+            cursor.close();
+        }
+        return ids;
     }
 
     public long addEntry(long raffleId, String name, String email, String phone, String selfieId) {
