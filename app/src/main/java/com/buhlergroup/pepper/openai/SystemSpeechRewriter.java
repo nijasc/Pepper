@@ -8,10 +8,11 @@ import com.buhlergroup.pepper.lang.SupportedLanguage;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -25,10 +26,17 @@ public final class SystemSpeechRewriter {
             ModelSelector.modelFor(ModelSelector.ModelTask.REWRITE);
     private static final long TIMEOUT_MS = 1500;
     private static final int MIN_LENGTH = 12;
+    private static final int MAX_CACHE_SIZE = 256;
 
     private static final SystemSpeechRewriter INSTANCE = new SystemSpeechRewriter();
 
-    private final Map<String, String> cache = new ConcurrentHashMap<>();
+    private final Map<String, String> cache = Collections.synchronizedMap(
+            new LinkedHashMap<String, String>(16, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
+                    return size() > MAX_CACHE_SIZE;
+                }
+            });
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final OpenAIService openAi = OpenAIService.shared();
 

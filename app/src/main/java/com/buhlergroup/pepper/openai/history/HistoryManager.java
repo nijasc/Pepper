@@ -12,6 +12,7 @@ public class HistoryManager implements Cloneable {
     private static final int MAX_DEV_LOG = 200;
     private final List<HistoryEntry> history = new ArrayList<>();
     private final List<String> devLog = new ArrayList<>();
+    private final Object lock = new Object();
 
     public void addUser(String content) {
         add(HistoryRole.USER, content, null);
@@ -30,11 +31,19 @@ public class HistoryManager implements Cloneable {
     }
 
     public void clear() {
-        history.clear();
-        addDeveloper("History cleared.");
+        synchronized (lock) {
+            history.clear();
+            addLocked(HistoryRole.DEVELOPER, "History cleared.", null);
+        }
     }
 
     private void add(HistoryRole role, String content, Action action) {
+        synchronized (lock) {
+            addLocked(role, content, action);
+        }
+    }
+
+    private void addLocked(HistoryRole role, String content, Action action) {
         if (role != HistoryRole.DEVELOPER && conversationalSize() >= MAX_HISTORY) {
             removeOldestConversational();
         }
@@ -48,32 +57,40 @@ public class HistoryManager implements Cloneable {
     }
 
     public List<String> getDevLog() {
-        return new ArrayList<>(devLog);
+        synchronized (lock) {
+            return new ArrayList<>(devLog);
+        }
     }
 
     public List<HistoryEntry> getConversation() {
-        List<HistoryEntry> result = new ArrayList<>();
-        for (HistoryEntry entry : history) {
-            if (entry.getRole() != HistoryRole.DEVELOPER) {
-                result.add(entry);
+        synchronized (lock) {
+            List<HistoryEntry> result = new ArrayList<>();
+            for (HistoryEntry entry : history) {
+                if (entry.getRole() != HistoryRole.DEVELOPER) {
+                    result.add(entry);
+                }
             }
+            return result;
         }
-        return result;
     }
 
     public List<Map<String, String>> toInput() {
-        List<Map<String, String>> input = new ArrayList<>();
-        for (HistoryEntry entry : history) {
-            Map<String, String> msg = new HashMap<>();
-            msg.put("role", entry.getRole().apiValue());
-            msg.put("content", entry.getContent());
-            input.add(msg);
+        synchronized (lock) {
+            List<Map<String, String>> input = new ArrayList<>();
+            for (HistoryEntry entry : history) {
+                Map<String, String> msg = new HashMap<>();
+                msg.put("role", entry.getRole().apiValue());
+                msg.put("content", entry.getContent());
+                input.add(msg);
+            }
+            return input;
         }
-        return input;
     }
 
     public int historySize() {
-        return conversationalSize();
+        synchronized (lock) {
+            return conversationalSize();
+        }
     }
 
     private int conversationalSize() {
