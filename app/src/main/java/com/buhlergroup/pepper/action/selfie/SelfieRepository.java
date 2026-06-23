@@ -1,12 +1,12 @@
 package com.buhlergroup.pepper.action.selfie;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.selfie.data.SelfieDao;
 import com.buhlergroup.pepper.action.selfie.data.SelfieDatabase;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
+import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,6 +20,8 @@ import java.util.concurrent.Executors;
 
 public final class SelfieRepository {
 
+    private static final String TAG = "SelfieRepository";
+    private static final long ORPHAN_GRACE_MILLIS = 60L * 60L * 1000L;
     private static final ExecutorService maintenanceExecutor = Executors.newSingleThreadExecutor();
     private static volatile SelfieRepository instance;
     private final SelfieDao dao;
@@ -28,8 +30,8 @@ public final class SelfieRepository {
     private SelfieRepository(Context context) {
         this.dao = SelfieDatabase.get(context).selfieDao();
         this.imagesDir = new File(context.getFilesDir(), "selfies");
-        if (!imagesDir.exists()) {
-            imagesDir.mkdirs();
+        if (!imagesDir.exists() && !imagesDir.mkdirs()) {
+            DebugLog.get().w(TAG, "Bildverzeichnis konnte nicht angelegt werden");
         }
     }
 
@@ -55,7 +57,7 @@ public final class SelfieRepository {
                 Set<String> protectedIds = new HashSet<>(RaffleRepository.get(app).linkedSelfieIds());
                 get(app).purgeExpired(days, protectedIds);
             } catch (Exception e) {
-                Log.w("SelfieRepository", "purgeExpired failed: " + e.getMessage());
+                DebugLog.get().w(TAG, "purgeExpired fehlgeschlagen: " + e.getMessage());
             }
         });
     }
@@ -87,7 +89,10 @@ public final class SelfieRepository {
         SelfieEntity entity = dao.findById(id);
         if (entity != null) {
             dao.deleteById(id);
-            new File(imagesDir, entity.filename).delete();
+            File file = new File(imagesDir, entity.filename);
+            if (file.exists() && !file.delete()) {
+                DebugLog.get().w(TAG, "Bilddatei konnte nicht gelöscht werden");
+            }
         }
     }
 
@@ -102,6 +107,32 @@ public final class SelfieRepository {
                 continue;
             }
             delete(selfie.id);
+        }
+        purgeOrphanedFiles();
+    }
+
+    private void purgeOrphanedFiles() {
+        File[] files = imagesDir.listFiles();
+        if (files == null) {
+            return;
+        }
+        Set<String> known = new HashSet<>();
+        for (SelfieEntity selfie : dao.getAll()) {
+            known.add(selfie.filename);
+        }
+        long orphanCutoff = System.currentTimeMillis() - ORPHAN_GRACE_MILLIS;
+        int removed = 0;
+        for (File file : files) {
+            if (file.isFile() && !known.contains(file.getName()) && file.lastModified() < orphanCutoff) {
+                if (file.delete()) {
+                    removed++;
+                } else {
+                    DebugLog.get().w(TAG, "Verwaiste Bilddatei konnte nicht gelöscht werden");
+                }
+            }
+        }
+        if (removed > 0) {
+            DebugLog.get().i(TAG, "Verwaiste Bilddateien entfernt: " + removed);
         }
     }
 }
