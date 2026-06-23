@@ -7,6 +7,7 @@ import android.util.Log;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Locale;
 
@@ -18,33 +19,54 @@ public final class NetworkUtils {
     }
 
     public static String localIp(Context context) {
+        InetAddress addr = localInetAddress(context);
+        return addr != null ? addr.getHostAddress() : null;
+    }
+
+    public static InetAddress localInetAddress(Context context) {
         try {
             WifiManager wm = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wm != null) {
                 int ip = wm.getConnectionInfo().getIpAddress();
                 if (ip != 0) {
-                    return String.format(Locale.US, "%d.%d.%d.%d",
+                    String text = String.format(Locale.US, "%d.%d.%d.%d",
                             ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
+                    return InetAddress.getByName(text);
                 }
             }
-        } catch (Exception e) {
+        } catch (UnknownHostException | RuntimeException e) {
             Log.w(TAG, "WifiManager IP lookup failed: " + e.getMessage());
         }
 
+        InetAddress preferred = null;
         try {
             for (NetworkInterface nif : Collections.list(NetworkInterface.getNetworkInterfaces())) {
                 if (!nif.isUp() || nif.isLoopback()) {
                     continue;
                 }
                 for (InetAddress addr : Collections.list(nif.getInetAddresses())) {
-                    if (addr instanceof Inet4Address && addr.isSiteLocalAddress()) {
-                        return addr.getHostAddress();
+                    if (!(addr instanceof Inet4Address) || !addr.isSiteLocalAddress()) {
+                        continue;
+                    }
+                    if (isAccessPointInterface(nif.getName())) {
+                        return addr;
+                    }
+                    if (preferred == null) {
+                        preferred = addr;
                     }
                 }
             }
         } catch (Exception e) {
             Log.w(TAG, "NetworkInterface IP lookup failed: " + e.getMessage());
         }
-        return null;
+        return preferred;
+    }
+
+    private static boolean isAccessPointInterface(String name) {
+        if (name == null) {
+            return false;
+        }
+        String lower = name.toLowerCase(Locale.US);
+        return lower.startsWith("wlan") || lower.startsWith("ap") || lower.contains("softap") || lower.startsWith("swlan");
     }
 }

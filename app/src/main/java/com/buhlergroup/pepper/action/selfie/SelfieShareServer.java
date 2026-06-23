@@ -5,6 +5,7 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 
 final class SelfieShareServer {
 
@@ -26,7 +27,7 @@ final class SelfieShareServer {
     synchronized void acquire(Context context) {
         qrViewers++;
         try {
-            ensureServer(SelfieRepository.get(context).imagesDir());
+            ensureServer(SelfieRepository.get(context).imagesDir(), NetworkUtils.localInetAddress(context));
         } catch (IOException e) {
             Log.w(TAG, "Could not start image server: " + e.getMessage());
         }
@@ -62,9 +63,9 @@ final class SelfieShareServer {
         return "http://" + ip + ":" + SERVER_PORT + "/" + filename + "?token=" + tokenFor(filename);
     }
 
-    private void ensureServer(File imagesDir) throws IOException {
+    private void ensureServer(File imagesDir, InetAddress bindAddress) throws IOException {
         if (server == null) {
-            LocalImageServer started = new LocalImageServer(imagesDir, SERVER_PORT);
+            LocalImageServer started = new LocalImageServer(imagesDir, SERVER_PORT, bindAddress);
             started.start();
             server = started;
         }
