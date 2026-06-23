@@ -6,8 +6,8 @@ import android.speech.RecognizerIntent;
 public class LanguageManager {
 
     private final Intent intent;
-    private SupportedLanguage current;
-    private LanguageChangeListener listener;
+    private volatile SupportedLanguage current;
+    private volatile LanguageChangeListener listener;
     public LanguageManager(Intent intent) {
         this.intent = intent;
     }

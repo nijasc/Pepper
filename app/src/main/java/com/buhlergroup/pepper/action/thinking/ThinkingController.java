@@ -59,7 +59,7 @@ public final class ThinkingController {
 
     private volatile Future<Void> animationFuture;
     private volatile Future<Void> fillerFuture;
-    private volatile MediaPlayer fillerPlayer;
+    private MediaPlayer fillerPlayer;
     private volatile boolean active;
     private volatile Thread loopThread;
     private int lastFiller = -1;
@@ -170,11 +170,18 @@ public final class ThinkingController {
             if (player == null) {
                 return false;
             }
-            fillerPlayer = player;
+            synchronized (this) {
+                fillerPlayer = player;
+            }
             player.setOnCompletionListener(p -> {
-                p.release();
-                if (fillerPlayer == p) {
-                    fillerPlayer = null;
+                synchronized (this) {
+                    if (fillerPlayer == p) {
+                        fillerPlayer = null;
+                        try {
+                            p.release();
+                        } catch (Exception ignored) {
+                        }
+                    }
                 }
             });
             player.start();
@@ -240,8 +247,11 @@ public final class ThinkingController {
     }
 
     private void releaseFillerPlayer() {
-        MediaPlayer player = fillerPlayer;
-        fillerPlayer = null;
+        MediaPlayer player;
+        synchronized (this) {
+            player = fillerPlayer;
+            fillerPlayer = null;
+        }
         if (player != null) {
             try {
                 if (player.isPlaying()) {

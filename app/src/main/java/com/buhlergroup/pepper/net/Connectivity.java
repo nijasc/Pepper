@@ -12,12 +12,12 @@ public final class Connectivity {
 
     public static boolean isOnline(Context context) {
         if (context == null) {
-            return true;
+            return false;
         }
         ConnectivityManager cm =
                 (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) {
-            return true;
+            return false;
         }
         Network network = cm.getActiveNetwork();
         if (network == null) {
