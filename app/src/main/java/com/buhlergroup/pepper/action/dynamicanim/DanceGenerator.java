@@ -99,6 +99,11 @@ public final class DanceGenerator extends GeneratorBase {
                 JSONObject plan = new JSONObject(extractJson(content));
                 String xml = buildDanceXml(plan, target, beatFrameStep);
                 Document doc = XmlUtils.parse(xml);
+                String error = QianimValidator.validate(doc);
+                if (error != null) {
+                    Log.w(TAG, "Compact dance attempt " + attempt + " invalid: " + error);
+                    continue;
+                }
                 return postProcess(doc, xml, true);
             } catch (Exception e) {
                 Log.w(TAG, "Compact dance attempt " + attempt + " failed: " + e.getMessage());

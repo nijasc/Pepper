@@ -2,6 +2,7 @@ package com.buhlergroup.pepper.action.dynamicanim;
 
 import android.util.Log;
 
+import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
 import com.aldebaran.qi.sdk.builder.AnimationBuilder;
@@ -40,6 +41,7 @@ public class DynamicAnimationAction extends Action {
             return;
         }
 
+        Future<Void> anim = null;
         try {
             Animation animation = AnimationBuilder.with(context)
                     .withTexts(qianim)
@@ -47,7 +49,19 @@ public class DynamicAnimationAction extends Action {
             Animate animate = AnimateBuilder.with(context)
                     .withAnimation(animation)
                     .build();
-            animate.run();
+            anim = animate.async().run();
+            while (!anim.isDone()) {
+                if (Thread.currentThread().isInterrupted()) {
+                    anim.requestCancellation();
+                    break;
+                }
+                Thread.sleep(100);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            if (anim != null && !anim.isDone()) {
+                anim.requestCancellation();
+            }
         } catch (Exception e) {
             Log.e(TAG, "Animation playback failed: " + e.getMessage() + "\nGenerated qianim:\n" + qianim, e);
             SpeechManager.getInstance().systemSay(context,

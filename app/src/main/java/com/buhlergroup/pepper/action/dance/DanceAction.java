@@ -1,6 +1,5 @@
 package com.buhlergroup.pepper.action.dance;
 
-import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.util.Log;
 
@@ -12,10 +11,8 @@ import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
-import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
-import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.File;
@@ -126,83 +123,11 @@ public class DanceAction extends Action {
     }
 
     private void playDance(QiContext context, DanceEntity dance) {
-        Future<Void> animationFuture = null;
         try {
-            if (dance.qianimPath == null) {
-                return;
-            }
-            String qianim = DanceRepository.readQianim(new File(dance.qianimPath));
-
-            Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
-            Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
-
-            if (dance.previewUrl == null || dance.previewUrl.isEmpty()) {
-                DebugLog.get().w(TAG, "Tanz '" + dance.songName + "' ohne Audio-Quelle – kein Ton");
-            }
-            MediaPlayer player = dance.previewUrl != null
-                    ? startAudioUrl(dance.previewUrl, dance.audioStartMs) : null;
-
-            animationFuture = animate.async().run();
-            QiFutures.consume(animationFuture, TAG, "dance animation");
-
-            long clipMs = player != null
-                    ? player.getDuration() - dance.audioStartMs : dance.durationMs;
-            if (clipMs <= 0) {
-                clipMs = dance.durationMs;
-            }
-            long playMs = Math.max(MIN_PLAY_MS, Math.min(MAX_PLAY_MS, clipMs));
-            awaitAnimation(animationFuture, playMs);
-
-            stopAudio();
-            if (!animationFuture.isDone()) {
-                animationFuture.requestCancellation();
-            }
+            DancePlayback.play(context, dance);
         } catch (Exception e) {
             Log.w(TAG, "Dance playback failed: " + e.getMessage());
-            stopAudio();
-            if (animationFuture != null && !animationFuture.isDone()) {
-                animationFuture.requestCancellation();
-            }
             playFallback(context);
-        }
-    }
-
-    private void awaitAnimation(Future<Void> animationFuture, long capMs) {
-        long deadline = System.currentTimeMillis() + capMs;
-        while (System.currentTimeMillis() < deadline) {
-            if (animationFuture == null || animationFuture.isDone()) {
-                return;
-            }
-            sleep();
-        }
-    }
-
-    private MediaPlayer startAudioUrl(String url, long startMs) {
-        stopAudio();
-        try {
-            MediaPlayer player = new MediaPlayer();
-            player.setOnErrorListener((mp, what, extra) -> {
-                DebugLog.get().w(TAG, "MediaPlayer-Fehler what=" + what + " extra=" + extra);
-                return false;
-            });
-            player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            player.setDataSource(url);
-            player.prepare();
-            if (startMs > 0 && startMs < player.getDuration()) {
-                player.seekTo((int) startMs);
-            }
-            player.start();
-            synchronized (audioLock) {
-                mediaPlayer = player;
-            }
-            AudioCoordinator.get().attachMusic(player);
-            DebugLog.get().i(TAG, "Musik gestartet");
-            return player;
-        } catch (Exception e) {
-            Log.w(TAG, "Preview playback failed: " + e.getMessage());
-            DebugLog.get().w(TAG, "Audio-Wiedergabe fehlgeschlagen: " + e.getMessage());
-            stopAudio();
-            return null;
         }
     }
 
@@ -228,8 +153,23 @@ public class DanceAction extends Action {
             Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 
             long end = System.currentTimeMillis() + playMs;
-            while (System.currentTimeMillis() < end) {
-                animate.run();
+            Future<Void> anim = null;
+            try {
+                while (System.currentTimeMillis() < end
+                        && !Thread.currentThread().isInterrupted()) {
+                    anim = animate.async().run();
+                    while (!anim.isDone() && System.currentTimeMillis() < end) {
+                        Thread.sleep(100);
+                    }
+                    if (!anim.isDone()) {
+                        anim.requestCancellation();
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                if (anim != null && !anim.isDone()) {
+                    anim.requestCancellation();
+                }
             }
             stopAudio();
         } catch (Exception e) {
@@ -269,14 +209,6 @@ public class DanceAction extends Action {
                 player.release();
             } catch (Exception ignored) {
             }
-        }
-    }
-
-    private void sleep() {
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 
