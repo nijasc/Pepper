@@ -45,7 +45,7 @@ import java.util.Map;
 public class ActionHandler {
     private static final int MAX_ATTEMPTS = 2;
     private static final long RETRY_BACKOFF_MS = 600;
-    private static final List<Action> actions = new ArrayList<>();
+    private final List<Action> actions = new ArrayList<>();
     private final Map<String, Action> actionsByName = new HashMap<>();
     private final IntentEngine intentEngine;
     private final HistoryManager historyManager;
