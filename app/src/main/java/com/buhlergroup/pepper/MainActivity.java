@@ -58,6 +58,8 @@ import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
     private static final int SPEECH_EVENT = 10;
@@ -73,6 +75,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private DebugOverlayView debugOverlay;
     private volatile boolean processing;
     private SpeechSession speech;
+    private final ExecutorService speechExecutor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -193,6 +196,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         AttractController.get().setListeningRelevanceListener(null);
         speech.destroy();
         QiSDK.unregister(this);
+        speechExecutor.shutdownNow();
         super.onDestroy();
     }
 
@@ -229,12 +233,18 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         }
         AdminController.get().setHistoryManager(historyManager);
         AdminController.get().setLanguageManager(languageManager);
-        try {
-            if (executionHandler == null) {
+        if (executionHandler == null) {
+            try {
                 executionHandler = new ActionHandler(languageManager, historyManager);
+            } catch (Exception e) {
+                Log.e("Mainactivity", "OnFocuseGainedError: " + e.getMessage());
+                DebugLog.get().setStatus("Aktionshandler-Initialisierung fehlgeschlagen – Wiederholung beim nächsten Fokus");
+                DebugLog.get().e("MainActivity", "ActionHandler-Initialisierung fehlgeschlagen: " + e.getMessage());
             }
-        } catch (Exception e) {
-            Log.e("Mainactivity", "OnFocuseGainedError: " + e.getMessage());
+        }
+        if (executionHandler == null) {
+            speech.listen();
+            return;
         }
         if (!said.isEmpty()) {
             String pending = said;
@@ -263,7 +273,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         }
         AttractController.get().notifyInteraction();
         processing = true;
-        new Thread(() -> {
+        speechExecutor.execute(() -> {
             try {
                 executionHandler.handleInput(qiContext, text);
             } catch (Exception e) {
@@ -272,7 +282,7 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
                 processing = false;
                 speech.listen();
             }
-        }, "speech-handle").start();
+        });
     }
 
     @Override
