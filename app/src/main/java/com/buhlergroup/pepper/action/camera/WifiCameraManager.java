@@ -23,6 +23,8 @@ public final class WifiCameraManager {
     private static final int READ_TIMEOUT_MS = 8000;
     private static final int EVENT_POLL_ATTEMPTS = 40;
     private static final long EVENT_POLL_INTERVAL_MS = 250;
+    private static final int MAX_PACKET_BYTES = 32 * 1024 * 1024;
+    private static final int MAX_PHOTO_EDGE = 1920;
 
     private static final int PKT_INIT_COMMAND_REQUEST = 1;
     private static final int PKT_INIT_COMMAND_ACK = 2;
@@ -101,13 +103,31 @@ public final class WifiCameraManager {
             if (jpeg.length == 0) {
                 return null;
             }
-            return BitmapFactory.decodeByteArray(jpeg, 0, jpeg.length);
+            return decodeScaled(jpeg);
         } catch (IOException e) {
             Log.w(TAG, "capture failed: " + e.getMessage());
             return null;
         } finally {
             close();
         }
+    }
+
+    private Bitmap decodeScaled(byte[] bytes) {
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, bounds);
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight, MAX_PHOTO_EDGE);
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+    }
+
+    private int sampleSizeFor(int width, int height, int maxEdge) {
+        int sample = 1;
+        int longer = Math.max(width, height);
+        while (longer / sample > maxEdge) {
+            sample *= 2;
+        }
+        return sample;
     }
 
     private int openCommandChannel(String ip, int port) throws IOException {
@@ -265,7 +285,7 @@ public final class WifiCameraManager {
         int length = buffer.getInt();
         int type = buffer.getInt();
         int payloadLength = length - 8;
-        if (payloadLength < 0 || payloadLength > 64 * 1024 * 1024) {
+        if (payloadLength < 0 || payloadLength > MAX_PACKET_BYTES) {
             throw new IOException("Invalid packet length " + length);
         }
         byte[] payload = new byte[payloadLength];
