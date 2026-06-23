@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -23,9 +24,13 @@ public final class LocalImageServer {
     private static final String TAG = "Selfie";
 
     private static final int MAX_WORKER_THREADS = 4;
+    private static final int SOCKET_TIMEOUT_MS = 5000;
+    private static final int ACCEPT_BACKLOG = 16;
+    private static final int MAX_REQUEST_LINE_LENGTH = 4096;
 
     private final File rootDir;
     private final int port;
+    private final InetAddress bindAddress;
     private final String secret;
     private final ExecutorService executor = Executors.newFixedThreadPool(MAX_WORKER_THREADS);
 
@@ -33,8 +38,13 @@ public final class LocalImageServer {
     private volatile boolean running = false;
 
     public LocalImageServer(File rootDir, int port) {
+        this(rootDir, port, null);
+    }
+
+    public LocalImageServer(File rootDir, int port, InetAddress bindAddress) {
         this.rootDir = rootDir;
         this.port = port;
+        this.bindAddress = bindAddress;
         byte[] random = new byte[16];
         new SecureRandom().nextBytes(random);
         this.secret = toHex(random, random.length);
@@ -76,7 +86,11 @@ public final class LocalImageServer {
         if (running) {
             return;
         }
-        serverSocket = new ServerSocket(port);
+        if (bindAddress == null) {
+            Log.w(TAG, "No local WLAN address available; image server not started");
+            throw new IOException("No local WLAN address available");
+        }
+        serverSocket = new ServerSocket(port, ACCEPT_BACKLOG, bindAddress);
         running = true;
         Thread acceptThread = new Thread(this::acceptLoop, "selfie-http");
         acceptThread.setDaemon(true);
@@ -113,8 +127,10 @@ public final class LocalImageServer {
              InputStream in = open.getInputStream();
              OutputStream out = open.getOutputStream()) {
 
+            open.setSoTimeout(SOCKET_TIMEOUT_MS);
+
             BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-            String requestLine = reader.readLine();
+            String requestLine = readRequestLine(reader);
             if (requestLine == null || requestLine.isEmpty()) {
                 return;
             }
@@ -141,7 +157,7 @@ public final class LocalImageServer {
             }
 
             String token = paramValue(query);
-            if (token.isEmpty() || !token.equals(tokenFor(name))) {
+            if (token.isEmpty() || !constantTimeEquals(token, tokenFor(name))) {
                 writeStatus(out, "403 Forbidden");
                 return;
             }
@@ -162,6 +178,30 @@ public final class LocalImageServer {
         } catch (IOException e) {
             Log.w(TAG, "Request handling failed: " + e.getMessage());
         }
+    }
+
+    private String readRequestLine(BufferedReader reader) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        int c;
+        while ((c = reader.read()) != -1) {
+            if (c == '\n') {
+                break;
+            }
+            if (c == '\r') {
+                continue;
+            }
+            if (sb.length() >= MAX_REQUEST_LINE_LENGTH) {
+                throw new IOException("Request line too long");
+            }
+            sb.append((char) c);
+        }
+        return sb.toString();
+    }
+
+    private static boolean constantTimeEquals(String a, String b) {
+        return MessageDigest.isEqual(
+                a.getBytes(StandardCharsets.UTF_8),
+                b.getBytes(StandardCharsets.UTF_8));
     }
 
     private void writeStatus(OutputStream out, String status) throws IOException {
