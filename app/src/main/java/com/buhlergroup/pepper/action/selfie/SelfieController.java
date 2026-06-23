@@ -49,6 +49,7 @@ public final class SelfieController {
     private static final long START_TIMEOUT_MS = 15000;
     private static final int MAX_CAPTURES = 3;
     private static final long PREVIEW_TIMEOUT_MS = 20000;
+    private static final int MAX_PHOTO_EDGE = 1920;
     private static final SelfieController INSTANCE = new SelfieController();
     private final SelfieShareServer shareServer = new SelfieShareServer();
     private volatile SelfieView view;
@@ -361,11 +362,29 @@ public final class SelfieController {
             buffer.rewind();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
-            return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            return decodeScaled(bytes);
         } catch (Exception e) {
             Log.e(TAG, "Capture failed", e);
             return null;
         }
+    }
+
+    private Bitmap decodeScaled(byte[] bytes) {
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, bounds);
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight, MAX_PHOTO_EDGE);
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+    }
+
+    private int sampleSizeFor(int width, int height, int maxEdge) {
+        int sample = 1;
+        int longer = Math.max(width, height);
+        while (longer / sample > maxEdge) {
+            sample *= 2;
+        }
+        return sample;
     }
 
     private void waitForStart(QiContext context) {
@@ -390,6 +409,9 @@ public final class SelfieController {
 
     private Bitmap addOverlay(Context context, Bitmap photo) {
         Bitmap result = photo.copy(Bitmap.Config.ARGB_8888, true);
+        if (result != photo) {
+            photo.recycle();
+        }
         Bitmap overlay = BitmapFactory.decodeResource(context.getResources(), R.drawable.pepper_selfie_overlay);
         if (overlay == null) {
             return result;
