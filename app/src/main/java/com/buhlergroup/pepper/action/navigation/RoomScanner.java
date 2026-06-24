@@ -23,7 +23,7 @@ final class RoomScanner {
 
     private static final String TAG = "Navigation";
     private static final long SNAPSHOT_INTERVAL_MS = 1500;
-    private static final int ROTATION_STEPS = 8;
+    private static final int ROTATION_STEPS = 4;
 
     private final NavigationManager nav;
 
