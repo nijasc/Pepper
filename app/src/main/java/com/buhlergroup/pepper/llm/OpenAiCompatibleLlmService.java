@@ -38,10 +38,28 @@ public final class OpenAiCompatibleLlmService implements LlmService {
     public String chat(ModelTask task, Map<String, Object> body, int timeoutMs) throws IOException {
         Context ctx = ctx();
         LlmProvider provider = ModelSettings.getProvider(ctx, task);
-        body.put("model", ModelSettings.getModel(ctx, task));
+        String apiKey = ModelSettings.getKey(ctx, provider);
         applyReasoning(provider, body);
-        return httpClient.request(provider, ModelSettings.getKey(ctx, provider),
-                "/chat/completions", body, timeoutMs);
+
+        List<String> candidates = candidateModels(provider, ModelSettings.getModel(ctx, task));
+        LlmHttpException lastModelError = null;
+        for (String model : candidates) {
+            body.put("model", model);
+            try {
+                return httpClient.request(provider, apiKey, "/chat/completions", body, timeoutMs);
+            } catch (LlmHttpException e) {
+                if (e.isModelError()) {
+                    DebugLog.get().w(TAG, "Modell '" + model + "' nicht verfügbar (HTTP "
+                            + e.statusCode + ") – versuche Fallback-Modell");
+                    lastModelError = e;
+                    continue;
+                }
+                throw e;
+            }
+        }
+        throw lastModelError != null
+                ? lastModelError
+                : new IOException("Kein verfügbares Modell");
     }
 
     @Override
@@ -79,47 +97,77 @@ public final class OpenAiCompatibleLlmService implements LlmService {
                              OpenAIService.StreamListener listener) throws IOException {
         Context ctx = ctx();
         LlmProvider provider = ModelSettings.getProvider(ctx, task);
-        Map<String, Object> body = new HashMap<>();
-        body.put("model", ModelSettings.getModel(ctx, task));
-        body.put("messages", messages);
-        body.put("max_tokens", maxTokens);
-        body.put("stream", true);
-        applyReasoning(provider, body);
+        String apiKey = ModelSettings.getKey(ctx, provider);
 
-        long started = System.currentTimeMillis();
         DebugLog.get().setStatus(provider.displayName + " – Anfrage läuft …");
         if (circuitBreaker.isOpen()) {
             DebugLog.get().w(TAG, "LLM-Circuit offen – schneller Fallback");
             throw new IOException("LLM circuit open, failing fast to fallback");
         }
 
-        boolean failed = false;
-        LlmHttpClient.EventStream stream = null;
-        try {
-            stream = httpClient.openChatStream(provider, ModelSettings.getKey(ctx, provider), body);
-            ChatStreamParser parser = new ChatStreamParser();
-            String result = parser.parse(stream.reader, listener, started);
-            if (result == null) {
-                return null;
-            }
-            Log.i("LATENCY", "streamed response complete after "
-                    + (System.currentTimeMillis() - started) + "ms");
-            DebugLog.get().setStatus(provider.displayName + " – Antwort erhalten");
-            return result;
-        } catch (IOException e) {
-            failed = true;
-            DebugLog.get().w(TAG, "LLM-Streaming fehlgeschlagen: " + e.getMessage());
-            throw e;
-        } finally {
-            if (stream != null) {
-                stream.disconnect();
-            }
-            if (failed) {
-                circuitBreaker.recordFailure();
-            } else {
+        List<String> candidates = candidateModels(provider, ModelSettings.getModel(ctx, task));
+        LlmHttpException lastModelError = null;
+        for (String model : candidates) {
+            Map<String, Object> body = new HashMap<>();
+            body.put("model", model);
+            body.put("messages", messages);
+            body.put("max_tokens", maxTokens);
+            body.put("stream", true);
+            applyReasoning(provider, body);
+
+            long started = System.currentTimeMillis();
+            LlmHttpClient.EventStream stream = null;
+            try {
+                stream = httpClient.openChatStream(provider, apiKey, body);
+                ChatStreamParser parser = new ChatStreamParser();
+                String result = parser.parse(stream.reader, listener, started);
                 circuitBreaker.recordSuccess();
+                if (result == null) {
+                    return null;
+                }
+                Log.i("LATENCY", "streamed response complete after "
+                        + (System.currentTimeMillis() - started) + "ms");
+                DebugLog.get().setStatus(provider.displayName + " – Antwort erhalten");
+                return result;
+            } catch (LlmHttpException e) {
+                if (e.isModelError()) {
+                    DebugLog.get().w(TAG, "Modell '" + model + "' nicht verfügbar (HTTP "
+                            + e.statusCode + ") – versuche Fallback-Modell");
+                    lastModelError = e;
+                    continue;
+                }
+                circuitBreaker.recordFailure();
+                DebugLog.get().w(TAG, "LLM-Streaming fehlgeschlagen: " + e.getMessage());
+                throw e;
+            } catch (IOException e) {
+                circuitBreaker.recordFailure();
+                DebugLog.get().w(TAG, "LLM-Streaming fehlgeschlagen: " + e.getMessage());
+                throw e;
+            } finally {
+                if (stream != null) {
+                    stream.disconnect();
+                }
             }
         }
+
+        circuitBreaker.recordFailure();
+        DebugLog.get().w(TAG, "Kein verfügbares Modell für " + provider.displayName);
+        throw lastModelError != null
+                ? lastModelError
+                : new IOException("Kein verfügbares Modell");
+    }
+
+    private List<String> candidateModels(LlmProvider provider, String preferred) {
+        List<String> candidates = new ArrayList<>();
+        if (preferred != null && !preferred.trim().isEmpty()) {
+            candidates.add(preferred.trim());
+        }
+        for (String fallback : provider.fallbackModels) {
+            if (!candidates.contains(fallback)) {
+                candidates.add(fallback);
+            }
+        }
+        return candidates;
     }
 
     private void applyReasoning(LlmProvider provider, Map<String, Object> body) {

@@ -58,7 +58,7 @@ public final class LlmHttpClient {
             }
             int code = con.getResponseCode();
             if (code >= 400) {
-                throw new IOException("Streaming request failed with HTTP " + code);
+                throw new LlmHttpException(code, "Streaming request failed with HTTP " + code);
             }
             BufferedReader reader = new BufferedReader(
                     new InputStreamReader(con.getInputStream(), StandardCharsets.UTF_8));
@@ -116,7 +116,7 @@ public final class LlmHttpClient {
         }
         if (code >= 400) {
             Log.w(TAG, "HTTP " + code + ": " + content);
-            throw new IOException("HTTP " + code);
+            throw new LlmHttpException(code, "HTTP " + code);
         }
         return content.toString();
     }
