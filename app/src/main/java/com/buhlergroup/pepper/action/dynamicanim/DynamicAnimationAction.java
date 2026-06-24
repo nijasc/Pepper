@@ -93,8 +93,8 @@ public class DynamicAnimationAction extends Action {
     @Override
     public String getDescription() {
         return "Generates and performs a custom body movement or gesture on request, for example "
-                + "\"move your head to the left\", \"raise your right arm\", \"nod\", \"make a gesture\". "
+                + "\"move your head to the left\", \"raise your right arm\", \"nod\", \"make a gesture\", \"kannst du für 10 sekunden winken\". "
                 + "Use this when the visitor asks Pepper to physically move a specific body part or make a "
-                + "gesture, but NOT for a full dance with music.";
+                + "gesture, but NOT for a full dance with music. Also call this for things like \"wave at me for 10 minutes\". There is no timly limit on this skill.";
     }
 }
