@@ -274,11 +274,16 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
         }
         AttractController.get().notifyInteraction();
         processing = true;
+        DebugLog.get().i("ActionHandler", "Verarbeite Eingabe: \"" + text + "\"");
+        long startedMs = System.currentTimeMillis();
         speechExecutor.execute(() -> {
             try {
                 executionHandler.handleInput(qiContext, text);
+                DebugLog.get().d("ActionHandler", "Eingabe verarbeitet in "
+                        + (System.currentTimeMillis() - startedMs) + "ms");
             } catch (Exception e) {
                 Log.e("Mainactivity", "handleInput error: " + e.getMessage());
+                DebugLog.get().e("ActionHandler", "Verarbeitung fehlgeschlagen", e);
             } finally {
                 processing = false;
                 speech.listen();

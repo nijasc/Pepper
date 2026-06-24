@@ -1,7 +1,12 @@
 package com.buhlergroup.pepper.action.admin;
 
 import android.content.Context;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.text.InputType;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -11,19 +16,26 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.content.ContextCompat;
+
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.debug.DebugLog;
+import com.buhlergroup.pepper.llm.LlmModel;
 import com.buhlergroup.pepper.llm.LlmProvider;
 import com.buhlergroup.pepper.llm.ModelCatalog;
 import com.buhlergroup.pepper.llm.ModelSettings;
 import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
 final class ModelPanelController {
+
+    private static final String TAG = "ModelPanel";
 
     private final View root;
     private final Executor executor;
@@ -34,6 +46,7 @@ final class ModelPanelController {
     private final Map<LlmProvider, TextView> statusViews = new EnumMap<>(LlmProvider.class);
     private final Map<ModelTask, Spinner> providerSpinners = new EnumMap<>(ModelTask.class);
     private final Map<ModelTask, Spinner> modelSpinners = new EnumMap<>(ModelTask.class);
+    private final Map<ModelTask, TextView> modelHints = new EnumMap<>(ModelTask.class);
 
     ModelPanelController(View root, Executor executor, PanelNavigator panelNav) {
         this.root = root;
@@ -45,8 +58,14 @@ final class ModelPanelController {
     }
 
     void showModels() {
-        buildProviderRows();
-        buildTaskRows();
+        DebugLog.get().d(TAG, "Modell-Panel wird geöffnet");
+        try {
+            buildProviderRows();
+            buildTaskRows();
+        } catch (Exception e) {
+            DebugLog.get().e(TAG, "Aufbau des Modell-Panels fehlgeschlagen", e);
+            Toast.makeText(ctx(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
+        }
         panelNav.show(PanelNavigator.PANEL_MODELS);
     }
 
@@ -55,40 +74,54 @@ final class ModelPanelController {
         keyEdits.clear();
         statusViews.clear();
         for (LlmProvider provider : LlmProvider.values()) {
-            LinearLayout row = verticalRow();
+            LinearLayout card = card();
 
-            TextView label = new TextView(ctx());
-            label.setText(provider.displayName);
-            label.setTextColor(ctx().getColor(R.color.white));
-            label.setTextSize(16);
-            row.addView(label);
+            TextView name = new TextView(ctx());
+            name.setText(provider.displayName);
+            name.setTextColor(color(R.color.text_primary));
+            name.setTextSize(17);
+            name.setTypeface(Typeface.DEFAULT_BOLD);
+            card.addView(name);
 
             EditText key = new EditText(ctx());
             key.setHint(R.string.model_api_key_hint);
-            key.setHintTextColor(ctx().getColor(R.color.text_muted));
-            key.setTextColor(ctx().getColor(R.color.white));
+            key.setHintTextColor(color(R.color.text_muted));
+            key.setTextColor(color(R.color.text_primary));
+            key.setTextSize(15);
+            key.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+            key.setSingleLine(true);
             key.setText(ModelSettings.getKey(ctx(), provider));
-            row.addView(key);
+            LinearLayout.LayoutParams keyParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            keyParams.topMargin = dp(8);
+            card.addView(key, keyParams);
             keyEdits.put(provider, key);
 
             LinearLayout actions = new LinearLayout(ctx());
             actions.setOrientation(LinearLayout.HORIZONTAL);
-            actions.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            actions.setGravity(Gravity.CENTER_VERTICAL);
+            LinearLayout.LayoutParams actionParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            actionParams.topMargin = dp(10);
+            actions.setLayoutParams(actionParams);
 
             Button validate = new Button(ctx());
             validate.setText(R.string.model_validate);
+            validate.setAllCaps(false);
             validate.setOnClickListener(v -> validate(provider));
             actions.addView(validate);
 
             TextView status = new TextView(ctx());
-            status.setTextColor(ctx().getColor(R.color.text_muted));
-            status.setTextSize(13);
-            status.setPadding(16, 0, 0, 0);
+            status.setTextColor(color(R.color.text_muted));
+            status.setTextSize(14);
+            status.setPadding(dp(12), 0, 0, 0);
+            boolean hasKey = ModelSettings.hasKey(ctx(), provider);
+            status.setText(hasKey ? R.string.model_key_set : R.string.model_key_empty);
             actions.addView(status);
             statusViews.put(provider, status);
 
-            row.addView(actions);
-            providerList.addView(row);
+            card.addView(actions);
+            providerList.addView(card);
         }
     }
 
@@ -96,31 +129,53 @@ final class ModelPanelController {
         taskList.removeAllViews();
         providerSpinners.clear();
         modelSpinners.clear();
+        modelHints.clear();
         for (ModelTask task : ModelTask.values()) {
-            LinearLayout row = verticalRow();
+            LinearLayout card = card();
 
-            TextView label = new TextView(ctx());
-            label.setText(taskLabel(task));
-            label.setTextColor(ctx().getColor(R.color.white));
-            label.setTextSize(16);
-            row.addView(label);
+            TextView name = new TextView(ctx());
+            name.setText(taskLabel(task));
+            name.setTextColor(color(R.color.text_primary));
+            name.setTextSize(17);
+            name.setTypeface(Typeface.DEFAULT_BOLD);
+            card.addView(name);
 
-            Spinner providerSpinner = new Spinner(ctx());
-            providerSpinner.setAdapter(stringAdapter(providerNames()));
+            TextView desc = new TextView(ctx());
+            desc.setText(taskDescription(task));
+            desc.setTextColor(color(R.color.text_muted));
+            desc.setTextSize(13);
+            LinearLayout.LayoutParams descParams = rowParams();
+            descParams.topMargin = dp(2);
+            card.addView(desc, descParams);
+
             LlmProvider savedProvider = ModelSettings.getProvider(ctx(), task);
+            String savedModelId = ModelSettings.getModel(ctx(), task);
+
+            card.addView(fieldLabel(R.string.model_provider_label));
+            Spinner providerSpinner = providerSpinner();
             providerSpinner.setSelection(savedProvider.ordinal());
-            row.addView(providerSpinner);
+            card.addView(providerSpinner, rowParams());
             providerSpinners.put(task, providerSpinner);
 
-            Spinner modelSpinner = new Spinner(ctx());
-            row.addView(modelSpinner);
+            card.addView(fieldLabel(R.string.model_model_label));
+            Spinner modelSpinner = styledSpinner();
+            card.addView(modelSpinner, rowParams());
             modelSpinners.put(task, modelSpinner);
-            populateModels(modelSpinner, savedProvider, ModelSettings.getModel(ctx(), task));
 
-            providerSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            TextView hint = new TextView(ctx());
+            hint.setTextColor(color(R.color.buhler_teal));
+            hint.setTextSize(13);
+            LinearLayout.LayoutParams hintParams = rowParams();
+            hintParams.topMargin = dp(4);
+            card.addView(hint, hintParams);
+            modelHints.put(task, hint);
+
+            fillModelSpinner(modelSpinner, hint, savedProvider, savedModelId);
+
+            modelSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    populateModels(modelSpinner, LlmProvider.values()[position], null);
+                    updateHint(hint, parent.getSelectedItem());
                 }
 
                 @Override
@@ -128,20 +183,58 @@ final class ModelPanelController {
                 }
             });
 
-            taskList.addView(row);
+            providerSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    LlmProvider chosen = LlmProvider.values()[position];
+                    if (chosen == modelSpinner.getTag()) {
+                        return;
+                    }
+                    DebugLog.get().d(TAG, "Anbieter geändert: " + task + " → " + chosen.displayName);
+                    fillModelSpinner(modelSpinner, hint, chosen, chosen.flagshipModel);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                }
+            });
+
+            taskList.addView(card);
         }
     }
 
-    private void populateModels(Spinner spinner, LlmProvider provider, String preselect) {
-        List<String> models = new ArrayList<>(ModelCatalog.models(provider));
-        if (preselect != null && !preselect.isEmpty() && !models.contains(preselect)) {
-            models.add(0, preselect);
+    private void fillModelSpinner(Spinner spinner, TextView hint, LlmProvider provider, String preselectId) {
+        List<LlmModel> models = new ArrayList<>(Arrays.asList(provider.models));
+        int selection = 0;
+        if (preselectId != null && !preselectId.isEmpty()) {
+            int index = indexOfModel(models, preselectId);
+            if (index < 0) {
+                models.add(0, new LlmModel(preselectId, preselectId + " · (eigenes)",
+                        "Manuell gesetztes Modell"));
+                selection = 0;
+            } else {
+                selection = index;
+            }
         }
-        spinner.setAdapter(stringAdapter(models));
-        if (preselect != null) {
-            int index = models.indexOf(preselect);
-            spinner.setSelection(Math.max(index, 0));
+        spinner.setAdapter(modelAdapter(models));
+        spinner.setSelection(selection);
+        spinner.setTag(provider);
+        updateHint(hint, models.get(selection));
+    }
+
+    private void updateHint(TextView hint, Object model) {
+        if (hint != null && model instanceof LlmModel) {
+            hint.setText(((LlmModel) model).hint);
         }
+    }
+
+    private int indexOfModel(List<LlmModel> models, String id) {
+        for (int i = 0; i < models.size(); i++) {
+            if (models.get(i).id.equals(id)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private void validate(LlmProvider provider) {
@@ -151,14 +244,21 @@ final class ModelPanelController {
             return;
         }
         String key = edit.getText().toString().trim();
+        DebugLog.get().d(TAG, "Teste API-Key: " + provider.displayName);
+        status.setTextColor(color(R.color.text_muted));
         status.setText(R.string.model_validating);
         executor.execute(() -> {
             ModelCatalog.Result result = ModelCatalog.validate(provider, key);
             root.post(() -> {
                 if (result.ok) {
+                    DebugLog.get().i(TAG, provider.displayName + ": Key gültig ("
+                            + result.models.size() + " Modelle)");
+                    status.setTextColor(color(R.color.status_ok));
                     status.setText(ctx().getString(R.string.model_valid, result.models.size()));
-                    refreshModelsForProvider(provider);
                 } else {
+                    DebugLog.get().w(TAG, provider.displayName + ": Key ungültig – "
+                            + (result.error == null ? "Fehler" : result.error));
+                    status.setTextColor(color(R.color.status_bad));
                     status.setText(ctx().getString(R.string.model_invalid,
                             result.error == null ? "Fehler" : result.error));
                 }
@@ -166,61 +266,119 @@ final class ModelPanelController {
         });
     }
 
-    private void refreshModelsForProvider(LlmProvider provider) {
-        for (ModelTask task : ModelTask.values()) {
-            Spinner providerSpinner = providerSpinners.get(task);
-            Spinner modelSpinner = modelSpinners.get(task);
-            if (providerSpinner == null || modelSpinner == null) {
-                continue;
-            }
-            if (LlmProvider.values()[providerSpinner.getSelectedItemPosition()] == provider) {
-                Object current = modelSpinner.getSelectedItem();
-                populateModels(modelSpinner, provider, current == null ? null : current.toString());
-            }
-        }
-    }
-
     private void save() {
-        for (LlmProvider provider : LlmProvider.values()) {
-            EditText edit = keyEdits.get(provider);
-            if (edit != null) {
-                ModelSettings.setKey(ctx(), provider, edit.getText().toString().trim());
+        try {
+            for (LlmProvider provider : LlmProvider.values()) {
+                EditText edit = keyEdits.get(provider);
+                if (edit != null) {
+                    ModelSettings.setKey(ctx(), provider, edit.getText().toString().trim());
+                }
             }
-        }
-        for (ModelTask task : ModelTask.values()) {
-            Spinner providerSpinner = providerSpinners.get(task);
-            Spinner modelSpinner = modelSpinners.get(task);
-            if (providerSpinner == null || modelSpinner == null) {
-                continue;
+            for (ModelTask task : ModelTask.values()) {
+                Spinner providerSpinner = providerSpinners.get(task);
+                Spinner modelSpinner = modelSpinners.get(task);
+                if (providerSpinner == null || modelSpinner == null) {
+                    continue;
+                }
+                Object providerItem = providerSpinner.getSelectedItem();
+                Object modelItem = modelSpinner.getSelectedItem();
+                if (!(providerItem instanceof LlmProvider)) {
+                    continue;
+                }
+                LlmProvider provider = (LlmProvider) providerItem;
+                String modelId = modelItem instanceof LlmModel ? ((LlmModel) modelItem).id : "";
+                ModelSettings.setChoice(ctx(), task, provider, modelId);
+                DebugLog.get().i(TAG, "Gespeichert: " + task + " → "
+                        + provider.displayName + " / " + modelId);
             }
-            LlmProvider provider = LlmProvider.values()[providerSpinner.getSelectedItemPosition()];
-            Object model = modelSpinner.getSelectedItem();
-            ModelSettings.setChoice(ctx(), task, provider, model == null ? "" : model.toString());
+            Toast.makeText(ctx(), R.string.model_saved, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            DebugLog.get().e(TAG, "Speichern der Modell-Einstellungen fehlgeschlagen", e);
+            Toast.makeText(ctx(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
         }
-        Toast.makeText(ctx(), R.string.model_saved, Toast.LENGTH_SHORT).show();
-        panelNav.show(PanelNavigator.PANEL_MENU);
     }
 
-    private ArrayAdapter<String> stringAdapter(List<String> items) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                ctx(), android.R.layout.simple_spinner_item, items);
+    private Spinner providerSpinner() {
+        Spinner spinner = styledSpinner();
+        spinner.setAdapter(providerAdapter());
+        return spinner;
+    }
+
+    private ArrayAdapter<LlmProvider> providerAdapter() {
+        return whiteAdapter(Arrays.asList(LlmProvider.values()));
+    }
+
+    private ArrayAdapter<LlmModel> modelAdapter(List<LlmModel> models) {
+        return whiteAdapter(models);
+    }
+
+    private <T> ArrayAdapter<T> whiteAdapter(List<T> items) {
+        ArrayAdapter<T> adapter = new ArrayAdapter<T>(
+                ctx(), android.R.layout.simple_spinner_item, items) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                TextView view = (TextView) super.getView(position, convertView, parent);
+                view.setTextColor(color(R.color.text_primary));
+                view.setTextSize(16);
+                return view;
+            }
+
+            @Override
+            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                TextView view = (TextView) super.getDropDownView(position, convertView, parent);
+                view.setTextColor(color(R.color.text_primary));
+                view.setTextSize(16);
+                view.setPadding(dp(16), dp(14), dp(16), dp(14));
+                view.setBackgroundColor(color(R.color.admin_card));
+                return view;
+            }
+        };
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         return adapter;
     }
 
-    private List<String> providerNames() {
-        List<String> names = new ArrayList<>();
-        for (LlmProvider provider : LlmProvider.values()) {
-            names.add(provider.displayName);
-        }
-        return names;
+    private Spinner styledSpinner() {
+        Spinner spinner = new Spinner(ctx());
+        spinner.setPopupBackgroundDrawable(new ColorDrawable(color(R.color.admin_card)));
+        return spinner;
     }
 
-    private LinearLayout verticalRow() {
-        LinearLayout row = new LinearLayout(ctx());
-        row.setOrientation(LinearLayout.VERTICAL);
-        row.setPadding(0, 8, 0, 16);
-        return row;
+    private TextView fieldLabel(int textRes) {
+        TextView label = new TextView(ctx());
+        label.setText(textRes);
+        label.setTextColor(color(R.color.text_secondary));
+        label.setTextSize(12);
+        label.setAllCaps(true);
+        LinearLayout.LayoutParams params = rowParams();
+        params.topMargin = dp(10);
+        label.setLayoutParams(params);
+        return label;
+    }
+
+    private LinearLayout card() {
+        LinearLayout card = new LinearLayout(ctx());
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setBackground(ContextCompat.getDrawable(ctx(), R.drawable.bg_admin_card));
+        card.setPadding(dp(16), dp(14), dp(16), dp(16));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.bottomMargin = dp(12);
+        card.setLayoutParams(params);
+        return card;
+    }
+
+    private LinearLayout.LayoutParams rowParams() {
+        return new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+    }
+
+    private int color(int colorRes) {
+        return ContextCompat.getColor(ctx(), colorRes);
+    }
+
+    private int dp(int value) {
+        float density = ctx().getResources().getDisplayMetrics().density;
+        return Math.round(value * density);
     }
 
     private String taskLabel(ModelTask task) {
@@ -236,6 +394,22 @@ final class ModelPanelController {
             case DOCUMENTATION:
             default:
                 return ctx().getString(R.string.model_task_documentation);
+        }
+    }
+
+    private String taskDescription(ModelTask task) {
+        switch (task) {
+            case CONVERSATION:
+                return ctx().getString(R.string.model_task_conversation_desc);
+            case CLASSIFICATION:
+                return ctx().getString(R.string.model_task_classification_desc);
+            case REWRITE:
+                return ctx().getString(R.string.model_task_rewrite_desc);
+            case GENERATION:
+                return ctx().getString(R.string.model_task_generation_desc);
+            case DOCUMENTATION:
+            default:
+                return ctx().getString(R.string.model_task_documentation_desc);
         }
     }
 

@@ -162,7 +162,7 @@ public final class OpenAiCompatibleLlmService implements LlmService {
         if (preferred != null && !preferred.trim().isEmpty()) {
             candidates.add(preferred.trim());
         }
-        for (String fallback : provider.fallbackModels) {
+        for (String fallback : provider.modelIds()) {
             if (!candidates.contains(fallback)) {
                 candidates.add(fallback);
             }

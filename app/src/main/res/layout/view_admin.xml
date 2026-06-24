@@ -1706,12 +1706,17 @@
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/model_providers_label"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:layout_marginBottom="20dp"
+                android:text="@string/model_intro"
+                android:textColor="@color/text_secondary"
+                android:textSize="15sp"
+                android:lineSpacingMultiplier="1.15" />
+
+            <TextView
+                style="@style/AdminSectionLabel"
+                android:text="@string/model_providers_label" />
 
             <LinearLayout
                 android:id="@+id/adminModelProviderList"
@@ -1721,13 +1726,9 @@
                 android:orientation="vertical" />
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="@string/model_tasks_label"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                style="@style/AdminSectionLabel"
+                android:layout_marginTop="28dp"
+                android:text="@string/model_tasks_label" />
 
             <LinearLayout
                 android:id="@+id/adminModelTaskList"
@@ -1739,8 +1740,9 @@
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/adminModelSave"
                 style="@style/AdminPrimaryButton"
-                android:layout_marginTop="24dp"
-                android:text="@string/raffle_save" />
+                android:layout_width="match_parent"
+                android:layout_marginTop="28dp"
+                android:text="@string/model_save" />
 
         </LinearLayout>
     </ScrollView>

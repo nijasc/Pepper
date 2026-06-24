@@ -36,7 +36,7 @@ public final class ModelCatalog {
     }
 
     private static List<String> fallback(LlmProvider provider) {
-        return new ArrayList<>(Arrays.asList(provider.fallbackModels));
+        return new ArrayList<>(Arrays.asList(provider.modelIds()));
     }
 
     public static final class Result {

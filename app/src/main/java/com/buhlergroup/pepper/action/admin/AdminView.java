@@ -36,6 +36,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
@@ -176,6 +177,7 @@ public class AdminView extends FrameLayout {
     }
 
     public void open() {
+        DebugLog.get().d(TAG, "Admin geöffnet");
         post(() -> {
             pinController.resetEntry();
             if (pinController.isLocked()) {
@@ -190,6 +192,7 @@ public class AdminView extends FrameLayout {
     }
 
     public void hide() {
+        DebugLog.get().d(TAG, "Admin geschlossen");
         AdminController.get().markClosed();
         galleryController.releaseDetailServer();
         dashboard.stopRefresh();

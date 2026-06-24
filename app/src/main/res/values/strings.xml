@@ -285,17 +285,28 @@
     <string name="profile_delete_confirm_message">Dieses Profil und seine Ressourcen werden entfernt.</string>
 
     <string name="admin_models">KI-Modelle</string>
-    <string name="model_providers_label">Anbieter &amp; API-Keys</string>
-    <string name="model_tasks_label">Modell pro Aufgabe</string>
-    <string name="model_api_key_hint">API-Key</string>
-    <string name="model_validate">Validieren</string>
-    <string name="model_valid">✓ %1$d Modelle</string>
+    <string name="model_intro">Trage je Anbieter den API-Key ein und teste ihn. Wähle dann pro Aufgabe Anbieter und Modell. Speichern nicht vergessen.</string>
+    <string name="model_providers_label">1 · Anbieter &amp; API-Keys</string>
+    <string name="model_tasks_label">2 · Modell pro Aufgabe</string>
+    <string name="model_api_key_hint">API-Key einfügen</string>
+    <string name="model_validate">Key testen</string>
+    <string name="model_valid">✓ Key gültig (%1$d Modelle)</string>
     <string name="model_invalid">✗ %1$s</string>
     <string name="model_validating">Prüfe …</string>
+    <string name="model_key_empty">Kein Key hinterlegt</string>
+    <string name="model_key_set">Key hinterlegt</string>
+    <string name="model_provider_label">Anbieter</string>
+    <string name="model_model_label">Modell</string>
     <string name="model_saved">Modell-Einstellungen gespeichert</string>
+    <string name="model_save">Einstellungen speichern</string>
     <string name="model_task_conversation">Konversation</string>
     <string name="model_task_classification">Klassifikation</string>
     <string name="model_task_rewrite">Umformulierung</string>
     <string name="model_task_generation">Generierung</string>
     <string name="model_task_documentation">Dokumentation</string>
+    <string name="model_task_conversation_desc">Live-Gespräche mit Pepper – Tempo und Natürlichkeit zählen.</string>
+    <string name="model_task_classification_desc">Erkennt die passende Aktion zur Anfrage – schnell und günstig genügt.</string>
+    <string name="model_task_rewrite_desc">Formuliert Sätze um – schnell und günstig genügt.</string>
+    <string name="model_task_generation_desc">Erzeugt Tänze und Animationen – braucht die beste Logik.</string>
+    <string name="model_task_documentation_desc">Beantwortet Fragen zu Dokumenten – präzise und stark.</string>
 </resources>

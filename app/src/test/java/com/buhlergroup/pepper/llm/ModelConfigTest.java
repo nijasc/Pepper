@@ -34,4 +34,36 @@ public class ModelConfigTest {
         assertEquals(LlmProvider.OPENAI, LlmProvider.fromName("nonsense", LlmProvider.OPENAI));
         assertEquals(LlmProvider.OPENAI, LlmProvider.fromName(null, LlmProvider.OPENAI));
     }
+
+    @Test
+    public void flagshipIsAlwaysAvailableModel() {
+        for (LlmProvider provider : LlmProvider.values()) {
+            assertTrue(provider.models.length > 0);
+            boolean found = false;
+            for (String id : provider.modelIds()) {
+                if (id.equals(provider.flagshipModel)) {
+                    found = true;
+                    break;
+                }
+            }
+            assertTrue("Flagship " + provider.flagshipModel + " missing from "
+                    + provider.name() + " model list", found);
+        }
+    }
+
+    @Test
+    public void defaultModelsExistInOpenAiCatalog() {
+        assertModelPresent(ModelSettings.DEFAULT_FAST);
+        assertModelPresent(ModelSettings.DEFAULT_STRONG);
+        assertModelPresent(ModelSettings.DEFAULT_GENERATION);
+    }
+
+    private void assertModelPresent(String id) {
+        for (String available : LlmProvider.OPENAI.modelIds()) {
+            if (available.equals(id)) {
+                return;
+            }
+        }
+        throw new AssertionError("Default model " + id + " not in OpenAI catalog");
+    }
 }

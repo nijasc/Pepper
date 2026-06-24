@@ -4,11 +4,14 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 final class PanelNavigator {
+
+    private static final String TAG = "AdminNav";
 
     public static final int PANEL_PIN = 0;
     public static final int PANEL_MENU = 1;
@@ -49,6 +52,7 @@ final class PanelNavigator {
     }
 
     void show(int which) {
+        DebugLog.get().d(TAG, "Panel anzeigen: " + which);
         currentPanel = which;
         for (Map.Entry<Integer, View> entry : panels.entrySet()) {
             entry.getValue().setVisibility(entry.getKey() == which ? View.VISIBLE : View.GONE);
