@@ -191,12 +191,19 @@ final class RobotGuide {
     }
 
     void rotateFullCircle(QiContext c, int steps, Runnable onStep) {
+        rotateFullCircle(c, steps, onStep, null);
+    }
+
+    void rotateFullCircle(QiContext c, int steps, Runnable onStep, Condition shouldContinue) {
         if (c == null || steps <= 0) {
             return;
         }
         double stepAngle = (2.0 * Math.PI) / steps;
         for (int i = 0; i < steps; i++) {
             if (nav.qiContext() == null) {
+                return;
+            }
+            if (shouldContinue != null && !shouldContinue.shouldContinue()) {
                 return;
             }
             try {

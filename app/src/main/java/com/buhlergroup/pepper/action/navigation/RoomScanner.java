@@ -141,7 +141,7 @@ final class RoomScanner {
                 return;
             }
             DebugLog.get().i(TAG, "360°-Erfassung gestartet");
-            nav.rotateFullCircle(c, ROTATION_STEPS, this::publishScanSnapshot);
+            nav.rotateFullCircle(c, ROTATION_STEPS, this::publishScanSnapshot, () -> scanning);
             publishScanSnapshot();
             DebugLog.get().i(TAG, "360°-Erfassung abgeschlossen");
         }, "scan-rotate");

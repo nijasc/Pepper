@@ -304,6 +304,10 @@ public final class NavigationManager {
         guide.rotateFullCircle(c, steps, onStep);
     }
 
+    void rotateFullCircle(QiContext c, int steps, Runnable onStep, RobotGuide.Condition shouldContinue) {
+        guide.rotateFullCircle(c, steps, onStep, shouldContinue);
+    }
+
     private Transform robotInMap(QiContext c) {
         Frame robotFrame = c.getActuation().robotFrame();
         Frame mapFrame = c.getMapping().mapFrame();
