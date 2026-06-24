@@ -64,11 +64,12 @@ final class RoomScanner {
                 currentMapping = lam;
                 mappingFuture = lam.async().run();
                 scanning = true;
-                DebugLog.get().setStatus("Raum-Scan – läuft, Pepper langsam einmal drehen, dann Stopp");
-                DebugLog.get().i(TAG, "Raum-Scan gestartet (Drehung durch Operator)");
+                DebugLog.get().setStatus("Raum-Scan – Pepper erfasst die erste Position, bitte Platz lassen");
+                DebugLog.get().i(TAG, "Raum-Scan gestartet (automatische 360°-Erfassung)");
                 cb.onResult(null);
                 startSnapshotLoop();
                 startScanStopListener(c);
+                captureRotation();
             } catch (Exception e) {
                 nav.releaseAbilities();
                 Log.w(TAG, "startScan failed: " + e.getMessage());
