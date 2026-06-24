@@ -45,6 +45,7 @@ public class RaffleJoinView extends FrameLayout {
     private String name = "";
     private String email = "";
     private String phone = "";
+
     public RaffleJoinView(Context context) {
         super(context);
         init(context);

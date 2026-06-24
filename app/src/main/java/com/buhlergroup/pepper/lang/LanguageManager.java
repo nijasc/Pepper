@@ -8,6 +8,7 @@ public class LanguageManager {
     private final Intent intent;
     private volatile SupportedLanguage current;
     private volatile LanguageChangeListener listener;
+
     public LanguageManager(Intent intent) {
         this.intent = intent;
     }

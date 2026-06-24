@@ -26,6 +26,7 @@ public final class QuizController {
     private volatile QuizView view;
     private volatile boolean running = false;
     private volatile StateListener stateListener;
+
     private QuizController() {
     }
 

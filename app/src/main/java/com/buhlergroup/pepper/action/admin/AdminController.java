@@ -18,6 +18,7 @@ public final class AdminController {
     private volatile LanguageManager languageManager;
     private volatile boolean open = false;
     private volatile AdminStateListener stateListener;
+
     private AdminController() {
     }
 

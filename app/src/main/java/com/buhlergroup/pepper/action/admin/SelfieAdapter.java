@@ -41,6 +41,7 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
     private final ExecutorService decodeExecutor = Executors.newFixedThreadPool(2);
     private final OnSelfieClick onClick;
     private File imagesDir;
+
     public SelfieAdapter(OnSelfieClick onClick) {
         this.onClick = onClick;
         INSTANCES.add(this);
@@ -51,11 +52,6 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
             adapter.shutdown();
         }
         INSTANCES.clear();
-    }
-
-    public void shutdown() {
-        decodeExecutor.shutdownNow();
-        INSTANCES.remove(this);
     }
 
     public static Bitmap decodeThumb(File file, int reqSize) {
@@ -73,6 +69,11 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = sample;
         return BitmapFactory.decodeFile(file.getPath(), options);
+    }
+
+    public void shutdown() {
+        decodeExecutor.shutdownNow();
+        INSTANCES.remove(this);
     }
 
     public void setData(List<SelfieEntity> data, File imagesDir, Set<String> linkedSelfieIds) {

@@ -12,6 +12,7 @@ public final class WinnerController {
     private volatile WinnerView view;
     private volatile boolean active;
     private volatile StateListener stateListener;
+
     private WinnerController() {
     }
 

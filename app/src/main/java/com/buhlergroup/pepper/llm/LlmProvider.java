@@ -51,14 +51,6 @@ public enum LlmProvider {
         this.models = models;
     }
 
-    public String[] modelIds() {
-        String[] ids = new String[models.length];
-        for (int i = 0; i < models.length; i++) {
-            ids[i] = models[i].id;
-        }
-        return ids;
-    }
-
     public static LlmProvider fromName(String name, LlmProvider fallback) {
         if (name != null) {
             for (LlmProvider provider : values()) {
@@ -68,5 +60,13 @@ public enum LlmProvider {
             }
         }
         return fallback;
+    }
+
+    public String[] modelIds() {
+        String[] ids = new String[models.length];
+        for (int i = 0; i < models.length; i++) {
+            ids[i] = models[i].id;
+        }
+        return ids;
     }
 }

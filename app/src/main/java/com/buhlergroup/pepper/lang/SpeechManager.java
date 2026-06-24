@@ -20,10 +20,6 @@ public class SpeechManager {
     private SpeechManager() {
     }
 
-    private static final class Holder {
-        private static final SpeechManager INSTANCE = new SpeechManager();
-    }
-
     public static SpeechManager getInstance() {
         return Holder.INSTANCE;
     }
@@ -99,5 +95,9 @@ public class SpeechManager {
                 DialogueController.get().endUtterance();
             }
         }
+    }
+
+    private static final class Holder {
+        private static final SpeechManager INSTANCE = new SpeechManager();
     }
 }

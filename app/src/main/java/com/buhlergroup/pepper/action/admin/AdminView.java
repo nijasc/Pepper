@@ -10,11 +10,11 @@ import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_GALLERY;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_HISTORY;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_LANG;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_MENU;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_MODELS;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_NAV;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PIN;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PROFILES;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_PROFILE_EDIT;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_MODELS;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE_CREATE;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATS;
@@ -36,11 +36,11 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
-import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.databinding.ViewAdminBinding;
+import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

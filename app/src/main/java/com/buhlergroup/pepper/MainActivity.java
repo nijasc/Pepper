@@ -23,7 +23,6 @@ import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.buhlergroup.pepper.action.ActionHandler;
 import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.admin.AdminView;
-import com.buhlergroup.pepper.action.profile.ProfileRepository;
 import com.buhlergroup.pepper.action.attract.AttractController;
 import com.buhlergroup.pepper.action.career.CareerController;
 import com.buhlergroup.pepper.action.career.CareerView;
@@ -40,6 +39,7 @@ import com.buhlergroup.pepper.action.memory.MemoryGameView;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
 import com.buhlergroup.pepper.action.navigation.NavigationManager;
 import com.buhlergroup.pepper.action.navigation.NavigationView;
+import com.buhlergroup.pepper.action.profile.ProfileRepository;
 import com.buhlergroup.pepper.action.quiz.QuizController;
 import com.buhlergroup.pepper.action.quiz.QuizView;
 import com.buhlergroup.pepper.action.raffle.RaffleJoinController;
@@ -65,6 +65,7 @@ import java.util.concurrent.Executors;
 public class MainActivity extends RobotActivity implements RobotLifecycleCallbacks {
     private static final int SPEECH_EVENT = 10;
     private static final int DANCE_EDIT_SPEECH_EVENT = 11;
+    private final ExecutorService speechExecutor = Executors.newSingleThreadExecutor();
     private volatile String said = "";
     private ActionHandler executionHandler;
     private LanguageManager languageManager;
@@ -76,7 +77,6 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
     private DebugOverlayView debugOverlay;
     private volatile boolean processing;
     private SpeechSession speech;
-    private final ExecutorService speechExecutor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

@@ -35,6 +35,7 @@ public class DanceAction extends Action {
     private final DanceRepository repository = new DanceRepository();
     private final Object audioLock = new Object();
     private MediaPlayer mediaPlayer;
+
     public DanceAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
         super(historyManager);
     }

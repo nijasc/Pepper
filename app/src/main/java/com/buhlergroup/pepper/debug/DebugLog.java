@@ -23,6 +23,7 @@ public final class DebugLog {
     private final SimpleDateFormat stampFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
     private volatile boolean enabled = DebugSettings.DEFAULT_ENABLED;
     private volatile String status = "";
+
     private DebugLog() {
     }
 

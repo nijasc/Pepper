@@ -5,6 +5,7 @@ public final class ModelSelector {
     public static final String FAST = "gpt-4o-mini";
     public static final String STRONG = "gpt-5.4";
     public static final String STRONG_GENERATION = "gpt-5.5";
+
     private ModelSelector() {
     }
 

@@ -10,6 +10,7 @@ public final class DanceLibraryController {
     private volatile StateListener stateListener;
     private volatile Runnable voiceRequester;
     private volatile DanceEntity pendingEdit;
+
     private DanceLibraryController() {
     }
 

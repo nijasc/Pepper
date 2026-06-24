@@ -31,6 +31,7 @@ public final class RaffleRepository {
     private final RaffleDatabase database;
     private final RaffleDao raffleDao;
     private final RaffleEntryDao entryDao;
+
     private RaffleRepository(Context context) {
         this.appContext = context.getApplicationContext();
         this.database = RaffleDatabase.get(context);

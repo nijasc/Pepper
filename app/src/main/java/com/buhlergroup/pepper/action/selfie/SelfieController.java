@@ -55,6 +55,7 @@ public final class SelfieController {
     private volatile SelfieView view;
     private volatile boolean running = false;
     private volatile StateListener stateListener;
+
     private SelfieController() {
     }
 

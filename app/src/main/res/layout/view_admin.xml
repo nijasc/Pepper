@@ -45,9 +45,20 @@
             android:layout_marginTop="12dp"
             android:orientation="horizontal">
 
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey1" style="@style/AdminKey" android:text="1" />
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey2" style="@style/AdminKey" android:text="2" />
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey3" style="@style/AdminKey" android:text="3" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey1"
+                style="@style/AdminKey"
+                android:text="1" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey2"
+                style="@style/AdminKey"
+                android:text="2" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey3"
+                style="@style/AdminKey"
+                android:text="3" />
         </LinearLayout>
 
         <LinearLayout
@@ -55,9 +66,20 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey4" style="@style/AdminKey" android:text="4" />
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey5" style="@style/AdminKey" android:text="5" />
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey6" style="@style/AdminKey" android:text="6" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey4"
+                style="@style/AdminKey"
+                android:text="4" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey5"
+                style="@style/AdminKey"
+                android:text="5" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey6"
+                style="@style/AdminKey"
+                android:text="6" />
         </LinearLayout>
 
         <LinearLayout
@@ -65,9 +87,20 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey7" style="@style/AdminKey" android:text="7" />
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey8" style="@style/AdminKey" android:text="8" />
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey9" style="@style/AdminKey" android:text="9" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey7"
+                style="@style/AdminKey"
+                android:text="7" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey8"
+                style="@style/AdminKey"
+                android:text="8" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey9"
+                style="@style/AdminKey"
+                android:text="9" />
         </LinearLayout>
 
         <LinearLayout
@@ -75,9 +108,20 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKeyClear" style="@style/AdminKey" android:text="@string/admin_key_clear" />
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKey0" style="@style/AdminKey" android:text="0" />
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/adminKeyBackspace" style="@style/AdminKey" android:text="@string/admin_key_backspace" />
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKeyClear"
+                style="@style/AdminKey"
+                android:text="@string/admin_key_clear" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKey0"
+                style="@style/AdminKey"
+                android:text="0" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/adminKeyBackspace"
+                style="@style/AdminKey"
+                android:text="@string/admin_key_backspace" />
         </LinearLayout>
 
         <androidx.appcompat.widget.AppCompatButton
@@ -128,6 +172,7 @@
                 android:orientation="horizontal">
 
                 <LinearLayout style="@style/AdminStatusTile">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -147,6 +192,7 @@
                 </LinearLayout>
 
                 <LinearLayout style="@style/AdminStatusTile">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -166,6 +212,7 @@
                 </LinearLayout>
 
                 <LinearLayout style="@style/AdminStatusTile">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -185,6 +232,7 @@
                 </LinearLayout>
 
                 <LinearLayout style="@style/AdminStatusTile">
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -215,7 +263,10 @@
                 android:layout_marginTop="@dimen/space_s"
                 android:columnCount="3">
 
-                <LinearLayout android:id="@+id/adminSelfies" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminSelfies"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -233,7 +284,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminDances" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminDances"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -251,7 +305,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminRaffle" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminRaffle"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -269,7 +326,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminProfiles" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminProfiles"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -299,7 +359,10 @@
                 android:layout_marginTop="@dimen/space_s"
                 android:columnCount="3">
 
-                <LinearLayout android:id="@+id/adminStatus" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminStatus"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -317,7 +380,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminDevLogs" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminDevLogs"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -335,7 +401,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminDebug" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminDebug"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -353,7 +422,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminHistory" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminHistory"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -371,7 +443,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminClearHistory" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminClearHistory"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -389,7 +464,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminStats" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminStats"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -407,7 +485,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminAttract" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminAttract"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -425,7 +506,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminDanceSettings" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminDanceSettings"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -443,7 +527,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminNavSettings" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminNavSettings"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -473,7 +560,10 @@
                 android:layout_marginTop="@dimen/space_s"
                 android:columnCount="3">
 
-                <LinearLayout android:id="@+id/adminLanguage" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminLanguage"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -491,7 +581,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminCamera" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminCamera"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -509,7 +602,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminNavigation" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminNavigation"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -527,7 +623,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminChangePin" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminChangePin"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -545,7 +644,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminDsgvo" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminDsgvo"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -563,7 +665,10 @@
                         android:textSize="@dimen/text_small" />
                 </LinearLayout>
 
-                <LinearLayout android:id="@+id/adminModels" style="@style/AdminMenuTile">
+                <LinearLayout
+                    android:id="@+id/adminModels"
+                    style="@style/AdminMenuTile">
+
                     <ImageView
                         android:layout_width="@dimen/admin_tile_icon"
                         android:layout_height="@dimen/admin_tile_icon"
@@ -590,9 +695,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -607,8 +712,8 @@
             android:id="@+id/adminDevLogScroll"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="12dp"
+            android:layout_weight="1">
 
             <TextView
                 android:id="@+id/adminDevLogText"
@@ -627,9 +732,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <CheckBox
@@ -656,8 +761,8 @@
             android:id="@+id/adminDebugScroll"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="12dp"
+            android:layout_weight="1">
 
             <TextView
                 android:id="@+id/adminDebugText"
@@ -701,9 +806,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <LinearLayout
@@ -726,8 +831,8 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="@dimen/space_m">
+            android:layout_marginTop="@dimen/space_m"
+            android:layout_weight="1">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/adminSelfieGrid"
@@ -754,9 +859,9 @@
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <ImageView
@@ -900,9 +1005,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -917,8 +1022,8 @@
             android:id="@+id/adminHistoryScroll"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="12dp"
+            android:layout_weight="1">
 
             <LinearLayout
                 android:id="@+id/adminHistoryContainer"
@@ -935,9 +1040,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -951,8 +1056,8 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="12dp"
+            android:layout_weight="1">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -1089,9 +1194,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -1125,8 +1230,8 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="12dp"
+            android:layout_weight="1">
 
             <LinearLayout
                 android:id="@+id/adminRaffleEntries"
@@ -1273,9 +1378,9 @@
             android:layout_width="320dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:digits="0123456789."
             android:hint="@string/camera_ip_hint"
             android:inputType="number|numberDecimal"
-            android:digits="0123456789."
             android:textColor="@color/white"
             android:textColorHint="@color/text_muted" />
 
@@ -1536,9 +1641,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <androidx.appcompat.widget.AppCompatButton
@@ -1570,9 +1675,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <LinearLayout
@@ -1695,9 +1800,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <LinearLayout
@@ -1709,10 +1814,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
+                android:lineSpacingMultiplier="1.15"
                 android:text="@string/model_intro"
                 android:textColor="@color/text_secondary"
-                android:textSize="15sp"
-                android:lineSpacingMultiplier="1.15" />
+                android:textSize="15sp" />
 
             <TextView
                 style="@style/AdminSectionLabel"
@@ -1753,9 +1858,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingLeft="24dp"
+        android:paddingTop="@dimen/admin_content_top"
         android:paddingRight="24dp"
         android:paddingBottom="24dp"
-        android:paddingTop="@dimen/admin_content_top"
         android:visibility="gone">
 
         <TextView
@@ -1769,8 +1874,8 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginTop="12dp">
+            android:layout_marginTop="12dp"
+            android:layout_weight="1">
 
             <TextView
                 android:id="@+id/adminStatsText"
@@ -1867,8 +1972,8 @@
             android:id="@+id/adminHeaderTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:layout_marginStart="@dimen/space_l"
+            android:layout_weight="1"
             android:textColor="@color/text_primary"
             android:textSize="@dimen/text_heading"
             android:textStyle="bold" />

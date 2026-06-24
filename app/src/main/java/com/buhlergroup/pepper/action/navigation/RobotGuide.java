@@ -25,6 +25,7 @@ final class RobotGuide {
     private final NavigationManager nav;
     private volatile Future<Void> activeGoTo;
     private volatile boolean stopGuideRequested;
+
     RobotGuide(NavigationManager nav) {
         this.nav = nav;
     }

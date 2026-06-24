@@ -72,6 +72,12 @@ public final class LocalImageServer {
         return "";
     }
 
+    private static boolean constantTimeEquals(String a, String b) {
+        return MessageDigest.isEqual(
+                a.getBytes(StandardCharsets.UTF_8),
+                b.getBytes(StandardCharsets.UTF_8));
+    }
+
     public String tokenFor(String filename) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -196,12 +202,6 @@ public final class LocalImageServer {
             sb.append((char) c);
         }
         return sb.toString();
-    }
-
-    private static boolean constantTimeEquals(String a, String b) {
-        return MessageDigest.isEqual(
-                a.getBytes(StandardCharsets.UTF_8),
-                b.getBytes(StandardCharsets.UTF_8));
     }
 
     private void writeStatus(OutputStream out, String status) throws IOException {

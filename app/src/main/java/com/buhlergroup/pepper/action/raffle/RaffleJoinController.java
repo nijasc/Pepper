@@ -26,6 +26,7 @@ public final class RaffleJoinController {
     private volatile RaffleJoinView view;
     private volatile boolean busy = false;
     private volatile StateListener stateListener;
+
     private RaffleJoinController() {
     }
 

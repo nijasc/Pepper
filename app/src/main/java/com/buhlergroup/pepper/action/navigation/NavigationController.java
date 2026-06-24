@@ -6,6 +6,7 @@ public final class NavigationController {
     private volatile NavigationView view;
     private volatile boolean open;
     private volatile StateListener stateListener;
+
     private NavigationController() {
     }
 

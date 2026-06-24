@@ -25,6 +25,7 @@ public class QuizView extends FrameLayout {
     private LinearLayout optionsContainer;
     private volatile boolean inputEnabled = false;
     private OnOptionListener listener;
+
     public QuizView(Context context) {
         super(context);
         init(context);

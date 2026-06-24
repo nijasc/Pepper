@@ -44,6 +44,7 @@ public final class HoldController {
     private volatile Thread loopThread;
     private volatile HoldView view;
     private volatile HoldStateListener stateListener;
+
     private HoldController() {
     }
 

@@ -49,6 +49,7 @@ public final class FollowController {
     private volatile int generation = 0;
     private volatile FollowStateListener stateListener;
     private Thread loopThread;
+
     private FollowController() {
     }
 

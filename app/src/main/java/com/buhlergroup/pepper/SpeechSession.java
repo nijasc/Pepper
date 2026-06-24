@@ -39,6 +39,7 @@ final class SpeechSession {
             mainHandler.postDelayed(this, WATCHDOG_INTERVAL_MS);
         }
     };
+
     SpeechSession(Activity activity, int speechEvent, Gate gate) {
         this.activity = activity;
         this.speechEvent = speechEvent;

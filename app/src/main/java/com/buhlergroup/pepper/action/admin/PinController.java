@@ -15,6 +15,7 @@ final class PinController {
     private final TextView pinError;
     private final OnUnlocked onUnlocked;
     private final StringBuilder entered = new StringBuilder();
+
     PinController(View root, OnUnlocked onUnlocked) {
         this.context = root.getContext();
         this.onUnlocked = onUnlocked;

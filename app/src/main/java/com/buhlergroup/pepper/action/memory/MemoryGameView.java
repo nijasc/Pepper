@@ -24,6 +24,7 @@ public class MemoryGameView extends FrameLayout {
     private TextView hintView;
     private volatile boolean inputEnabled = false;
     private OnPadListener padListener;
+
     public MemoryGameView(Context context) {
         super(context);
         init(context);

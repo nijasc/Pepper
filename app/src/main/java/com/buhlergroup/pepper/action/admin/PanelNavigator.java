@@ -11,8 +11,6 @@ import java.util.Map;
 
 final class PanelNavigator {
 
-    private static final String TAG = "AdminNav";
-
     public static final int PANEL_PIN = 0;
     public static final int PANEL_MENU = 1;
     public static final int PANEL_DEVLOG = 2;
@@ -32,11 +30,13 @@ final class PanelNavigator {
     public static final int PANEL_PROFILES = 16;
     public static final int PANEL_PROFILE_EDIT = 17;
     public static final int PANEL_MODELS = 18;
+    private static final String TAG = "AdminNav";
     private final Map<Integer, View> panels = new LinkedHashMap<>();
     private final View header;
     private final TextView headerTitle;
     private final OnPanelShown onPanelShown;
     private int currentPanel = PANEL_PIN;
+
     PanelNavigator(View header, TextView headerTitle, OnPanelShown onPanelShown) {
         this.header = header;
         this.headerTitle = headerTitle;

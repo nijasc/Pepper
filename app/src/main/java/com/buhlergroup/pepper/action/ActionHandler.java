@@ -51,6 +51,7 @@ public class ActionHandler {
     private final HistoryManager historyManager;
     private final LanguageManager languageManager;
     private final OpenAIService routingService;
+
     public ActionHandler(LanguageManager languageManager, HistoryManager historyManager) {
         this.historyManager = historyManager;
         this.languageManager = languageManager;

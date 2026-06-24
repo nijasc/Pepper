@@ -15,6 +15,7 @@ public class CareerAction extends Action {
     private static final String TAG = "Career";
     private static final String CAREER_URL_KEY = "PEPPER_CAREER_URL";
     private static final long DISPLAY_MS = 30000;
+
     public CareerAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
         super(historyManager);
     }
