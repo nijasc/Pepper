@@ -149,7 +149,7 @@ flowchart TD
     subgraph Loc["Lokalisierung"]
         L1["Scan aktivieren: Karte laden, Drehung 8× 45°"] --> L2{Status}
         L2 -->|lokalisiert| L3["bereit für Wegpunkte und Fahrten"]
-        L2 -->|Zeitlimit (Standard 40 s)| L4["Abbruch + Hinweis"]
+        L2 -->|"Zeitlimit (Standard 40 s)"| L4["Abbruch + Hinweis"]
         L3 -->|Orientierung verloren| L5["anhalten + Hinweis"]
     end
     subgraph Drive["Wegpunkte"]
@@ -186,7 +186,7 @@ Leerlaufverhalten. Standardmässig aktiv, im Admin-Bereich umschaltbar.
 ```mermaid
 stateDiagram-v2
     [*] --> Idle
-    Idle --> Attract: aktiv und Leerlauf (Standard 2 min) und kein Overlay und frei
+    Idle --> Attract: aktiv und Leerlauf ab 2 min und kein Overlay und frei
     Attract --> Idle: Interaktion oder Overlay oder beschäftigt oder ausgeschaltet
     state Attract {
         [*] --> Roaming
@@ -232,7 +232,7 @@ flowchart TD
     F3 --> F5["Motiv einfügen, Vorschau zeigen"]
     F4 --> F5
     F5 --> F6{Entscheidung}
-    F6 -->|Nochmal (max. 3 Aufnahmen)| F2
+    F6 -->|"Nochmal (max. 3 Aufnahmen)"| F2
     F6 -->|Speichern / Zeitablauf| F7["lokal speichern"]
     F7 --> F8["token-geschützten Webserver starten, QR-Code(s) zeigen"]
     F8 --> F9{aktive Verlosung}
