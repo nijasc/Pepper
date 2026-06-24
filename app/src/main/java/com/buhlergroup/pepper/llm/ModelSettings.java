@@ -9,7 +9,7 @@ import com.buhlergroup.pepper.openai.OpenAiTokenProvider;
 public final class ModelSettings {
 
     public static final String DEFAULT_FAST = "gpt-4o-mini";
-    public static final String DEFAULT_STRONG = "gpt-5.4";
+    public static final String DEFAULT_STRONG = "gpt-5.5";
     public static final String DEFAULT_GENERATION = "gpt-5.5";
 
     private static final String PREFS = "model_prefs";
