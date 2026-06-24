@@ -79,8 +79,8 @@ delegiert an die Kollaboratoren `RoomScanner` (Scan/Snapshot), `RobotLocalizer`
 ```mermaid
 flowchart TD
     subgraph Scan["Raum-Scan (RoomScanner)"]
-        S1["startScan: LocalizeAndMap, Fähigkeiten halten"] --> S2["Operator dreht Pepper von Hand"]
-        S2 --> S3["Snapshot-Loop: Live-Karte via NavMapRenderer (captureSnapshot bei 'Position erfassen')"]
+        S1["startScan: LocalizeAndMap, Fähigkeiten halten"] --> S2["captureRotation: Pepper dreht selbst 4× 90° (erste Position)"]
+        S2 --> S3["Operator schiebt Pepper, dann 'Position erfassen' → erneut 4× 90°; Snapshot-Loop zeigt Live-Karte"]
         S3 --> S4["Stopp per STOP-Button oder Sprache ('stopp'/'fertig')"]
         S4 --> S5["stopAndSaveScan: dumpMap, serialize, Datei + DB"]
     end

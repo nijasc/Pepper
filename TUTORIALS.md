@@ -31,13 +31,13 @@ Tablet eingelernt** (kein autonomes Herumfahren).
 ### 2. Raum scannen
 
 1. Oben einen **Namen** für den Scan eingeben (z. B. „Empfang“).
-2. **„Scan starten“** tippen. Pepper beginnt zu mappen und zeigt die **Live-Karte
-   im Vollbild**, die laufend wächst.
-3. **Drehe Pepper langsam von Hand einmal um die eigene Achse**, damit er den
-   Umkreis erfasst. Für grössere oder verwinkelte Räume zusätzlich ein Stück
-   hinschieben (um Ecken, in Nischen) und dort erneut drehen. An markanten Stellen
-   **„Aktuelle Position erfassen“** tippen, damit die Live-Karte den Bereich sicher
-   aufnimmt.
+2. **„Scan starten“** tippen. Pepper beginnt zu mappen, zeigt die **Live-Karte
+   im Vollbild** und **dreht sich automatisch einmal um die eigene Achse** (4× 90°),
+   um die erste Position zu erfassen. Bitte Platz lassen, während er dreht.
+3. Für grössere oder verwinkelte Räume Pepper anschliessend ein Stück
+   **hinschieben** (um Ecken, in Nischen) und dort **„Aktuelle Position erfassen“**
+   tippen – Pepper dreht erneut 4× 90° und nimmt den Bereich auf. Beliebig oft
+   wiederholen, bis der Raum vollständig erfasst ist.
 4. **Möglichst freie Fläche, kurzer Scan:** keine Personen im Sichtfeld, sonst
    landen sie als „Geister-Hindernisse“ in der Karte. Kontrolliere das laufend an
    der Live-Karte und scanne im Zweifel neu.
