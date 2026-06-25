@@ -2,10 +2,14 @@
 <Animation typeVersion="2.0" xmlns:editor="http://www.aldebaran.com/animation/editor">
   <ActuatorCurve fps="25" actuator="HeadPitch" mute="false" unit="radian">
     <Key value="-0.05" frame="0">
-      <Tangent side="right" abscissaParam="23.3333" ordinateParam="0" editor:interpType="bezier_auto"/>
+      <Tangent side="right" abscissaParam="11.6667" ordinateParam="0" editor:interpType="bezier_auto"/>
+    </Key>
+    <Key value="0.07" frame="35">
+      <Tangent side="left" abscissaParam="-11.6667" ordinateParam="0" editor:interpType="bezier_auto"/>
+      <Tangent side="right" abscissaParam="11.6667" ordinateParam="0" editor:interpType="bezier_auto"/>
     </Key>
     <Key value="-0.05" frame="70">
-      <Tangent side="left" abscissaParam="-23.3333" ordinateParam="0" editor:interpType="bezier_auto"/>
+      <Tangent side="left" abscissaParam="-11.6667" ordinateParam="0" editor:interpType="bezier_auto"/>
     </Key>
   </ActuatorCurve>
   <ActuatorCurve fps="25" actuator="HeadYaw" mute="false" unit="radian">
