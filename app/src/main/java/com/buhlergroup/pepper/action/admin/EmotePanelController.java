@@ -1,10 +1,13 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.graphics.drawable.ColorDrawable;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
@@ -57,6 +60,8 @@ final class EmotePanelController {
         this.root = root;
         this.panelNav = panelNav;
         this.emoteSelect = root.findViewById(R.id.emoteSelect);
+        this.emoteSelect.setPopupBackgroundDrawable(
+                new ColorDrawable(ContextCompat.getColor(root.getContext(), R.color.admin_card)));
         root.findViewById(R.id.emotePlay).setOnClickListener(v -> playSelected());
         root.findViewById(R.id.emoteStop).setOnClickListener(v -> stop());
     }
@@ -67,8 +72,8 @@ final class EmotePanelController {
             labels[i] = root.getContext().getString(EMOTE_LABEL[i]);
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(root.getContext(),
-                android.R.layout.simple_spinner_item, labels);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                R.layout.spinner_item_admin, labels);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item_admin);
         emoteSelect.setAdapter(adapter);
         panelNav.show(PanelNavigator.PANEL_EMOTES);
     }

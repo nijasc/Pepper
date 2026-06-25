@@ -1,10 +1,13 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.navigation.NavigationSettings;
@@ -31,6 +34,8 @@ final class NavigationPanelController {
         this.panelNav = panelNav;
         this.navAutoLocalize = root.findViewById(R.id.navAutoLocalize);
         this.navDefaultScan = root.findViewById(R.id.navDefaultScan);
+        this.navDefaultScan.setPopupBackgroundDrawable(
+                new ColorDrawable(ContextCompat.getColor(root.getContext(), R.color.admin_card)));
         root.findViewById(R.id.navSave).setOnClickListener(v -> saveNavigation());
         root.findViewById(R.id.navOpen).setOnClickListener(v -> openNavigation.run());
     }
@@ -59,8 +64,8 @@ final class NavigationPanelController {
             labels.add(scan.name);
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(root.getContext(),
-                android.R.layout.simple_spinner_item, labels);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                R.layout.spinner_item_admin, labels);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item_admin);
         navDefaultScan.setAdapter(adapter);
         int index = scanIds.indexOf(NavigationSettings.getDefaultScanId(root.getContext()));
         navDefaultScan.setSelection(Math.max(index, 0));

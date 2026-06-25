@@ -1,9 +1,12 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.dance.DanceRepository;
@@ -28,6 +31,8 @@ final class DancePanelController {
         this.executor = executor;
         this.panelNav = panelNav;
         this.danceDefault = root.findViewById(R.id.danceDefault);
+        this.danceDefault.setPopupBackgroundDrawable(
+                new ColorDrawable(ContextCompat.getColor(root.getContext(), R.color.admin_card)));
         root.findViewById(R.id.danceSave).setOnClickListener(v -> saveDance());
         root.findViewById(R.id.danceOpenLibrary).setOnClickListener(v -> openLibrary.run());
     }
@@ -54,8 +59,8 @@ final class DancePanelController {
             labels.add(dance.songName);
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(root.getContext(),
-                android.R.layout.simple_spinner_item, labels);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                R.layout.spinner_item_admin, labels);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item_admin);
         danceDefault.setAdapter(adapter);
         int index = danceIds.indexOf(DanceSettings.getDefaultDanceId(root.getContext()));
         danceDefault.setSelection(Math.max(index, 0));
