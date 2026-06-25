@@ -2,7 +2,6 @@ package com.buhlergroup.pepper.action.admin;
 
 import android.view.View;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -21,21 +20,19 @@ final class DancePanelController {
     private final Executor executor;
     private final PanelNavigator panelNav;
     private final Spinner danceDefault;
-    private final EditText danceDuration;
     private final DanceRepository repository = new DanceRepository();
     private final List<String> danceIds = new ArrayList<>();
 
-    DancePanelController(View root, Executor executor, PanelNavigator panelNav) {
+    DancePanelController(View root, Executor executor, PanelNavigator panelNav, Runnable openLibrary) {
         this.root = root;
         this.executor = executor;
         this.panelNav = panelNav;
         this.danceDefault = root.findViewById(R.id.danceDefault);
-        this.danceDuration = root.findViewById(R.id.danceDuration);
         root.findViewById(R.id.danceSave).setOnClickListener(v -> saveDance());
+        root.findViewById(R.id.danceOpenLibrary).setOnClickListener(v -> openLibrary.run());
     }
 
     void showDance() {
-        danceDuration.setText(String.valueOf(DanceSettings.getDefaultDurationSeconds(root.getContext())));
         panelNav.show(PanelNavigator.PANEL_DANCE);
         loadDances();
     }
@@ -67,16 +64,7 @@ final class DancePanelController {
     private void saveDance() {
         int pos = danceDefault.getSelectedItemPosition();
         String id = pos >= 0 && pos < danceIds.size() ? danceIds.get(pos) : "";
-        int duration = parseIntOr(danceDuration);
-        DanceSettings.save(root.getContext(), id, duration);
+        DanceSettings.save(root.getContext(), id);
         Toast.makeText(root.getContext(), R.string.dance_settings_saved, Toast.LENGTH_SHORT).show();
-    }
-
-    private int parseIntOr(EditText field) {
-        try {
-            return Integer.parseInt(field.getText().toString().trim());
-        } catch (NumberFormatException e) {
-            return DanceSettings.DEFAULT_DURATION_SECONDS;
-        }
     }
 }

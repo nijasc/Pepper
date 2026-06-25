@@ -23,13 +23,14 @@ final class PanelNavigator {
     public static final int PANEL_CAMERA = 9;
     public static final int PANEL_STATUS = 10;
     public static final int PANEL_STATS = 11;
-    public static final int PANEL_ATTRACT = 12;
+    public static final int PANEL_SYSTEM = 12;
     public static final int PANEL_DEBUG = 13;
     public static final int PANEL_DANCE = 14;
     public static final int PANEL_NAV = 15;
     public static final int PANEL_PROFILES = 16;
     public static final int PANEL_PROFILE_EDIT = 17;
     public static final int PANEL_MODELS = 18;
+    public static final int PANEL_EMOTES = 19;
     private static final String TAG = "AdminNav";
     private final Map<Integer, View> panels = new LinkedHashMap<>();
     private final View header;
@@ -93,10 +94,10 @@ final class PanelNavigator {
                 return R.string.admin_status;
             case PANEL_STATS:
                 return R.string.admin_stats;
+            case PANEL_SYSTEM:
+                return R.string.admin_system;
             case PANEL_DEBUG:
                 return R.string.admin_debug_title;
-            case PANEL_ATTRACT:
-                return R.string.admin_attract;
             case PANEL_DANCE:
                 return R.string.admin_dance_settings;
             case PANEL_NAV:
@@ -107,6 +108,8 @@ final class PanelNavigator {
                 return R.string.profile_edit_title;
             case PANEL_MODELS:
                 return R.string.admin_models;
+            case PANEL_EMOTES:
+                return R.string.admin_emotes;
             default:
                 return R.string.admin_menu_title;
         }

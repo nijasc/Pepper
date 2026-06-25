@@ -7,6 +7,7 @@ import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.openai.OpenAIService;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,7 +44,7 @@ public class DocumentationAction extends Action {
     private long cachedAtMs;
 
     public DocumentationAction(List<Action> actions,
-                               com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+                               HistoryManager historyManager) {
         super(historyManager);
         this.service = new OpenAIService(actions);
     }

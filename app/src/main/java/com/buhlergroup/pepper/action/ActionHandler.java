@@ -10,6 +10,8 @@ import com.buhlergroup.pepper.action.dance.DanceAction;
 import com.buhlergroup.pepper.action.documentation.DocumentationAction;
 import com.buhlergroup.pepper.action.dynamicanim.DynamicAnimationAction;
 import com.buhlergroup.pepper.action.follow.FollowMeAction;
+import com.buhlergroup.pepper.action.gesture.WaveGestureAction;
+import com.buhlergroup.pepper.action.gesture.WelcomeGestureAction;
 import com.buhlergroup.pepper.action.highfive.HighFiveAction;
 import com.buhlergroup.pepper.action.hold.HoldMyBeerAction;
 import com.buhlergroup.pepper.action.lang.ChangeLanguageAction;
@@ -240,6 +242,8 @@ public class ActionHandler {
         actions.add(new SiriAction(languageManager, historyManager));
         actions.add(new SaxophoneAction(historyManager));
         actions.add(new HighFiveAction(historyManager));
+        actions.add(new WaveGestureAction(historyManager));
+        actions.add(new WelcomeGestureAction(historyManager));
         actions.add(new HoldMyBeerAction(historyManager));
         actions.add(new ChangeLanguageAction(languageManager, historyManager));
         actions.add(new ChangeVolumeAction(historyManager));

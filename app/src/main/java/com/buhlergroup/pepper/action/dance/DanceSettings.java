@@ -9,7 +9,6 @@ public final class DanceSettings {
 
     private static final String PREFS = "dance_prefs";
     private static final String KEY_DEFAULT_DANCE_ID = "default_dance_id";
-    private static final String KEY_DEFAULT_DURATION_SECONDS = "default_duration_seconds";
 
     private DanceSettings() {
     }
@@ -23,17 +22,16 @@ public final class DanceSettings {
     }
 
     public static int getDefaultDurationSeconds(Context context) {
-        return Math.max(8, prefs(context).getInt(KEY_DEFAULT_DURATION_SECONDS, DEFAULT_DURATION_SECONDS));
+        return DEFAULT_DURATION_SECONDS;
     }
 
     public static long getDefaultDurationMs(Context context) {
         return getDefaultDurationSeconds(context) * 1000L;
     }
 
-    public static void save(Context context, String defaultDanceId, int defaultDurationSeconds) {
+    public static void save(Context context, String defaultDanceId) {
         prefs(context).edit()
                 .putString(KEY_DEFAULT_DANCE_ID, defaultDanceId == null ? "" : defaultDanceId)
-                .putInt(KEY_DEFAULT_DURATION_SECONDS, Math.max(8, defaultDurationSeconds))
                 .apply();
     }
 }

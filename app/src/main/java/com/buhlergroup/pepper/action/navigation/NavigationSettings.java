@@ -11,7 +11,6 @@ public final class NavigationSettings {
     private static final String PREFS = "navigation_prefs";
     private static final String KEY_AUTO_LOCALIZE = "auto_localize";
     private static final String KEY_DEFAULT_SCAN_ID = "default_scan_id";
-    private static final String KEY_LOCALIZE_TIMEOUT_SECONDS = "localize_timeout_seconds";
 
     private NavigationSettings() {
     }
@@ -29,20 +28,17 @@ public final class NavigationSettings {
     }
 
     public static int getLocalizeTimeoutSeconds(Context context) {
-        return Math.max(10,
-                prefs(context).getInt(KEY_LOCALIZE_TIMEOUT_SECONDS, DEFAULT_LOCALIZE_TIMEOUT_SECONDS));
+        return DEFAULT_LOCALIZE_TIMEOUT_SECONDS;
     }
 
     public static long getLocalizeTimeoutMs(Context context) {
         return getLocalizeTimeoutSeconds(context) * 1000L;
     }
 
-    public static void save(Context context, boolean autoLocalize, String defaultScanId,
-                            int localizeTimeoutSeconds) {
+    public static void save(Context context, boolean autoLocalize, String defaultScanId) {
         prefs(context).edit()
                 .putBoolean(KEY_AUTO_LOCALIZE, autoLocalize)
                 .putString(KEY_DEFAULT_SCAN_ID, defaultScanId == null ? "" : defaultScanId)
-                .putInt(KEY_LOCALIZE_TIMEOUT_SECONDS, Math.max(10, localizeTimeoutSeconds))
                 .apply();
     }
 }

@@ -3,7 +3,6 @@ package com.buhlergroup.pepper.action.admin;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -23,23 +22,21 @@ final class NavigationPanelController {
     private final PanelNavigator panelNav;
     private final CheckBox navAutoLocalize;
     private final Spinner navDefaultScan;
-    private final EditText navLocalizeTimeout;
     private final List<String> scanIds = new ArrayList<>();
 
-    NavigationPanelController(View root, Executor executor, PanelNavigator panelNav) {
+    NavigationPanelController(View root, Executor executor, PanelNavigator panelNav,
+                             Runnable openNavigation) {
         this.root = root;
         this.executor = executor;
         this.panelNav = panelNav;
         this.navAutoLocalize = root.findViewById(R.id.navAutoLocalize);
         this.navDefaultScan = root.findViewById(R.id.navDefaultScan);
-        this.navLocalizeTimeout = root.findViewById(R.id.navLocalizeTimeout);
         root.findViewById(R.id.navSave).setOnClickListener(v -> saveNavigation());
+        root.findViewById(R.id.navOpen).setOnClickListener(v -> openNavigation.run());
     }
 
     void showNavigation() {
         navAutoLocalize.setChecked(NavigationSettings.isAutoLocalize(root.getContext()));
-        navLocalizeTimeout.setText(
-                String.valueOf(NavigationSettings.getLocalizeTimeoutSeconds(root.getContext())));
         panelNav.show(PanelNavigator.PANEL_NAV);
         loadScans();
     }
@@ -72,16 +69,7 @@ final class NavigationPanelController {
     private void saveNavigation() {
         int pos = navDefaultScan.getSelectedItemPosition();
         String id = pos >= 0 && pos < scanIds.size() ? scanIds.get(pos) : "";
-        int timeout = parseIntOr(navLocalizeTimeout);
-        NavigationSettings.save(root.getContext(), navAutoLocalize.isChecked(), id, timeout);
+        NavigationSettings.save(root.getContext(), navAutoLocalize.isChecked(), id);
         Toast.makeText(root.getContext(), R.string.nav_settings_saved, Toast.LENGTH_SHORT).show();
-    }
-
-    private int parseIntOr(EditText field) {
-        try {
-            return Integer.parseInt(field.getText().toString().trim());
-        } catch (NumberFormatException e) {
-            return NavigationSettings.DEFAULT_LOCALIZE_TIMEOUT_SECONDS;
-        }
     }
 }

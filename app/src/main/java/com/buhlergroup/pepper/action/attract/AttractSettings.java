@@ -11,8 +11,6 @@ public final class AttractSettings {
 
     private static final String PREFS = "attract_prefs";
     private static final String KEY_ENABLED = "enabled";
-    private static final String KEY_IDLE_MINUTES = "idle_minutes";
-    private static final String KEY_GREET_SECONDS = "greet_seconds";
 
     private AttractSettings() {
     }
@@ -26,18 +24,14 @@ public final class AttractSettings {
     }
 
     public static int getIdleMinutes(Context context) {
-        return Math.max(1, prefs(context).getInt(KEY_IDLE_MINUTES, DEFAULT_IDLE_MINUTES));
+        return DEFAULT_IDLE_MINUTES;
     }
 
     public static int getGreetSeconds(Context context) {
-        return Math.max(5, prefs(context).getInt(KEY_GREET_SECONDS, DEFAULT_GREET_SECONDS));
+        return DEFAULT_GREET_SECONDS;
     }
 
-    public static void save(Context context, boolean enabled, int idleMinutes, int greetSeconds) {
-        prefs(context).edit()
-                .putBoolean(KEY_ENABLED, enabled)
-                .putInt(KEY_IDLE_MINUTES, Math.max(1, idleMinutes))
-                .putInt(KEY_GREET_SECONDS, Math.max(5, greetSeconds))
-                .apply();
+    public static void save(Context context, boolean enabled) {
+        prefs(context).edit().putBoolean(KEY_ENABLED, enabled).apply();
     }
 }

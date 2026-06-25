@@ -1,15 +1,12 @@
 package com.buhlergroup.pepper.action.admin;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.text.InputType;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -23,7 +20,6 @@ import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.selfie.QrGenerator;
 import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
-import com.buhlergroup.pepper.action.selfie.SelfieSettings;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 
 import java.io.File;
@@ -83,7 +79,6 @@ final class SelfieGalleryController {
         exportAllButton.setOnClickListener(v -> onExportAll());
         detailFavorite.setOnClickListener(v -> toggleFavorite());
         root.findViewById(R.id.adminDetailDelete).setOnClickListener(v -> deleteCurrent());
-        root.findViewById(R.id.adminSelfieRetention).setOnClickListener(v -> showSelfieRetentionDialog());
     }
 
     private Context ctx() {
@@ -264,28 +259,5 @@ final class SelfieGalleryController {
             SelfieRepository.get(ctx()).delete(selfie.id);
             root.post(this::showGallery);
         });
-    }
-
-    private void showSelfieRetentionDialog() {
-        EditText input = new EditText(ctx());
-        input.setInputType(InputType.TYPE_CLASS_NUMBER);
-        input.setHint(R.string.selfie_retention_hint);
-        input.setText(String.valueOf(SelfieSettings.getRetentionDays(ctx())));
-        new AlertDialog.Builder(ctx())
-                .setTitle(R.string.selfie_retention_title)
-                .setView(input)
-                .setNegativeButton(R.string.admin_back, null)
-                .setPositiveButton(R.string.raffle_save, (d, w) -> {
-                    int days;
-                    try {
-                        days = Math.max(0, Integer.parseInt(input.getText().toString().trim()));
-                    } catch (NumberFormatException e) {
-                        days = SelfieSettings.DEFAULT_RETENTION_DAYS;
-                    }
-                    SelfieSettings.setRetentionDays(ctx(), days);
-                    Toast.makeText(ctx(), R.string.selfie_retention_saved,
-                            Toast.LENGTH_SHORT).show();
-                })
-                .show();
     }
 }

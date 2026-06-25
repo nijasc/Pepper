@@ -1,11 +1,11 @@
 package com.buhlergroup.pepper.action.admin;
 
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_ATTRACT;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_CAMERA;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DANCE;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEBUG;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DETAIL;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEVLOG;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_EMOTES;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_GALLERY;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_HISTORY;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_LANG;
@@ -19,6 +19,7 @@ import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_RAFFLE_CREATE;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATS;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATUS;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_SYSTEM;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -27,8 +28,10 @@ import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +39,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
+import com.buhlergroup.pepper.action.attract.AttractSettings;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
@@ -58,13 +62,14 @@ public class AdminView extends FrameLayout {
     private RaffleAdminController raffleAdmin;
     private LanguagePanelController language;
     private HistoryPanelController history;
-    private AttractPanelController attract;
     private DancePanelController dance;
+    private EmotePanelController emotes;
     private NavigationPanelController navigationSettings;
     private CameraPanelController camera;
     private DiagnosticsController diagnostics;
     private ProfilePanelController profiles;
     private ModelPanelController models;
+    private Switch attractSwitch;
 
     public AdminView(Context context) {
         super(context);
@@ -100,8 +105,9 @@ public class AdminView extends FrameLayout {
         View statusPanel = binding.adminStatusPanel;
         View statsPanel = binding.adminStatsPanel;
         View debugPanel = binding.adminDebugPanel;
-        View attractPanel = binding.adminAttractPanel;
+        View systemPanel = binding.adminSystemPanel;
         View dancePanel = binding.adminDancePanel;
+        View emotesPanel = binding.adminEmotesPanel;
         View navPanel = binding.adminNavPanel;
         View profilesPanel = binding.adminProfilesPanel;
         View profileEditPanel = binding.adminProfileEditPanel;
@@ -126,8 +132,9 @@ public class AdminView extends FrameLayout {
         panelNav.register(PANEL_STATUS, statusPanel);
         panelNav.register(PANEL_STATS, statsPanel);
         panelNav.register(PANEL_DEBUG, debugPanel);
-        panelNav.register(PANEL_ATTRACT, attractPanel);
+        panelNav.register(PANEL_SYSTEM, systemPanel);
         panelNav.register(PANEL_DANCE, dancePanel);
+        panelNav.register(PANEL_EMOTES, emotesPanel);
         panelNav.register(PANEL_NAV, navPanel);
         panelNav.register(PANEL_PROFILES, profilesPanel);
         panelNav.register(PANEL_PROFILE_EDIT, profileEditPanel);
@@ -139,35 +146,42 @@ public class AdminView extends FrameLayout {
         raffleAdmin = new RaffleAdminController(this, dbExecutor, panelNav, galleryController, this::hide);
         language = new LanguagePanelController(this, panelNav);
         history = new HistoryPanelController(this, panelNav);
-        attract = new AttractPanelController(this, panelNav);
-        dance = new DancePanelController(this, dbExecutor, panelNav);
-        navigationSettings = new NavigationPanelController(this, dbExecutor, panelNav);
+        dance = new DancePanelController(this, dbExecutor, panelNav, this::openDanceLibrary);
+        emotes = new EmotePanelController(this, panelNav);
+        navigationSettings = new NavigationPanelController(this, dbExecutor, panelNav, this::openNavigation);
         camera = new CameraPanelController(this, dbExecutor, panelNav);
         diagnostics = new DiagnosticsController(this, panelNav);
         profiles = new ProfilePanelController(this, dbExecutor, panelNav);
         models = new ModelPanelController(this, dbExecutor, panelNav);
+
+        attractSwitch = binding.adminAttractSwitch;
+        attractSwitch.setOnCheckedChangeListener(this::onAttractToggled);
+
         binding.adminPinCancel.setOnClickListener(v -> hide());
         binding.adminClose.setOnClickListener(v -> hide());
-        binding.adminDevLogs.setOnClickListener(v -> diagnostics.showDevLog());
         binding.adminSelfies.setOnClickListener(v -> galleryController.showGallery());
         binding.adminLanguage.setOnClickListener(v -> language.showLanguage());
-        binding.adminHistory.setOnClickListener(v -> history.showHistory());
         binding.adminRaffle.setOnClickListener(v -> raffleAdmin.openRaffle());
         binding.adminCamera.setOnClickListener(v -> camera.showCamera());
-        binding.adminStatus.setOnClickListener(v -> showStatus());
+        binding.adminSystem.setOnClickListener(v -> panelNav.show(PANEL_SYSTEM));
+        binding.systemStatus.setOnClickListener(v -> showStatus());
+        binding.systemStats.setOnClickListener(v -> showStats());
+        binding.systemHistory.setOnClickListener(v -> history.showHistory());
+        binding.systemDevLogs.setOnClickListener(v -> diagnostics.showDevLog());
+        binding.systemDebug.setOnClickListener(v -> diagnostics.showDebug());
         binding.statusRefresh.setOnClickListener(v -> showStatus());
-        binding.adminStats.setOnClickListener(v -> showStats());
         binding.adminStatsExport.setOnClickListener(v -> dashboard.exportStats());
-        binding.adminDebug.setOnClickListener(v -> diagnostics.showDebug());
-        binding.adminAttract.setOnClickListener(v -> attract.showAttract());
-        binding.adminDanceSettings.setOnClickListener(v -> dance.showDance());
-        binding.adminNavSettings.setOnClickListener(v -> navigationSettings.showNavigation());
-        binding.adminNavigation.setOnClickListener(v -> openNavigation());
-        binding.adminDances.setOnClickListener(v -> openDanceLibrary());
+        binding.adminEmotes.setOnClickListener(v -> emotes.showEmotes());
+        binding.adminNavigation.setOnClickListener(v -> navigationSettings.showNavigation());
+        binding.adminDances.setOnClickListener(v -> dance.showDance());
         binding.adminDsgvo.setOnClickListener(v -> showDsgvoAccessDialog());
         binding.adminChangePin.setOnClickListener(v -> showChangePinDialog());
         binding.adminProfiles.setOnClickListener(v -> profiles.showProfiles());
         binding.adminModels.setOnClickListener(v -> models.showModels());
+    }
+
+    private void onAttractToggled(CompoundButton button, boolean checked) {
+        AttractSettings.save(getContext(), checked);
     }
 
     public void onProfileDocumentPicked(android.net.Uri uri) {
@@ -223,13 +237,18 @@ public class AdminView extends FrameLayout {
     private void onPanelShown(int which) {
         dashboard.stopRefresh();
         if (which == PANEL_MENU) {
+            attractSwitch.setChecked(AttractSettings.isEnabled(getContext()));
             dashboard.startRefresh();
         }
     }
 
     private void goBack() {
-        if (panelNav.current() == PANEL_DETAIL) {
+        int current = panelNav.current();
+        if (current == PANEL_DETAIL) {
             galleryController.showGallery();
+        } else if (current == PANEL_STATUS || current == PANEL_STATS || current == PANEL_HISTORY
+                || current == PANEL_DEVLOG || current == PANEL_DEBUG) {
+            panelNav.show(PANEL_SYSTEM);
         } else {
             panelNav.show(PANEL_MENU);
         }

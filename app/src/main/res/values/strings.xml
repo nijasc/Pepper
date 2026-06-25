@@ -75,8 +75,13 @@
     <string name="admin_raffle">Verlosung</string>
     <string name="admin_camera">Kamera</string>
     <string name="admin_navigation">Navigation</string>
-    <string name="admin_dances">Tänze</string>
+    <string name="admin_dances">Tanz</string>
     <string name="admin_camera_title">Externe Kamera</string>
+
+    <string name="admin_system">System</string>
+    <string name="admin_group_robot">Roboter</string>
+    <string name="dance_open_library">Tanz-Bibliothek öffnen</string>
+    <string name="nav_open">Navigation starten</string>
 
     <string name="dance_title">Tanz-Bibliothek</string>
     <string name="dance_subtitle">Automatisch generierte Tänze zu YouTube-Songs.</string>
@@ -230,6 +235,20 @@
     <string name="dance_duration_label">Standard-Dauer (Sekunden)</string>
     <string name="dance_default_none">Zufall / Favoriten</string>
     <string name="dance_settings_saved">Tanz-Einstellungen gespeichert.</string>
+    <string name="admin_emotes">Emotes</string>
+    <string name="emote_intro">Emote von Hand auslösen — wiederholt sich für die eingestellte Dauer (Standard 60 s). Ideal für Videoaufnahmen.</string>
+    <string name="emote_select_label">Emote</string>
+    <string name="emote_duration_label">Dauer (Sekunden)</string>
+    <string name="emote_play">Abspielen</string>
+    <string name="emote_stop">Stopp</string>
+    <string name="emote_wave">Winken</string>
+    <string name="emote_welcome">Einladende Geste</string>
+    <string name="emote_highfive">High Five</string>
+    <string name="emote_raise_hand">Hand heben</string>
+    <string name="emote_playing">Emote läuft …</string>
+    <string name="emote_stopped">Emote gestoppt.</string>
+    <string name="emote_already_playing">Läuft bereits — zuerst stoppen.</string>
+    <string name="emote_not_ready">Roboter ist gerade nicht bereit.</string>
     <string name="admin_navigation_settings">Navigations-Einstellungen</string>
     <string name="nav_auto_localize">Beim Start automatisch lokalisieren</string>
     <string name="nav_default_scan_label">Standard-Raum-Scan</string>
