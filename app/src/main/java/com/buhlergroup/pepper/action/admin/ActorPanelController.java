@@ -30,6 +30,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.dance.RobotContext;
+import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.InputStream;
 import java.util.List;
@@ -59,6 +60,7 @@ final class ActorPanelController {
     private final Button delayButton;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService playExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService speechExecutor = Executors.newSingleThreadExecutor();
     private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
     private final AtomicInteger generation = new AtomicInteger(0);
 
@@ -126,7 +128,7 @@ final class ActorPanelController {
         b.setAllCaps(false);
         b.setTextColor(Color.WHITE);
         b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
-        b.setBackgroundColor(preset.isSequence() ? ActorState.SUN_DEEP : Color.parseColor("#33FFFFFF"));
+        b.setBackgroundColor(preset.isSequence() ? ActorState.TEAL_DARK : Color.parseColor("#22FFFFFF"));
         b.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
         b.setPadding(32, 28, 32, 28);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
@@ -189,6 +191,7 @@ final class ActorPanelController {
             return;
         }
         display.render(preset.state);
+        speak(preset.speech, gen);
         if (preset.gestureRaw != 0) {
             startGesture(preset.gestureRaw, gen);
         }
@@ -200,9 +203,31 @@ final class ActorPanelController {
         }
         ActorPreset.Step step = steps.get(index);
         display.render(step.state);
+        speak(step.speech, gen);
         if (index < steps.size() - 1) {
             main.postDelayed(() -> runSequence(steps, index + 1, gen), step.holdMs);
         }
+    }
+
+    /** Pepper speaks the line (countdown digit, greeting …) in parallel with the pose. */
+    private void speak(String text, int gen) {
+        if (text == null || gen != generation.get()) {
+            return;
+        }
+        QiContext context = RobotContext.get();
+        if (context == null) {
+            return; // display still shows; only speech needs the robot
+        }
+        speechExecutor.execute(() -> {
+            if (gen != generation.get()) {
+                return;
+            }
+            try {
+                SpeechManager.getInstance().say(context, text);
+            } catch (Exception e) {
+                Log.w(TAG, "Actor-Speech fehlgeschlagen: " + e.getMessage());
+            }
+        });
     }
 
     private void startGesture(int rawRes, int gen) {

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Animation typeVersion="2.0" xmlns:editor="http://www.aldebaran.com/animation/editor">
+  <!-- Peering out longingly: head up and turned to the side. Drehbuch D Fenster/Sonne. -->
+  <ActuatorCurve fps="25" actuator="HeadPitch" mute="false" unit="radian">
+    <Key value="-0.3" frame="0"/>
+    <Key value="-0.3" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="HeadYaw" mute="false" unit="radian">
+    <Key value="0.45" frame="0"/>
+    <Key value="0.45" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LShoulderPitch" mute="false" unit="radian">
+    <Key value="1.4" frame="0"/>
+    <Key value="1.4" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LShoulderRoll" mute="false" unit="radian">
+    <Key value="0.1" frame="0"/>
+    <Key value="0.1" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LElbowYaw" mute="false" unit="radian">
+    <Key value="-1.2" frame="0"/>
+    <Key value="-1.2" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LElbowRoll" mute="false" unit="radian">
+    <Key value="-0.5" frame="0"/>
+    <Key value="-0.5" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LHand" mute="false" unit="dimensionless">
+    <Key value="0.5" frame="0"/>
+    <Key value="0.5" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RShoulderPitch" mute="false" unit="radian">
+    <Key value="1.4" frame="0"/>
+    <Key value="1.4" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RShoulderRoll" mute="false" unit="radian">
+    <Key value="-0.1" frame="0"/>
+    <Key value="-0.1" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RElbowYaw" mute="false" unit="radian">
+    <Key value="1.2" frame="0"/>
+    <Key value="1.2" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RElbowRoll" mute="false" unit="radian">
+    <Key value="0.5" frame="0"/>
+    <Key value="0.5" frame="50"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RHand" mute="false" unit="dimensionless">
+    <Key value="0.5" frame="0"/>
+    <Key value="0.5" frame="50"/>
+  </ActuatorCurve>
+</Animation>

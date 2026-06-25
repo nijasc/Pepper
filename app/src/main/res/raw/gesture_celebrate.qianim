@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Animation typeVersion="2.0" xmlns:editor="http://www.aldebaran.com/animation/editor">
+  <ActuatorCurve fps="25" actuator="HeadPitch" mute="false" unit="radian">
+    <Key value="-0.2" frame="0"/>
+    <Key value="0.08" frame="18"/>
+    <Key value="-0.2" frame="37"/>
+    <Key value="0.08" frame="56"/>
+    <Key value="-0.2" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="HeadYaw" mute="false" unit="radian">
+    <Key value="0" frame="0"/>
+    <Key value="0.28" frame="18"/>
+    <Key value="-0.28" frame="37"/>
+    <Key value="0.28" frame="56"/>
+    <Key value="0" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LShoulderPitch" mute="false" unit="radian">
+    <Key value="-1.5" frame="0"/>
+    <Key value="-1.05" frame="18"/>
+    <Key value="-1.5" frame="37"/>
+    <Key value="-1.05" frame="56"/>
+    <Key value="-1.5" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LShoulderRoll" mute="false" unit="radian">
+    <Key value="0.15" frame="0"/>
+    <Key value="0.45" frame="18"/>
+    <Key value="0.15" frame="37"/>
+    <Key value="0.45" frame="56"/>
+    <Key value="0.15" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LElbowYaw" mute="false" unit="radian">
+    <Key value="-1.2" frame="0"/>
+    <Key value="-1.2" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LElbowRoll" mute="false" unit="radian">
+    <Key value="-0.4" frame="0"/>
+    <Key value="-1.0" frame="18"/>
+    <Key value="-0.4" frame="37"/>
+    <Key value="-1.0" frame="56"/>
+    <Key value="-0.4" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LWristYaw" mute="false" unit="radian">
+    <Key value="0" frame="0"/>
+    <Key value="0" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="LHand" mute="false" unit="dimensionless">
+    <Key value="1.0" frame="0"/>
+    <Key value="0.2" frame="18"/>
+    <Key value="1.0" frame="37"/>
+    <Key value="0.2" frame="56"/>
+    <Key value="1.0" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RShoulderPitch" mute="false" unit="radian">
+    <Key value="-1.5" frame="0"/>
+    <Key value="-1.05" frame="18"/>
+    <Key value="-1.5" frame="37"/>
+    <Key value="-1.05" frame="56"/>
+    <Key value="-1.5" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RShoulderRoll" mute="false" unit="radian">
+    <Key value="-0.15" frame="0"/>
+    <Key value="-0.45" frame="18"/>
+    <Key value="-0.15" frame="37"/>
+    <Key value="-0.45" frame="56"/>
+    <Key value="-0.15" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RElbowYaw" mute="false" unit="radian">
+    <Key value="1.2" frame="0"/>
+    <Key value="1.2" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RElbowRoll" mute="false" unit="radian">
+    <Key value="0.4" frame="0"/>
+    <Key value="1.0" frame="18"/>
+    <Key value="0.4" frame="37"/>
+    <Key value="1.0" frame="56"/>
+    <Key value="0.4" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RWristYaw" mute="false" unit="radian">
+    <Key value="0" frame="0"/>
+    <Key value="0" frame="75"/>
+  </ActuatorCurve>
+  <ActuatorCurve fps="25" actuator="RHand" mute="false" unit="dimensionless">
+    <Key value="1.0" frame="0"/>
+    <Key value="0.2" frame="18"/>
+    <Key value="1.0" frame="37"/>
+    <Key value="0.2" frame="56"/>
+    <Key value="1.0" frame="75"/>
+  </ActuatorCurve>
+</Animation>
