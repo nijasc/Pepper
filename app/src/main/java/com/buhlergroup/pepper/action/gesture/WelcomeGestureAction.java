@@ -13,7 +13,7 @@ import com.buhlergroup.pepper.openai.history.HistoryManager;
 /**
  * Welcoming gesture (einladende Geste): extends the right arm forward with the palm
  * turned up and the hand open, as if inviting someone in. Pure gesture, no speech,
- * so it can be filmed cleanly and looped (e.g. via the Emotes admin tile). Built for
+ * so it can be filmed cleanly and looped (e.g. via the Actor admin tile). Built for
  * the Bühler Future Marketing summer-campaign video.
  */
 public class WelcomeGestureAction extends Action {

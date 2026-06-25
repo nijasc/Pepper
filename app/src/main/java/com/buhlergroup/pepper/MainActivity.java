@@ -405,9 +405,9 @@ public class MainActivity extends RobotActivity implements RobotLifecycleCallbac
             }
             return;
         }
-        if (requestCode == AdminController.REQUEST_EMOTE_IMAGE) {
+        if (requestCode == AdminController.REQUEST_ACTOR_IMAGE) {
             if (resultCode == RESULT_OK && data != null && data.getData() != null) {
-                AdminController.get().onEmoteImagePicked(data.getData());
+                AdminController.get().onActorImagePicked(data.getData());
             }
             return;
         }

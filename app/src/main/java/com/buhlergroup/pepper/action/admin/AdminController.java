@@ -11,7 +11,7 @@ import java.util.List;
 public final class AdminController {
 
     public static final int REQUEST_PROFILE_DOCUMENT = 0x9101;
-    public static final int REQUEST_EMOTE_IMAGE = 0x9102;
+    public static final int REQUEST_ACTOR_IMAGE = 0x9102;
 
     private static final AdminController INSTANCE = new AdminController();
     private volatile AdminView view;
@@ -85,10 +85,10 @@ public final class AdminController {
         }
     }
 
-    public void onEmoteImagePicked(android.net.Uri uri) {
+    public void onActorImagePicked(android.net.Uri uri) {
         AdminView current = view;
         if (current != null) {
-            current.onEmoteImagePicked(uri);
+            current.onActorImagePicked(uri);
         }
     }
 

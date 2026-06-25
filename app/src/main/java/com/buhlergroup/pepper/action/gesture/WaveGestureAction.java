@@ -12,7 +12,7 @@ import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 /**
  * Waves the right hand in greeting (Winken). Pure gesture, no speech, so it can be
- * filmed cleanly and looped (e.g. via the Emotes admin tile). Built for the Bühler
+ * filmed cleanly and looped (e.g. via the Actor admin tile). Built for the Bühler
  * Future Marketing summer-campaign video.
  */
 public class WaveGestureAction extends Action {

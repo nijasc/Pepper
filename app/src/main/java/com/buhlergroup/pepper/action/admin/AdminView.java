@@ -5,7 +5,7 @@ import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DANCE;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEBUG;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DETAIL;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_DEVLOG;
-import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_EMOTES;
+import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_ACTOR;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_GALLERY;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_HISTORY;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_LANG;
@@ -63,7 +63,7 @@ public class AdminView extends FrameLayout {
     private LanguagePanelController language;
     private HistoryPanelController history;
     private DancePanelController dance;
-    private EmotePanelController emotes;
+    private ActorPanelController actor;
     private NavigationPanelController navigationSettings;
     private CameraPanelController camera;
     private DiagnosticsController diagnostics;
@@ -107,7 +107,7 @@ public class AdminView extends FrameLayout {
         View debugPanel = binding.adminDebugPanel;
         View systemPanel = binding.adminSystemPanel;
         View dancePanel = binding.adminDancePanel;
-        View emotesPanel = binding.adminEmotesPanel;
+        View actorPanel = binding.adminActorPanel;
         View navPanel = binding.adminNavPanel;
         View profilesPanel = binding.adminProfilesPanel;
         View profileEditPanel = binding.adminProfileEditPanel;
@@ -134,7 +134,7 @@ public class AdminView extends FrameLayout {
         panelNav.register(PANEL_DEBUG, debugPanel);
         panelNav.register(PANEL_SYSTEM, systemPanel);
         panelNav.register(PANEL_DANCE, dancePanel);
-        panelNav.register(PANEL_EMOTES, emotesPanel);
+        panelNav.register(PANEL_ACTOR, actorPanel);
         panelNav.register(PANEL_NAV, navPanel);
         panelNav.register(PANEL_PROFILES, profilesPanel);
         panelNav.register(PANEL_PROFILE_EDIT, profileEditPanel);
@@ -147,7 +147,7 @@ public class AdminView extends FrameLayout {
         language = new LanguagePanelController(this, panelNav);
         history = new HistoryPanelController(this, panelNav);
         dance = new DancePanelController(this, dbExecutor, panelNav, this::openDanceLibrary);
-        emotes = new EmotePanelController(this, panelNav);
+        actor = new ActorPanelController(this, panelNav);
         navigationSettings = new NavigationPanelController(this, dbExecutor, panelNav, this::openNavigation);
         camera = new CameraPanelController(this, dbExecutor, panelNav);
         diagnostics = new DiagnosticsController(this, panelNav);
@@ -171,7 +171,7 @@ public class AdminView extends FrameLayout {
         binding.systemDebug.setOnClickListener(v -> diagnostics.showDebug());
         binding.statusRefresh.setOnClickListener(v -> showStatus());
         binding.adminStatsExport.setOnClickListener(v -> dashboard.exportStats());
-        binding.adminEmotes.setOnClickListener(v -> emotes.showEmotes());
+        binding.adminActor.setOnClickListener(v -> actor.showActor());
         binding.adminNavigation.setOnClickListener(v -> navigationSettings.showNavigation());
         binding.adminDances.setOnClickListener(v -> dance.showDance());
         binding.adminDsgvo.setOnClickListener(v -> showDsgvoAccessDialog());
@@ -190,9 +190,9 @@ public class AdminView extends FrameLayout {
         }
     }
 
-    public void onEmoteImagePicked(android.net.Uri uri) {
-        if (emotes != null) {
-            emotes.onImagePicked(uri);
+    public void onActorImagePicked(android.net.Uri uri) {
+        if (actor != null) {
+            actor.onImagePicked(uri);
         }
     }
 
