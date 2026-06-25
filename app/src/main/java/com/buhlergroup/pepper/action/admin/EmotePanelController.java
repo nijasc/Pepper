@@ -4,8 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -25,6 +28,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.dance.RobotContext;
 
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,6 +68,7 @@ final class EmotePanelController {
     private final View overlay;
     private final ImageView overlayImage;
     private final ExecutorService playExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
     private final AtomicBoolean cancel = new AtomicBoolean(false);
     private volatile boolean playing = false;
     private Uri overlayUri;
@@ -150,13 +155,13 @@ final class EmotePanelController {
     }
 
     private void showOverlay() {
-        if (overlayUri != null) {
-            setImage(overlayImage, overlayUri);
-        } else {
-            overlayImage.setImageDrawable(null);
-        }
+        overlayImage.setImageDrawable(null);
         overlay.setVisibility(View.VISIBLE);
         overlay.bringToFront();
+        if (overlayUri != null) {
+            DisplayMetrics dm = root.getResources().getDisplayMetrics();
+            loadScaled(overlayUri, overlayImage, dm.widthPixels, dm.heightPixels, null);
+        }
     }
 
     private void hideOverlay() {
@@ -191,23 +196,58 @@ final class EmotePanelController {
     }
 
     private void bindPreview() {
-        if (overlayUri != null && setImage(imagePreview, overlayUri)) {
-            imageHint.setVisibility(View.GONE);
-        } else {
+        imagePreview.setImageDrawable(null);
+        if (overlayUri == null) {
+            imageHint.setVisibility(View.VISIBLE);
+            return;
+        }
+        imageHint.setVisibility(View.GONE);
+        loadScaled(overlayUri, imagePreview, 560, 280, () -> {
             imagePreview.setImageDrawable(null);
             imageHint.setVisibility(View.VISIBLE);
+        });
+    }
+
+    private void loadScaled(Uri uri, ImageView target, int reqW, int reqH, Runnable onFail) {
+        imageExecutor.execute(() -> {
+            Bitmap bitmap = decodeScaled(uri, reqW, reqH);
+            root.post(() -> {
+                if (bitmap != null) {
+                    target.setImageBitmap(bitmap);
+                } else if (onFail != null) {
+                    onFail.run();
+                }
+            });
+        });
+    }
+
+    private Bitmap decodeScaled(Uri uri, int reqW, int reqH) {
+        try {
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            try (InputStream in = ctx().getContentResolver().openInputStream(uri)) {
+                BitmapFactory.decodeStream(in, null, bounds);
+            }
+            BitmapFactory.Options opts = new BitmapFactory.Options();
+            opts.inSampleSize = sampleSize(bounds.outWidth, bounds.outHeight, reqW, reqH);
+            try (InputStream in = ctx().getContentResolver().openInputStream(uri)) {
+                return BitmapFactory.decodeStream(in, null, opts);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Bild laden fehlgeschlagen: " + e.getMessage());
+            return null;
         }
     }
 
-    private boolean setImage(ImageView target, Uri uri) {
-        try {
-            target.setImageURI(null);
-            target.setImageURI(uri);
-            return target.getDrawable() != null;
-        } catch (Exception e) {
-            Log.w(TAG, "Bild laden fehlgeschlagen: " + e.getMessage());
-            return false;
+    private int sampleSize(int width, int height, int reqW, int reqH) {
+        int sample = 1;
+        if (width <= 0 || height <= 0 || reqW <= 0 || reqH <= 0) {
+            return sample;
         }
+        while ((width / (sample * 2)) >= reqW && (height / (sample * 2)) >= reqH) {
+            sample *= 2;
+        }
+        return sample;
     }
 
     private Uri loadSavedUri() {
