@@ -40,14 +40,20 @@ final class EmotePanelController {
             R.raw.gesture_welcome_arm,
             R.raw.pepper_highfive,
             R.raw.raise_right_hand_b001,
-            R.raw.gesture_hands_up
+            R.raw.gesture_hands_up,
+            R.raw.gesture_eagle,
+            R.raw.gesture_open_arms,
+            R.raw.gesture_present
     };
     private static final int[] EMOTE_LABEL = {
             R.string.emote_wave,
             R.string.emote_welcome,
             R.string.emote_highfive,
             R.string.emote_raise_hand,
-            R.string.emote_hands_up
+            R.string.emote_hands_up,
+            R.string.emote_eagle,
+            R.string.emote_open_arms,
+            R.string.emote_present
     };
 
     private final View root;

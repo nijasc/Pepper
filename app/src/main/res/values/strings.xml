@@ -248,6 +248,9 @@
     <string name="emote_highfive">High Five</string>
     <string name="emote_raise_hand">Hand heben</string>
     <string name="emote_hands_up">Beide Hände hoch (Umziehen)</string>
+    <string name="emote_eagle">Adler / Umarmung</string>
+    <string name="emote_open_arms">Offene Arme (einladend)</string>
+    <string name="emote_present">Präsentieren</string>
     <string name="emote_playing">Emote läuft …</string>
     <string name="emote_stopped">Emote gestoppt.</string>
     <string name="emote_already_playing">Läuft bereits — zuerst stoppen.</string>
