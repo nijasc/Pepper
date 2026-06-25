@@ -128,7 +128,7 @@ final class ActorPanelController {
         b.setAllCaps(false);
         b.setTextColor(Color.WHITE);
         b.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f);
-        b.setBackgroundColor(preset.isSequence() ? ActorState.TEAL_DARK : Color.parseColor("#22FFFFFF"));
+        b.setBackgroundColor(preset.isSequence() ? ActorState.TEAL : Color.parseColor("#22FFFFFF"));
         b.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
         b.setPadding(32, 28, 32, 28);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
