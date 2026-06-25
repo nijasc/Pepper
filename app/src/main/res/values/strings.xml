@@ -236,8 +236,10 @@
     <string name="dance_default_none">Zufall / Favoriten</string>
     <string name="dance_settings_saved">Tanz-Einstellungen gespeichert.</string>
     <string name="admin_emotes">Emotes</string>
-    <string name="emote_intro">Emote von Hand auslösen — wiederholt sich für die eingestellte Dauer (Standard 60 s). Ideal für Videoaufnahmen.</string>
+    <string name="emote_intro">Emote von Hand auslösen — läuft in Schleife bis du es stoppst. Während des Emotes wird ein Vollbild angezeigt, damit bei Video- und Fotoaufnahmen kein Admin-Panel zu sehen ist.</string>
     <string name="emote_select_label">Emote</string>
+    <string name="emote_pick_image">Bild für Aufnahme wählen</string>
+    <string name="emote_image_hint">Kein Bild gewählt – Vollbild bleibt schwarz</string>
     <string name="emote_duration_label">Dauer (Sekunden)</string>
     <string name="emote_play">Abspielen</string>
     <string name="emote_stop">Stopp</string>

@@ -190,6 +190,12 @@ public class AdminView extends FrameLayout {
         }
     }
 
+    public void onEmoteImagePicked(android.net.Uri uri) {
+        if (emotes != null) {
+            emotes.onImagePicked(uri);
+        }
+    }
+
     public void open() {
         DebugLog.get().d(TAG, "Admin geöffnet");
         post(() -> {
