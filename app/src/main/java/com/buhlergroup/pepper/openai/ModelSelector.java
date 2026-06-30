@@ -1,12 +1,13 @@
 package com.buhlergroup.pepper.openai;
 
+import com.buhlergroup.pepper.llm.ModelSettings;
 import com.buhlergroup.pepper.llm.ModelTask;
 
 public final class ModelSelector {
 
-    public static final String FAST = "gpt-4o-mini";
-    public static final String STRONG = "gpt-5.4";
-    public static final String STRONG_GENERATION = "gpt-5.5";
+    public static final String FAST = ModelSettings.DEFAULT_FAST;
+    public static final String STRONG = ModelSettings.DEFAULT_STRONG;
+    public static final String STRONG_GENERATION = ModelSettings.DEFAULT_GENERATION;
 
     private ModelSelector() {
     }
