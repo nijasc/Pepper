@@ -15,6 +15,7 @@ import com.aldebaran.qi.sdk.object.conversation.ListenResult;
 import com.aldebaran.qi.sdk.object.conversation.PhraseSet;
 import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.debug.DebugLog;
+import com.buhlergroup.pepper.util.FutureUtils;
 
 import java.io.File;
 import java.util.UUID;
@@ -219,18 +220,14 @@ final class RoomScanner {
     void cancelScanStopListener() {
         Future<ListenResult> f = scanStopListenFuture;
         scanStopListenFuture = null;
-        if (f != null && !f.isDone()) {
-            f.requestCancellation();
-        }
+        FutureUtils.cancel(f);
     }
 
     void cancelMapping() {
         Future<Void> f = mappingFuture;
         mappingFuture = null;
         currentMapping = null;
-        if (f != null && !f.isDone()) {
-            f.requestCancellation();
-        }
+        FutureUtils.cancel(f);
     }
 
     void stopScanning() {

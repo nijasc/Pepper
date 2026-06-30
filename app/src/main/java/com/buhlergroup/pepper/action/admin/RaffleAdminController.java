@@ -35,11 +35,9 @@ import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.concurrent.Executor;
 
 final class RaffleAdminController {
@@ -172,7 +170,7 @@ final class RaffleAdminController {
                 picked.set(Calendar.MINUTE, minute);
                 picked.set(Calendar.SECOND, 0);
                 raffleEndDateMillis = picked.getTimeInMillis();
-                raffleEndDateButton.setText(new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
+                raffleEndDateButton.setText(AdminFormats.dateTime()
                         .format(new Date(raffleEndDateMillis)));
             }, picked.get(Calendar.HOUR_OF_DAY), picked.get(Calendar.MINUTE), true).show();
         }, initial.get(Calendar.YEAR), initial.get(Calendar.MONTH), initial.get(Calendar.DAY_OF_MONTH));
@@ -212,7 +210,7 @@ final class RaffleAdminController {
         currentRaffleTitle = raffle.title;
         raffleOverviewTitle.setText(raffle.title);
         if (raffle.status == RaffleStatus.ACTIVE) {
-            String end = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
+            String end = AdminFormats.dateTime()
                     .format(new Date(raffle.endDate));
             raffleOverviewStatus.setText(
                     ctx().getString(R.string.raffle_status_active, end, entries.size()));

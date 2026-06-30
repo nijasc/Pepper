@@ -9,6 +9,7 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
+import com.buhlergroup.pepper.util.ThreadUtils;
 
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -230,11 +231,7 @@ public final class QuizController {
     }
 
     private void sleep() {
-        try {
-            Thread.sleep(QuizController.FEEDBACK_PAUSE_MS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        ThreadUtils.sleep(QuizController.FEEDBACK_PAUSE_MS);
     }
 
     public interface StateListener {

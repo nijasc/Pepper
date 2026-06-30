@@ -5,9 +5,11 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.buhlergroup.pepper.llm.ChatMessages;
 import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
+import com.buhlergroup.pepper.util.JsonUtils;
 
 import org.json.JSONObject;
 
@@ -34,7 +36,7 @@ public final class SongResearcher {
         String fallbackQuery = utterance == null ? "" : utterance.trim();
         try {
             List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(message("system",
+            messages.add(ChatMessages.of("system",
                     "The user asked a Pepper robot to dance. From their utterance work out which song to "
                             + "play and reply with ONLY a JSON object "
                             + "{\"query\":\"...\",\"startSeconds\":N,\"mood\":\"calm|lively\"}. "
@@ -47,7 +49,7 @@ public final class SongResearcher {
                             + "from 0 to 15 for how many seconds into that preview the song's signature danceable "
                             + "hook lands, or 0 if unsure. \"mood\" is \"calm\" for slow, gentle or romantic "
                             + "songs and \"lively\" for upbeat or energetic songs. No prose, only the JSON."));
-            messages.add(message("user", fallbackQuery));
+            messages.add(ChatMessages.of("user", fallbackQuery));
 
             Map<String, Object> body = new HashMap<>();
             body.put("model", ModelSelector.FAST);
@@ -76,7 +78,7 @@ public final class SongResearcher {
         openAi.setC(context);
         try {
             List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(message("system",
+            messages.add(ChatMessages.of("system",
                     "You are a music and choreography researcher. For the given song, reply with ONLY a JSON "
                             + "object with facts useful for choreographing a robot dance: "
                             + "{\"genre\":\"...\",\"tempo\":\"slow|medium|fast plus an approximate BPM\","
@@ -85,7 +87,7 @@ public final class SongResearcher {
                             + "'none' if it has no famous routine\",\"structure\":\"where the danceable hook/chorus "
                             + "sits and how the energy builds\"}. Be accurate; if unsure of a field, give your best "
                             + "estimate from the genre. No prose, only the JSON."));
-            messages.add(message("user", "Song: " + songName.trim()));
+            messages.add(ChatMessages.of("user", "Song: " + songName.trim()));
 
             Map<String, Object> body = new HashMap<>();
             body.put("model", MODEL);
@@ -98,7 +100,7 @@ public final class SongResearcher {
                     .getJSONObject(0)
                     .getJSONObject("message")
                     .getString("content");
-            JSONObject obj = new JSONObject(extractJson(content));
+            JSONObject obj = new JSONObject(JsonUtils.extractJson(content));
             String mood = obj.optString("mood", "").trim().toLowerCase(Locale.ROOT);
             if (!mood.equals("calm") && !mood.equals("lively")) {
                 mood = null;
@@ -148,22 +150,4 @@ public final class SongResearcher {
         return new SongPlan(query, Math.max(0, Math.min(15, startSeconds)), mood);
     }
 
-    private String extractJson(String content) {
-        if (content == null) {
-            return "{}";
-        }
-        int start = content.indexOf('{');
-        int end = content.lastIndexOf('}');
-        if (start < 0 || end < start) {
-            return "{}";
-        }
-        return content.substring(start, end + 1);
-    }
-
-    private Map<String, String> message(String role, String content) {
-        Map<String, String> map = new HashMap<>();
-        map.put("role", role);
-        map.put("content", content);
-        return map;
-    }
 }

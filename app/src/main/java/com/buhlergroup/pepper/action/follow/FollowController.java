@@ -23,6 +23,7 @@ import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
 import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.aldebaran.qi.sdk.object.human.Human;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.util.FutureUtils;
 
 import java.util.List;
 
@@ -296,7 +297,7 @@ public final class FollowController {
     }
 
     private void requestCancel(Future<?> f) {
-        if (f != null && !f.isDone()) f.requestCancellation();
+        FutureUtils.cancel(f);
     }
 
     private void releaseQuietly(Holder holder) {

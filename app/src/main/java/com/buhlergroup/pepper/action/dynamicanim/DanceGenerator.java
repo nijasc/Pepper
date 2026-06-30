@@ -7,6 +7,7 @@ import androidx.annotation.Nullable;
 
 import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
+import com.buhlergroup.pepper.util.JsonUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -89,7 +90,7 @@ public final class DanceGenerator extends GeneratorBase {
                         .getJSONObject(0)
                         .getJSONObject("message")
                         .getString("content");
-                JSONObject plan = new JSONObject(extractJson(content));
+                JSONObject plan = new JSONObject(JsonUtils.extractJson(content));
                 String xml = buildDanceXml(plan, target, beatFrameStep);
                 Document doc = XmlUtils.parse(xml);
                 String error = QianimValidator.validate(doc);
@@ -131,7 +132,7 @@ public final class DanceGenerator extends GeneratorBase {
                     .getJSONObject(0)
                     .getJSONObject("message")
                     .getString("content");
-            JSONObject obj = new JSONObject(extractJson(content));
+            JSONObject obj = new JSONObject(JsonUtils.extractJson(content));
             Integer startSeconds = obj.isNull("startSeconds") ? null : obj.optInt("startSeconds");
             String choreography = obj.isNull("choreography") ? null : obj.optString("choreography", "").trim();
             if (choreography != null && choreography.isEmpty()) {
@@ -221,18 +222,6 @@ public final class DanceGenerator extends GeneratorBase {
             return value;
         }
         return Math.max(limit[0], Math.min(limit[1], value));
-    }
-
-    private String extractJson(String content) {
-        if (content == null) {
-            return "{}";
-        }
-        int start = content.indexOf('{');
-        int end = content.lastIndexOf('}');
-        if (start < 0 || end < start) {
-            return "{}";
-        }
-        return content.substring(start, end + 1);
     }
 
     private String buildDanceXml(JSONObject plan, int targetSeconds, int beatFrameStep) throws Exception {

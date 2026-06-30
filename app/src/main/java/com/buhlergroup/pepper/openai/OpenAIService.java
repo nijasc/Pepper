@@ -13,6 +13,7 @@ import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.debug.DebugLog;
+import com.buhlergroup.pepper.llm.ChatMessages;
 import com.buhlergroup.pepper.llm.LlmService;
 import com.buhlergroup.pepper.llm.OpenAiCompatibleLlmService;
 import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
@@ -67,7 +68,7 @@ public class OpenAIService {
 
     public String getResponse(HistoryManager historyManager, QiContext context) {
         List<Map<String, String>> messages = new ArrayList<>();
-        messages.add(message("system", formDefaultSystemPrompt(context)));
+        messages.add(ChatMessages.of("system", formDefaultSystemPrompt(context)));
         messages.addAll(historyManager.toInput());
 
         Map<String, Object> body = new HashMap<>();
@@ -122,9 +123,9 @@ public class OpenAIService {
     public String getResponseStreaming(HistoryManager historyManager, QiContext context,
                                        String userMessage, StreamListener listener) throws IOException {
         List<Map<String, String>> messages = new ArrayList<>();
-        messages.add(message("system", formRoutingSystemPrompt(context)));
+        messages.add(ChatMessages.of("system", formRoutingSystemPrompt(context)));
         messages.addAll(historyManager.toInput());
-        messages.add(message("user", userMessage));
+        messages.add(ChatMessages.of("user", userMessage));
         lastLanguageTag = null;
         return llm.streamChat(ModelTask.CONVERSATION, messages, MAX_OUTPUT_TOKENS, listener);
     }
@@ -139,13 +140,6 @@ public class OpenAIService {
         } catch (Exception e) {
             throw new IOException("Antwort ohne Inhalt: " + snippet(responseJson));
         }
-    }
-
-    private Map<String, String> message(String role, String content) {
-        Map<String, String> map = new HashMap<>();
-        map.put("role", role);
-        map.put("content", content);
-        return map;
     }
 
     private String snippet(String json) {

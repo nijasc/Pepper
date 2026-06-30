@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.buhlergroup.pepper.lang.SupportedLanguage;
+import com.buhlergroup.pepper.llm.ChatMessages;
 
 import org.json.JSONObject;
 
@@ -81,8 +82,8 @@ public final class SystemSpeechRewriter {
         openAi.setC(context);
 
         List<Map<String, String>> messages = new ArrayList<>();
-        messages.add(message("system", systemPrompt(targetLang)));
-        messages.add(message("user", original));
+        messages.add(ChatMessages.of("system", systemPrompt(targetLang)));
+        messages.add(ChatMessages.of("user", original));
 
         Map<String, Object> body = new HashMap<>();
         body.put("model", MODEL);
@@ -98,13 +99,6 @@ public final class SystemSpeechRewriter {
                 + "Preserve the exact meaning, keep it equally short, do not add or remove information, "
                 + "do not add quotation marks or any extra formatting. "
                 + "Reply with only the rewritten sentence.";
-    }
-
-    private Map<String, String> message(String role, String content) {
-        Map<String, String> map = new HashMap<>();
-        map.put("role", role);
-        map.put("content", content);
-        return map;
     }
 
     private String parseContent(String response) throws Exception {

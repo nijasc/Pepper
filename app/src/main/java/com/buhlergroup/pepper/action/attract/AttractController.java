@@ -19,6 +19,7 @@ import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
+import com.buhlergroup.pepper.util.FutureUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -268,9 +269,7 @@ public final class AttractController {
     private void cancelGoTo() {
         Future<Void> future = activeGoTo;
         activeGoTo = null;
-        if (future != null && !future.isDone()) {
-            future.requestCancellation();
-        }
+        FutureUtils.cancel(future);
     }
 
     private void greet(QiContext context) {

@@ -18,6 +18,7 @@ import com.aldebaran.qi.sdk.object.geometry.Transform;
 import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
 import com.buhlergroup.pepper.debug.DebugLog;
+import com.buhlergroup.pepper.util.FutureUtils;
 
 final class RobotGuide {
 
@@ -115,9 +116,7 @@ final class RobotGuide {
     void cancelActiveGoTo() {
         Future<Void> f = activeGoTo;
         activeGoTo = null;
-        if (f != null && !f.isDone()) {
-            f.requestCancellation();
-        }
+        FutureUtils.cancel(f);
     }
 
     private Future<ListenResult> startGuideStopListener(QiContext c) {

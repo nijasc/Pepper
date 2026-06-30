@@ -10,6 +10,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.util.ThreadUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -236,10 +237,6 @@ public final class MemoryGameController {
     }
 
     private void sleep(long ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        ThreadUtils.sleep(ms);
     }
 }

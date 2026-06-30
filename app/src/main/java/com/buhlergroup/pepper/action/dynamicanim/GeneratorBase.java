@@ -2,12 +2,12 @@ package com.buhlergroup.pepper.action.dynamicanim;
 
 import android.util.Log;
 
+import com.buhlergroup.pepper.llm.ChatMessages;
 import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.OpenAIService;
 
 import org.w3c.dom.Document;
 
-import java.util.HashMap;
 import java.util.Map;
 
 abstract class GeneratorBase {
@@ -20,10 +20,7 @@ abstract class GeneratorBase {
     protected final OpenAIService openAi = OpenAIService.shared();
 
     protected Map<String, String> message(String role, String content) {
-        Map<String, String> map = new HashMap<>();
-        map.put("role", role);
-        map.put("content", content);
-        return map;
+        return ChatMessages.of(role, content);
     }
 
     protected String postProcess(Document doc, String original, boolean normalizeBody) {

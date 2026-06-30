@@ -97,8 +97,8 @@ public final class OpenAiCompatibleLlmService implements LlmService {
     public String generate(ModelTask task, String systemInstructions, String userInput, int maxTokens)
             throws IOException {
         List<Map<String, String>> messages = new ArrayList<>();
-        messages.add(message("system", systemInstructions));
-        messages.add(message("user", userInput));
+        messages.add(ChatMessages.of("system", systemInstructions));
+        messages.add(ChatMessages.of("user", userInput));
 
         Map<String, Object> body = new HashMap<>();
         body.put("messages", messages);
@@ -190,13 +190,6 @@ public final class OpenAiCompatibleLlmService implements LlmService {
             body.remove("reasoning_effort");
             body.remove("reasoning");
         }
-    }
-
-    private Map<String, String> message(String role, String content) {
-        Map<String, String> map = new HashMap<>();
-        map.put("role", role);
-        map.put("content", content);
-        return map;
     }
 
     private Context ctx() {

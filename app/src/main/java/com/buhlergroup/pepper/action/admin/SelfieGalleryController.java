@@ -27,11 +27,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.zip.ZipEntry;
@@ -189,7 +187,7 @@ final class SelfieGalleryController {
         currentDetail = selfie;
         panelNav.show(PanelNavigator.PANEL_DETAIL);
         detailNumber.setText("#" + selfie.number);
-        detailDate.setText(new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.GERMANY)
+        detailDate.setText(AdminFormats.dateTime()
                 .format(new Date(selfie.createdAt)));
         updateFavoriteButton();
         detailImage.setImageBitmap(null);

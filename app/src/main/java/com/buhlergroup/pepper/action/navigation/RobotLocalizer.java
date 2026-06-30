@@ -12,6 +12,7 @@ import com.aldebaran.qi.sdk.object.actuation.Localize;
 import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.util.FutureUtils;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -111,9 +112,7 @@ final class RobotLocalizer {
         }
         Future<Void> f = localizeFuture;
         localizeFuture = null;
-        if (f != null && !f.isDone()) {
-            f.requestCancellation();
-        }
+        FutureUtils.cancel(f);
     }
 
     private void scheduleLocalizeTimeout(AtomicBoolean done, NavigationManager.Callback<Boolean> cb,
