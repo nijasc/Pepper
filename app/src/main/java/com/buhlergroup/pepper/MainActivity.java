@@ -28,7 +28,6 @@ import com.buhlergroup.pepper.action.career.CareerController;
 import com.buhlergroup.pepper.action.career.CareerView;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.dance.DanceLibraryView;
-import com.buhlergroup.pepper.action.dance.RobotContext;
 import com.buhlergroup.pepper.action.dialogue.DialogueController;
 import com.buhlergroup.pepper.action.dialogue.DialogueView;
 import com.buhlergroup.pepper.action.follow.FollowController;
@@ -57,6 +56,7 @@ import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
+import com.buhlergroup.pepper.robot.RobotContext;
 
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;

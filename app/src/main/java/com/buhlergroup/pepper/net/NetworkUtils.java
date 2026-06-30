@@ -1,4 +1,4 @@
-package com.buhlergroup.pepper.action.selfie;
+package com.buhlergroup.pepper.net;
 
 import android.content.Context;
 import android.net.wifi.WifiManager;

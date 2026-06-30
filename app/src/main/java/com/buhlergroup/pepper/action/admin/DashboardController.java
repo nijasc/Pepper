@@ -16,8 +16,8 @@ import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.PepperApplication;
 import com.buhlergroup.pepper.R;
-import com.buhlergroup.pepper.action.selfie.NetworkUtils;
 import com.buhlergroup.pepper.net.Connectivity;
+import com.buhlergroup.pepper.net.NetworkUtils;
 import com.buhlergroup.pepper.stats.Stats;
 
 import java.net.InetSocketAddress;

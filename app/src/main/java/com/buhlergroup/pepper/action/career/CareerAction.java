@@ -5,11 +5,11 @@ import android.util.Log;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
-import com.buhlergroup.pepper.action.selfie.QrGenerator;
 import com.buhlergroup.pepper.config.Env;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
+import com.buhlergroup.pepper.util.QrGenerator;
 
 public class CareerAction extends Action {
 

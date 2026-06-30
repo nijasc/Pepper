@@ -30,8 +30,9 @@ import com.aldebaran.qi.sdk.builder.AnimationBuilder;
 import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
-import com.buhlergroup.pepper.action.dance.RobotContext;
+import com.buhlergroup.pepper.action.dynamicanim.GestureBooster;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.robot.RobotContext;
 
 import java.io.InputStream;
 import java.util.List;

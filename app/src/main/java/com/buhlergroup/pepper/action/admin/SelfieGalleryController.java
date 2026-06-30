@@ -18,10 +18,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
-import com.buhlergroup.pepper.action.selfie.QrGenerator;
 import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
+import com.buhlergroup.pepper.util.QrGenerator;
 
 import java.io.File;
 import java.io.FileInputStream;

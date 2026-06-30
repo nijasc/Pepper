@@ -1,10 +1,7 @@
-package com.buhlergroup.pepper.action.admin;
+package com.buhlergroup.pepper.action.dynamicanim;
 
 import android.content.Context;
 import android.util.Log;
-
-import com.buhlergroup.pepper.action.dynamicanim.QianimValidator;
-import com.buhlergroup.pepper.action.dynamicanim.XmlUtils;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -16,7 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
-final class GestureBooster {
+public final class GestureBooster {
 
     private static final String TAG = "GestureBooster";
 
@@ -28,7 +25,7 @@ final class GestureBooster {
     private GestureBooster() {
     }
 
-    static String boost(Context context, int rawRes) {
+    public static String boost(Context context, int rawRes) {
         try {
             Document doc = XmlUtils.parse(readRaw(context, rawRes));
             NodeList curves = doc.getElementsByTagName("ActuatorCurve");

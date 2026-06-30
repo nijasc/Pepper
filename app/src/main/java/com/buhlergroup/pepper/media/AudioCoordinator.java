@@ -1,4 +1,4 @@
-package com.buhlergroup.pepper.action.audio;
+package com.buhlergroup.pepper.media;
 
 import android.media.MediaPlayer;
 

@@ -1,4 +1,4 @@
-package com.buhlergroup.pepper.action.dance;
+package com.buhlergroup.pepper.robot;
 
 import com.aldebaran.qi.sdk.QiContext;
 

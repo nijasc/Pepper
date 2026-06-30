@@ -5,6 +5,9 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.buhlergroup.pepper.net.LocalImageServer;
+import com.buhlergroup.pepper.net.NetworkUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;

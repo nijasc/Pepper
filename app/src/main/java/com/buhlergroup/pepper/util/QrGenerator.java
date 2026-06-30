@@ -1,4 +1,4 @@
-package com.buhlergroup.pepper.action.selfie;
+package com.buhlergroup.pepper.util;
 
 import android.graphics.Bitmap;
 import android.graphics.Color;

@@ -28,6 +28,8 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.config.Env;
+import com.buhlergroup.pepper.net.NetworkUtils;
+import com.buhlergroup.pepper.util.QrGenerator;
 import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.stats.Stats;

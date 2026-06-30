@@ -1,4 +1,4 @@
-package com.buhlergroup.pepper.openai;
+package com.buhlergroup.pepper.llm;
 
 import android.util.Log;
 

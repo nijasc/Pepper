@@ -10,8 +10,8 @@ import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
-import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.media.AudioCoordinator;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class SaxophoneAction extends Action {

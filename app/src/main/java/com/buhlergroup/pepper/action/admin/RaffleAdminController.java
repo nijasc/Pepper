@@ -25,8 +25,8 @@ import androidx.core.content.FileProvider;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.R;
-import com.buhlergroup.pepper.action.dance.RobotContext;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
+import com.buhlergroup.pepper.robot.RobotContext;
 import com.buhlergroup.pepper.action.raffle.WinnerController;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;

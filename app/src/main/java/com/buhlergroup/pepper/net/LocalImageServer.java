@@ -1,4 +1,4 @@
-package com.buhlergroup.pepper.action.selfie;
+package com.buhlergroup.pepper.net;
 
 import android.util.Log;
 

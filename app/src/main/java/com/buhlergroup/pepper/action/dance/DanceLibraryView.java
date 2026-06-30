@@ -24,10 +24,11 @@ import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.admin.AdminController;
-import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 import com.buhlergroup.pepper.databinding.ViewDanceLibraryBinding;
 import com.buhlergroup.pepper.debug.DebugLog;
+import com.buhlergroup.pepper.media.AudioCoordinator;
+import com.buhlergroup.pepper.robot.RobotContext;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;

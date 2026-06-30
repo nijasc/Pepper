@@ -7,9 +7,9 @@ import com.aldebaran.qi.sdk.builder.SayBuilder;
 import com.aldebaran.qi.sdk.object.conversation.BodyLanguageOption;
 import com.aldebaran.qi.sdk.object.conversation.Say;
 import com.aldebaran.qi.sdk.object.locale.Locale;
-import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dialogue.DialogueController;
 import com.buhlergroup.pepper.action.thinking.ThinkingController;
+import com.buhlergroup.pepper.media.AudioCoordinator;
 import com.buhlergroup.pepper.openai.SystemSpeechRewriter;
 
 public class SpeechManager {
