@@ -58,6 +58,7 @@ public class AdminView extends FrameLayout {
     private final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
     private PinController pinController;
     private DashboardController dashboard;
+    private StatsReporter statsReporter;
 
     private PanelNavigator panelNav;
     private SelfieGalleryController galleryController;
@@ -145,6 +146,7 @@ public class AdminView extends FrameLayout {
 
         pinController = new PinController(this, () -> panelNav.show(PANEL_MENU));
         dashboard = new DashboardController(this, dbExecutor);
+        statsReporter = new StatsReporter(this);
         galleryController = new SelfieGalleryController(this, dbExecutor, panelNav);
         raffleAdmin = new RaffleAdminController(this, dbExecutor, panelNav, galleryController, this::hide);
         language = new LanguagePanelController(this, panelNav);
@@ -173,7 +175,7 @@ public class AdminView extends FrameLayout {
         binding.systemDevLogs.setOnClickListener(v -> diagnostics.showDevLog());
         binding.systemDebug.setOnClickListener(v -> diagnostics.showDebug());
         binding.statusRefresh.setOnClickListener(v -> showStatus());
-        binding.adminStatsExport.setOnClickListener(v -> dashboard.exportStats());
+        binding.adminStatsExport.setOnClickListener(v -> statsReporter.exportStats());
         binding.adminActor.setOnClickListener(v -> actor.showActor());
         binding.adminNavigation.setOnClickListener(v -> navigationSettings.showNavigation());
         binding.adminDances.setOnClickListener(v -> dance.showDance());
@@ -340,7 +342,7 @@ public class AdminView extends FrameLayout {
     }
 
     private void showStats() {
-        dashboard.refreshStats();
+        statsReporter.refreshStats();
         panelNav.show(PANEL_STATS);
     }
 

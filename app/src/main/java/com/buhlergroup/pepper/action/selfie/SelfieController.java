@@ -2,9 +2,6 @@ package com.buhlergroup.pepper.action.selfie;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Rect;
 import android.util.Log;
 
 import com.aldebaran.qi.Future;
@@ -18,7 +15,6 @@ import com.aldebaran.qi.sdk.object.conversation.ListenResult;
 import com.aldebaran.qi.sdk.object.conversation.PhraseSet;
 import com.aldebaran.qi.sdk.object.image.EncodedImage;
 import com.aldebaran.qi.sdk.object.image.TimestampedImageHandle;
-import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.camera.CameraSettings;
 import com.buhlergroup.pepper.action.camera.WifiCameraManager;
 import com.buhlergroup.pepper.action.navigation.NavigationManager;
@@ -27,14 +23,12 @@ import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
-import com.buhlergroup.pepper.config.Env;
 import com.buhlergroup.pepper.net.NetworkUtils;
 import com.buhlergroup.pepper.util.QrGenerator;
 import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.stats.Stats;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,7 +46,6 @@ public final class SelfieController {
     private static final long START_TIMEOUT_MS = 15000;
     private static final int MAX_CAPTURES = 3;
     private static final long PREVIEW_TIMEOUT_MS = 20000;
-    private static final int MAX_PHOTO_EDGE = 1920;
     private static final SelfieController INSTANCE = new SelfieController();
     private final SelfieShareServer shareServer = new SelfieShareServer();
     private volatile SelfieView view;
@@ -145,7 +138,7 @@ public final class SelfieController {
                     return null;
                 }
 
-                entity = SelfieRepository.get(context).save(toJpeg(composed));
+                entity = SelfieRepository.get(context).save(SelfieImaging.toJpeg(composed));
 
                 String ip = NetworkUtils.localIp(context);
                 if (ip == null) {
@@ -158,7 +151,7 @@ public final class SelfieController {
 
                 String url = downloadUrl(context, entity.filename);
                 Bitmap qr = QrGenerator.encode(url, 600);
-                Bitmap wifiQr = buildWifiQr(context);
+                Bitmap wifiQr = WifiQrFactory.buildWifiQr(context);
 
                 AtomicBoolean retake = new AtomicBoolean(false);
                 CountDownLatch dismiss = new CountDownLatch(1);
@@ -234,7 +227,7 @@ public final class SelfieController {
                 announceCaptureFailure(context, externalCam);
                 return null;
             }
-            composed = addOverlay(context, photo);
+            composed = SelfieImaging.addOverlay(context, photo);
             boolean canRetake = attempt < MAX_CAPTURES;
             PreviewDecision decision = askPreview(context, board, composed, canRetake);
             if (decision != PreviewDecision.RETAKE) {
@@ -358,29 +351,11 @@ public final class SelfieController {
             buffer.rewind();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
-            return decodeScaled(bytes);
+            return SelfieImaging.decodeScaled(bytes);
         } catch (Exception e) {
             Log.e(TAG, "Capture failed", e);
             return null;
         }
-    }
-
-    private Bitmap decodeScaled(byte[] bytes) {
-        BitmapFactory.Options bounds = new BitmapFactory.Options();
-        bounds.inJustDecodeBounds = true;
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, bounds);
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight, MAX_PHOTO_EDGE);
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
-    }
-
-    private int sampleSizeFor(int width, int height, int maxEdge) {
-        int sample = 1;
-        int longer = Math.max(width, height);
-        while (longer / sample > maxEdge) {
-            sample *= 2;
-        }
-        return sample;
     }
 
     private void waitForStart(QiContext context) {
@@ -401,64 +376,6 @@ public final class SelfieController {
         } catch (Exception e) {
             Log.w(TAG, "waitForStart failed: " + e.getMessage());
         }
-    }
-
-    private Bitmap addOverlay(Context context, Bitmap photo) {
-        Bitmap result = photo.copy(Bitmap.Config.ARGB_8888, true);
-        if (result != photo) {
-            photo.recycle();
-        }
-        Bitmap overlay = BitmapFactory.decodeResource(context.getResources(), R.drawable.pepper_selfie_overlay);
-        if (overlay == null) {
-            return result;
-        }
-
-        Canvas canvas = new Canvas(result);
-        int targetWidth = Math.round(result.getWidth() * 0.34f);
-        float scale = targetWidth / (float) overlay.getWidth();
-        int targetHeight = Math.round(overlay.getHeight() * scale);
-        int margin = Math.round(result.getWidth() * 0.03f);
-        int left = result.getWidth() - targetWidth - margin;
-        int top = result.getHeight() - targetHeight - margin;
-        Rect dst = new Rect(left, top, left + targetWidth, top + targetHeight);
-        canvas.drawBitmap(overlay, null, dst, null);
-        overlay.recycle();
-        return result;
-    }
-
-    private byte[] toJpeg(Bitmap bitmap) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, bos);
-        return bos.toByteArray();
-    }
-
-    private Bitmap buildWifiQr(Context context) {
-        String ssid = Env.get(context, "PEPPER_WIFI_SSID", "");
-        if (ssid.isEmpty()) {
-            return null;
-        }
-        String password = Env.get(context, "PEPPER_WIFI_PASSWORD", "");
-        String type = password.isEmpty() ? "nopass" : "WPA";
-        StringBuilder payload = new StringBuilder("WIFI:T:").append(type)
-                .append(";S:").append(escapeWifi(ssid)).append(";");
-        if (!password.isEmpty()) {
-            payload.append("P:").append(escapeWifi(password)).append(";");
-        }
-        payload.append(";");
-        try {
-            return QrGenerator.encode(payload.toString(), 400);
-        } catch (Exception e) {
-            Log.w(TAG, "WiFi QR generation failed: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private String escapeWifi(String value) {
-        return value.replace("\\", "\\\\")
-                .replace(";", "\\;")
-                .replace(",", "\\,")
-                .replace(":", "\\:")
-                .replace("\"", "\\\"");
     }
 
     private void offerRaffleJoin(QiContext context, SelfieEntity selfie) {

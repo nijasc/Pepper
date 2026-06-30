@@ -314,8 +314,13 @@ final class ActorPanelController {
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        Context context = ctx();
+        if (!(context instanceof Activity)) {
+            toast(R.string.admin_export_failed);
+            return;
+        }
         try {
-            ((Activity) ctx()).startActivityForResult(intent, AdminController.REQUEST_ACTOR_IMAGE);
+            ((Activity) context).startActivityForResult(intent, AdminController.REQUEST_ACTOR_IMAGE);
         } catch (Exception e) {
             toast(R.string.admin_export_failed);
         }
