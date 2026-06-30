@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.aldebaran.qi.sdk.object.actuation.ExplorationMap;
 
 import java.nio.ByteBuffer;
@@ -15,6 +17,7 @@ final class NavMapRenderer {
     private NavMapRenderer() {
     }
 
+    @Nullable
     static Bitmap render(ExplorationMap map) {
         try {
             ByteBuffer buffer = map.getTopGraphicalRepresentation().getImage().getData();

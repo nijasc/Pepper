@@ -3,6 +3,8 @@ package com.buhlergroup.pepper.action.dance;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.dance.audio.SongAudioAnalyzer;
 import com.buhlergroup.pepper.action.dance.data.DanceDao;
@@ -219,6 +221,7 @@ public final class DanceRepository {
         deleteQuietly(dance.audioPath);
     }
 
+    @Nullable
     private File downloadPreview(File danceDir, SongSource source) {
         if (source.previewUrl == null || source.previewUrl.isEmpty()) {
             return null;

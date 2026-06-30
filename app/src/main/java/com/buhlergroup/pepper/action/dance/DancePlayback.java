@@ -4,6 +4,8 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.aldebaran.qi.Future;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
@@ -52,7 +54,8 @@ public final class DancePlayback {
         }
     }
 
-    private static MediaPlayer startAudio(String url, long startMs) {
+    @Nullable
+    private static MediaPlayer startAudio(@Nullable String url, long startMs) {
         if (url == null || url.isEmpty()) {
             DebugLog.get().w(TAG, "Keine Audio-Quelle (previewUrl leer) – kein Ton");
             return null;

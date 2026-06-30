@@ -54,7 +54,7 @@ public class QuizView extends FrameLayout {
         optionsContainer = findViewById(R.id.quizOptions);
     }
 
-    public void setOnOptionListener(OnOptionListener listener) {
+    public void setOnOptionListener(@Nullable OnOptionListener listener) {
         this.listener = listener;
     }
 

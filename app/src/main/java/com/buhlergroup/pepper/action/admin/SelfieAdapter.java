@@ -11,6 +11,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.buhlergroup.pepper.R;
@@ -44,7 +45,7 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
     private final OnSelfieClick onClick;
     private File imagesDir;
 
-    public SelfieAdapter(OnSelfieClick onClick) {
+    public SelfieAdapter(@NonNull OnSelfieClick onClick) {
         this.onClick = onClick;
         INSTANCES.add(this);
     }
@@ -56,7 +57,8 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
         INSTANCES.clear();
     }
 
-    public static Bitmap decodeThumb(File file, int reqSize) {
+    @Nullable
+    public static Bitmap decodeThumb(@Nullable File file, int reqSize) {
         if (file == null || !file.exists()) {
             return null;
         }

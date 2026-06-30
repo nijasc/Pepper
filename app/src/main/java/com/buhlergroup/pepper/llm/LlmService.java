@@ -2,6 +2,8 @@ package com.buhlergroup.pepper.llm;
 
 import android.content.Context;
 
+import androidx.annotation.Nullable;
+
 import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
 
@@ -22,6 +24,7 @@ public interface LlmService {
     String generate(ModelTask task, String systemInstructions, String userInput, int maxTokens)
             throws IOException;
 
+    @Nullable
     String streamChat(ModelTask task, List<Map<String, String>> messages, int maxTokens,
                       OpenAIService.StreamListener listener) throws IOException;
 }

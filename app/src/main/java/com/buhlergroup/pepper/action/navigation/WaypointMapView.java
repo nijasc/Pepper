@@ -64,7 +64,7 @@ public class WaypointMapView extends View {
         postInvalidate();
     }
 
-    public void setRobotPose(double[] pose) {
+    public void setRobotPose(@Nullable double[] pose) {
         this.robotPose = pose;
         postInvalidate();
     }

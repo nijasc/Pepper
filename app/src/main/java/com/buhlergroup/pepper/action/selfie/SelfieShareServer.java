@@ -3,6 +3,8 @@ package com.buhlergroup.pepper.action.selfie;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -51,6 +53,7 @@ final class SelfieShareServer {
         return current != null ? current.tokenFor(filename) : "";
     }
 
+    @Nullable
     String downloadUrl(Context context, String filename) {
         String ip = NetworkUtils.localIp(context);
         if (ip == null) {

@@ -61,7 +61,7 @@ public class MemoryGameView extends FrameLayout {
         }
     }
 
-    public void setOnPadListener(OnPadListener listener) {
+    public void setOnPadListener(@Nullable OnPadListener listener) {
         this.padListener = listener;
     }
 

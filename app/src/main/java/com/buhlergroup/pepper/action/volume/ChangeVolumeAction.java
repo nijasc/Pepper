@@ -63,6 +63,10 @@ public class ChangeVolumeAction extends Action {
         AudioManager audioManager =
                 (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
 
+        if (audioManager == null) {
+            return;
+        }
+
         int maxVolume =
                 audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 

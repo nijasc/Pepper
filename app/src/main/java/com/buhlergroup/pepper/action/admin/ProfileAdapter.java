@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.buhlergroup.pepper.R;
@@ -20,11 +21,11 @@ public class ProfileAdapter extends RecyclerView.Adapter<ProfileAdapter.ProfileH
     private final OnProfileClick onClick;
     private String activeId = "";
 
-    public ProfileAdapter(OnProfileClick onClick) {
+    public ProfileAdapter(@NonNull OnProfileClick onClick) {
         this.onClick = onClick;
     }
 
-    public void setData(List<ProfileEntity> data, String activeId) {
+    public void setData(List<ProfileEntity> data, @Nullable String activeId) {
         this.activeId = activeId == null ? "" : activeId;
         items.clear();
         items.addAll(data);

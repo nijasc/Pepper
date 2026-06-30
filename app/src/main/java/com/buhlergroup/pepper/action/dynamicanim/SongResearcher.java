@@ -3,6 +3,8 @@ package com.buhlergroup.pepper.action.dynamicanim;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
@@ -66,6 +68,7 @@ public final class SongResearcher {
         }
     }
 
+    @Nullable
     public SongResearch researchSong(Context context, String songName) {
         if (songName == null || songName.trim().isEmpty()) {
             return null;

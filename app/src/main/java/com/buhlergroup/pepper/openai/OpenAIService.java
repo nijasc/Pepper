@@ -4,6 +4,8 @@ package com.buhlergroup.pepper.openai;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.profile.ProfileRepository;
@@ -100,6 +102,7 @@ public class OpenAIService {
         return llm.chatStrongest(task, body, timeoutMs);
     }
 
+    @Nullable
     public String extractLanguageTag(String text) {
         if (text == null) {
             lastLanguageTag = null;
@@ -111,6 +114,7 @@ public class OpenAIService {
         return ACTION_TAG.matcher(cleaned).replaceAll("").trim();
     }
 
+    @Nullable
     public String lastLanguageTag() {
         return lastLanguageTag;
     }

@@ -2,6 +2,8 @@ package com.buhlergroup.pepper.perception;
 
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.object.human.Emotion;
 import com.aldebaran.qi.sdk.object.human.ExcitementState;
@@ -16,6 +18,7 @@ public class EmotionReader {
 
     private boolean mentionedLastTime = false;
 
+    @Nullable
     public String moodHintForPrompt(QiContext context) {
         BasicEmotion mood = readMood(context);
 

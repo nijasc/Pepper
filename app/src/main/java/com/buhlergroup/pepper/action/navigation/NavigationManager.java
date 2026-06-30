@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.HolderBuilder;
 import com.aldebaran.qi.sdk.object.actuation.ExplorationMap;
@@ -363,6 +365,7 @@ public final class NavigationManager {
         }
     }
 
+    @Nullable
     String readFile(String path) {
         File file = new File(path);
         if (!file.exists()) {
@@ -406,7 +409,7 @@ public final class NavigationManager {
     }
 
     public interface Callback<T> {
-        void onResult(T value);
+        void onResult(@Nullable T value);
 
         void onError(String error);
     }

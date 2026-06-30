@@ -3,6 +3,8 @@ package com.buhlergroup.pepper.action.dynamicanim;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 
@@ -36,6 +38,7 @@ public final class DanceGenerator extends GeneratorBase {
     }
 
 
+    @Nullable
     public String generateValidatedDance(Context context, String songName, int seconds,
                                          String editNote, String mood, int measuredBpm,
                                          ProgressListener progress) {

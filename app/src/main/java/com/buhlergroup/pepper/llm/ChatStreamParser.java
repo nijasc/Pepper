@@ -2,6 +2,8 @@ package com.buhlergroup.pepper.llm;
 
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.buhlergroup.pepper.openai.OpenAIService;
 
 import org.json.JSONObject;
@@ -23,6 +25,7 @@ public final class ChatStreamParser {
 
     private String lastLanguageTag;
 
+    @Nullable
     public String lastLanguageTag() {
         return lastLanguageTag;
     }

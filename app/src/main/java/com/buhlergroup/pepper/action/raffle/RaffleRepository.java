@@ -4,6 +4,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.buhlergroup.pepper.action.raffle.data.RaffleDao;
 import com.buhlergroup.pepper.action.raffle.data.RaffleDatabase;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
@@ -77,6 +79,7 @@ public final class RaffleRepository {
         return raffleDao.countActive() > 0;
     }
 
+    @Nullable
     public RaffleEntity getCurrentRaffle() {
         refreshExpired();
         return raffleDao.getCurrent();
@@ -207,6 +210,7 @@ public final class RaffleRepository {
         return entryDao.countEntries(raffleId);
     }
 
+    @Nullable
     public String buildAccessReport(String email) {
         List<RaffleEntryEntity> entries = entryDao.getEntriesByEmail(email);
         if (entries.isEmpty()) {
@@ -242,6 +246,7 @@ public final class RaffleRepository {
         return entryDao.getLinkedSelfieIds();
     }
 
+    @Nullable
     public RaffleEntryEntity pickWinner(long raffleId) {
         RaffleEntryEntity entry = entryDao.getRandomEntry(raffleId);
         if (entry == null) {
@@ -251,6 +256,7 @@ public final class RaffleRepository {
         return entry;
     }
 
+    @Nullable
     public RaffleEntryEntity pickReplacementWinner(long raffleId) {
         RaffleEntity raffle = raffleDao.findById(raffleId);
         Long exclude = raffle != null ? raffle.winnerId : null;
@@ -264,6 +270,7 @@ public final class RaffleRepository {
         return entry;
     }
 
+    @Nullable
     public RaffleEntryEntity getWinner(long raffleId) {
         RaffleEntity raffle = raffleDao.findById(raffleId);
         if (raffle == null || raffle.winnerId == null) {

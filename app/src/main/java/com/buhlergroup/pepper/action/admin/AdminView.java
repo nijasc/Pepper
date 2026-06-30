@@ -187,13 +187,13 @@ public class AdminView extends FrameLayout {
         AttractSettings.save(getContext(), checked);
     }
 
-    public void onProfileDocumentPicked(Uri uri) {
+    public void onProfileDocumentPicked(@Nullable Uri uri) {
         if (profiles != null) {
             profiles.onDocumentPicked(uri);
         }
     }
 
-    public void onActorImagePicked(Uri uri) {
+    public void onActorImagePicked(@Nullable Uri uri) {
         if (actor != null) {
             actor.onImagePicked(uri);
         }

@@ -3,6 +3,8 @@ package com.buhlergroup.pepper.action.dynamicanim;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 
 import org.json.JSONObject;
@@ -19,6 +21,7 @@ public final class AnimationGenerator extends GeneratorBase {
     private static final int GENERATION_TIMEOUT_MS = 120000;
     private static final String XML_PROLOG = "<?xml version=\"1.0\" encoding=\"utf-8\"?>";
 
+    @Nullable
     public String generateValidated(Context context, String command, int targetSeconds) {
         int seconds = Math.min(MAX_SECONDS, Math.max(0, targetSeconds));
         return generate(context, gestureSystemPrompt(seconds), "Movement request: " + command);

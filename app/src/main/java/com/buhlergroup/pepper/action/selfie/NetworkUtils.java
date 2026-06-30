@@ -4,6 +4,8 @@ import android.content.Context;
 import android.net.wifi.WifiManager;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -18,6 +20,7 @@ public final class NetworkUtils {
     private NetworkUtils() {
     }
 
+    @Nullable
     public static String localIp(Context context) {
         InetAddress addr = localInetAddress(context);
         return addr != null ? addr.getHostAddress() : null;

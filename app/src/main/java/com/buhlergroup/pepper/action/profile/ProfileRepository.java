@@ -2,6 +2,8 @@ package com.buhlergroup.pepper.action.profile;
 
 import android.content.Context;
 
+import androidx.annotation.Nullable;
+
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.profile.data.ProfileDao;
 import com.buhlergroup.pepper.action.profile.data.ProfileDatabase;
@@ -142,6 +144,7 @@ public final class ProfileRepository {
         return id;
     }
 
+    @Nullable
     public String cloneProfile(String sourceId) {
         ProfileEntity source = profileDao.findById(sourceId);
         if (source == null) {

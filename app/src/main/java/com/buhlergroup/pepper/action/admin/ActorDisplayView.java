@@ -18,6 +18,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+
 import com.buhlergroup.pepper.R;
 
 import java.util.ArrayList;
@@ -48,7 +50,7 @@ final class ActorDisplayView extends FrameLayout {
         render(ActorState.idle());
     }
 
-    void render(ActorState state) {
+    void render(@Nullable ActorState state) {
         stopBlink();
         removeEffect();
         textView.setVisibility(GONE);

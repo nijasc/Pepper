@@ -21,6 +21,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatButton;
 
 import com.aldebaran.qi.sdk.QiContext;
@@ -319,7 +320,7 @@ final class ActorPanelController {
         }
     }
 
-    void onImagePicked(Uri uri) {
+    void onImagePicked(@Nullable Uri uri) {
         if (uri == null) {
             return;
         }
