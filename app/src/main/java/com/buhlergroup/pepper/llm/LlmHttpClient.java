@@ -30,19 +30,23 @@ public final class LlmHttpClient {
     public String request(LlmProvider provider, String apiKey, String path,
                           @Nullable Map<String, Object> body, int readTimeoutMs) throws IOException {
         HttpURLConnection con = open(provider, apiKey, path);
-        con.setReadTimeout(readTimeoutMs);
-        con.setRequestProperty("Accept-Encoding", "gzip");
-        if (body != null) {
-            con.setRequestMethod("POST");
-            con.setDoOutput(true);
-            byte[] json = objectMapper.writeValueAsString(body).getBytes(StandardCharsets.UTF_8);
-            try (OutputStream os = con.getOutputStream()) {
-                os.write(json, 0, json.length);
+        try {
+            con.setReadTimeout(readTimeoutMs);
+            con.setRequestProperty("Accept-Encoding", "gzip");
+            if (body != null) {
+                con.setRequestMethod("POST");
+                con.setDoOutput(true);
+                byte[] json = objectMapper.writeValueAsString(body).getBytes(StandardCharsets.UTF_8);
+                try (OutputStream os = con.getOutputStream()) {
+                    os.write(json, 0, json.length);
+                }
+            } else {
+                con.setRequestMethod("GET");
             }
-        } else {
-            con.setRequestMethod("GET");
+            return readBody(con);
+        } finally {
+            con.disconnect();
         }
-        return readBody(con);
     }
 
     public EventStream openChatStream(LlmProvider provider, String apiKey, Map<String, Object> body)

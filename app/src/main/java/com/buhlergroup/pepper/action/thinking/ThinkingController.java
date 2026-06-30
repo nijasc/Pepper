@@ -20,10 +20,13 @@ import com.buhlergroup.pepper.lang.SupportedLanguage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public final class ThinkingController {
 
     private static final String TAG = "Thinking";
+
+    private static final Random RANDOM = new Random();
 
     private static final String[] HMM_CLIPS = {
             "hmm_1", "hmm_2", "hmm_3", "mhm_1", "mhm_2"
@@ -241,7 +244,7 @@ public final class ThinkingController {
     private int pickIndex(int length, int last) {
         int index;
         do {
-            index = (int) (Math.random() * length);
+            index = RANDOM.nextInt(length);
         } while (length > 1 && index == last);
         return index;
     }

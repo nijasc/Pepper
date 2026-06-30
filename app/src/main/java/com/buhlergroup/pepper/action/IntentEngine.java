@@ -5,6 +5,8 @@ import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
+import android.util.Log;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 public class IntentEngine {
+    private static final String TAG = "IntentEngine";
     private static final String MODEL =
             ModelSelector.modelFor(ModelSelector.ModelTask.CLASSIFICATION);
     private final Map<String, Action> intents = new HashMap<>();
@@ -51,7 +54,7 @@ public class IntentEngine {
             String intentKey = parseIntent(response);
             return intents.get(intentKey);
         } catch (IOException | JSONException e) {
-            e.printStackTrace();
+            Log.w(TAG, "getIntent failed", e);
             return null;
         }
     }

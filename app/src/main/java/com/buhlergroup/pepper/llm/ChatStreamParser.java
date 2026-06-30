@@ -16,6 +16,8 @@ import java.util.regex.Pattern;
 
 public final class ChatStreamParser {
 
+    private static final String TAG = "ChatStreamParser";
+
     private static final Pattern LEADING_MARKER =
             Pattern.compile("^\\s*\\[\\[\\s*(lang|action)\\s*:\\s*([^\\]\\s]+)\\s*\\]\\]");
     private static final Pattern LANG_VALUE =
@@ -93,6 +95,7 @@ public final class ChatStreamParser {
             JSONObject delta = choice.optJSONObject("delta");
             return delta == null ? "" : delta.optString("content", "");
         } catch (Exception e) {
+            Log.d(TAG, "extractDelta failed", e);
             return null;
         }
     }

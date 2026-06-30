@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.text.InputType;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -33,6 +34,8 @@ import java.util.Locale;
 import java.util.concurrent.Executor;
 
 final class ProfilePanelController {
+
+    private static final String TAG = "ProfilePanel";
 
     private final View root;
     private final Executor executor;
@@ -284,10 +287,15 @@ final class ProfilePanelController {
         intent.setType("*/*");
         intent.putExtra(Intent.EXTRA_MIME_TYPES,
                 new String[]{"application/pdf", "text/plain", "text/markdown"});
+        Context context = ctx();
+        if (!(context instanceof Activity)) {
+            Toast.makeText(context, R.string.profile_resource_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
         try {
-            ((Activity) ctx()).startActivityForResult(intent, AdminController.REQUEST_PROFILE_DOCUMENT);
+            ((Activity) context).startActivityForResult(intent, AdminController.REQUEST_PROFILE_DOCUMENT);
         } catch (Exception e) {
-            Toast.makeText(ctx(), R.string.profile_resource_failed, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, R.string.profile_resource_failed, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -422,7 +430,8 @@ final class ProfilePanelController {
                     }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.d(TAG, "queryDisplayName failed", e);
         }
         String last = uri.getLastPathSegment();
         return last != null ? last : "Datei";

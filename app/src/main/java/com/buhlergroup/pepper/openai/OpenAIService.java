@@ -239,7 +239,8 @@ public class OpenAIService {
                         .append("If the visitor asks about the raffle, tell them it has unfortunately ")
                         .append("already ended. Do not invite them to take part.\n");
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.d(TAG, "appendRaffleHint failed", e);
         }
     }
 

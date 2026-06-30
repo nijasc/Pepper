@@ -1,6 +1,7 @@
 package com.buhlergroup.pepper.action.documentation;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.R;
@@ -35,6 +36,7 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 public class DocumentationAction extends Action {
+    private static final String TAG = "DocumentationAction";
     private static final String DOCUMENTATION_URL =
             "https://raw.githubusercontent.com/nijasc/Pepper/main/PEPPER.md";
     private static final int ANSWER_TIMEOUT_MS = 120000;
@@ -91,7 +93,7 @@ public class DocumentationAction extends Action {
             getHistoryManager().addAssistant(answer, this);
             SpeechManager.getInstance().say(context, answer, service.lastLanguageTag());
         } catch (IOException | JSONException e) {
-            e.printStackTrace();
+            Log.w(TAG, "Documentation analysis failed", e);
             SpeechManager.getInstance().systemSay(context,
                     "Bei der Analyse der Dokumentation ist ein Fehler aufgetreten. ");
         }
@@ -124,7 +126,7 @@ public class DocumentationAction extends Action {
                 return cachedDocumentation;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.w(TAG, "Failed to load documentation", e);
             return cachedDocumentation;
         } finally {
             if (connection != null) {

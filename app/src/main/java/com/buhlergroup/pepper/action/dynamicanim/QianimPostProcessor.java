@@ -49,7 +49,7 @@ public final class QianimPostProcessor {
                     continue;
                 }
                 float clamped = Math.max(-amplitude, Math.min(amplitude, value));
-                if (clamped != value) {
+                if (Math.abs(clamped - value) > 1e-6f) {
                     key.setAttribute("value", String.format(Locale.US, "%.6f", clamped));
                 }
             }
@@ -119,7 +119,7 @@ public final class QianimPostProcessor {
             max = limits[1];
         }
         float clamped = Math.max(min, Math.min(max, value));
-        if (clamped != value) {
+        if (Math.abs(clamped - value) > 1e-6f) {
             key.setAttribute("value", String.format(Locale.US, "%.6f", clamped));
         }
     }

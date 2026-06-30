@@ -103,6 +103,5 @@ public final class DialogueController {
 
     private void cancelPending() {
         handler.removeCallbacksAndMessages(null);
-        handler.removeCallbacks(hideRunnable);
     }
 }

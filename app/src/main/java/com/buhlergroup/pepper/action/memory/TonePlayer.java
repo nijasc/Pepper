@@ -3,12 +3,14 @@ package com.buhlergroup.pepper.action.memory;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.util.Log;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public final class TonePlayer {
 
+    private static final String TAG = "TonePlayer";
     private static final int SAMPLE_RATE = 44100;
     private static final double[] PAD_FREQUENCIES = {329.63, 261.63, 392.00, 196.00};
 
@@ -74,7 +76,8 @@ public final class TonePlayer {
             track.write(buffer, 0, sampleCount);
             track.play();
             sleepQuietly(durationMs + 60);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            Log.d(TAG, "emit failed", e);
         } finally {
             try {
                 track.stop();
