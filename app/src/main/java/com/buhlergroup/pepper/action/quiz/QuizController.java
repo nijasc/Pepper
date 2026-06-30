@@ -61,15 +61,11 @@ public final class QuizController {
     public void play(QiContext context, SupportedLanguage lang) {
         QuizView board = view;
         if (board == null) {
-            say(context, lang == SupportedLanguage.ENGLISH
-                    ? "My tablet is not ready, so I cannot run the quiz right now."
-                    : "Mein Tablet ist gerade nicht bereit, deshalb kann ich kein Quiz starten.");
+            say(context, QuizNarration.tabletNotReady(lang));
             return;
         }
         if (running) {
-            say(context, lang == SupportedLanguage.ENGLISH
-                    ? "We are already playing a quiz!"
-                    : "Wir spielen doch schon ein Quiz!");
+            say(context, QuizNarration.alreadyPlaying(lang));
             return;
         }
 
@@ -80,18 +76,16 @@ public final class QuizController {
         board.show();
 
         try {
-            say(context, lang == SupportedLanguage.ENGLISH
-                    ? "Time for a little Bühler quiz! Tap the answer you think is correct on my tablet."
-                    : "Zeit für ein kleines Bühler-Quiz! Tippe die richtige Antwort auf meinem Tablet an.");
+            say(context, QuizNarration.intro(lang));
 
             List<QuizQuestion> questions = loadQuestions(context, lang);
             int score = 0;
             for (int i = 0; i < questions.size(); i++) {
                 QuizQuestion question = questions.get(i);
                 answers.clear();
-                board.showQuestion(progress(lang, i + 1, questions.size()),
+                board.showQuestion(QuizNarration.progress(lang, i + 1, questions.size()),
                         question.question, question.options);
-                board.setScore(scoreText(lang, score));
+                board.setScore(QuizNarration.scoreText(lang, score));
                 say(context, question.question);
 
                 Integer choice = awaitAnswer(answers);
@@ -101,12 +95,12 @@ public final class QuizController {
                     score++;
                 }
                 board.revealAnswer(question.correctIndex, chosen);
-                board.setScore(scoreText(lang, score));
-                sayFeedback(context, lang, correct, chosen < 0, question);
+                board.setScore(QuizNarration.scoreText(lang, score));
+                say(context, QuizNarration.feedback(lang, correct, chosen < 0, question));
                 sleep();
             }
 
-            announceFinal(context, lang, score, questions.size());
+            say(context, QuizNarration.finalResult(lang, score, questions.size()));
             board.setOnOptionListener(null);
             board.hide();
             maybeOfferRaffle(context, lang, score, questions.size());
@@ -129,12 +123,7 @@ public final class QuizController {
             if (raffle == null || raffle.status != RaffleStatus.ACTIVE) {
                 return;
             }
-            say(context, lang == SupportedLanguage.ENGLISH
-                    ? "Great result! Since you did so well, would you like to enter our raffle? "
-                    + "You can sign up right here on my tablet, or tap cancel."
-                    : "Tolles Ergebnis! Weil du so gut warst – möchtest du an unserer Verlosung "
-                    + "teilnehmen? Du kannst dich direkt auf meinem Tablet eintragen, "
-                    + "oder tippe auf Abbrechen.");
+            say(context, QuizNarration.raffleOffer(lang));
             RaffleJoinController.get().join(context, raffle);
         } catch (Exception e) {
             Log.w(TAG, "Raffle offer after quiz failed: " + e.getMessage());
@@ -151,59 +140,6 @@ public final class QuizController {
         }
         Log.i(TAG, "Using local fallback quiz questions");
         return QuizQuestions.fallback(lang, QUESTION_COUNT);
-    }
-
-    private String progress(SupportedLanguage lang, int current, int total) {
-        return lang == SupportedLanguage.ENGLISH
-                ? "Question " + current + " of " + total
-                : "Frage " + current + " von " + total;
-    }
-
-    private String scoreText(SupportedLanguage lang, int score) {
-        return lang == SupportedLanguage.ENGLISH ? "Score: " + score : "Punkte: " + score;
-    }
-
-    private void sayFeedback(QiContext context, SupportedLanguage lang, boolean correct,
-                             boolean timedOut, QuizQuestion question) {
-        String correctOption = question.options.get(question.correctIndex);
-        String text;
-        if (correct) {
-            text = lang == SupportedLanguage.ENGLISH
-                    ? "Correct, well done!" : "Richtig, super gemacht!";
-        } else if (timedOut) {
-            text = lang == SupportedLanguage.ENGLISH
-                    ? "Time is up. The correct answer was: " + correctOption + "."
-                    : "Die Zeit ist um. Richtig gewesen wäre: " + correctOption + ".";
-        } else {
-            text = lang == SupportedLanguage.ENGLISH
-                    ? "Not quite. The correct answer is: " + correctOption + "."
-                    : "Leider falsch. Richtig ist: " + correctOption + ".";
-        }
-        say(context, text);
-    }
-
-    private void announceFinal(QiContext context, SupportedLanguage lang, int score, int total) {
-        String base = lang == SupportedLanguage.ENGLISH
-                ? "You got " + score + " out of " + total + " questions right. "
-                : "Du hast " + score + " von " + total + " Fragen richtig beantwortet. ";
-        say(context, base + closingComment(lang, score, total));
-    }
-
-    private String closingComment(SupportedLanguage lang, int score, int total) {
-        boolean perfect = score == total;
-        boolean good = score * 2 >= total;
-        if (lang == SupportedLanguage.ENGLISH) {
-            if (perfect) {
-                return "Outstanding, you really know Bühler!";
-            }
-            return good ? "Nicely done, thanks for playing!"
-                    : "Thanks for playing, come back and try again!";
-        }
-        if (perfect) {
-            return "Hervorragend, du kennst dich bei Bühler richtig gut aus!";
-        }
-        return good ? "Gut gemacht, danke fürs Mitmachen!"
-                : "Danke fürs Mitmachen, versuch es gern noch einmal!";
     }
 
     private Integer awaitAnswer(BlockingQueue<Integer> queue) {

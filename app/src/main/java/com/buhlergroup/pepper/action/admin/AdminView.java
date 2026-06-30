@@ -22,20 +22,15 @@ import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATUS;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_SYSTEM;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
-import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -44,7 +39,6 @@ import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.attract.AttractSettings;
 import com.buhlergroup.pepper.action.dance.DanceLibraryController;
 import com.buhlergroup.pepper.action.navigation.NavigationController;
-import com.buhlergroup.pepper.action.raffle.RaffleRepository;
 import com.buhlergroup.pepper.databinding.ViewAdminBinding;
 import com.buhlergroup.pepper.debug.DebugLog;
 
@@ -179,8 +173,8 @@ public class AdminView extends FrameLayout {
         binding.adminActor.setOnClickListener(v -> actor.showActor());
         binding.adminNavigation.setOnClickListener(v -> navigationSettings.showNavigation());
         binding.adminDances.setOnClickListener(v -> dance.showDance());
-        binding.adminDsgvo.setOnClickListener(v -> showDsgvoAccessDialog());
-        binding.adminChangePin.setOnClickListener(v -> showChangePinDialog());
+        binding.adminDsgvo.setOnClickListener(v -> new DsgvoAccessController(this, dbExecutor).show());
+        binding.adminChangePin.setOnClickListener(v -> ChangePinDialog.show(this));
         binding.adminProfiles.setOnClickListener(v -> profiles.showProfiles());
         binding.adminModels.setOnClickListener(v -> models.showModels());
     }
@@ -262,82 +256,6 @@ public class AdminView extends FrameLayout {
             panelNav.show(PANEL_SYSTEM);
         } else {
             panelNav.show(PANEL_MENU);
-        }
-    }
-
-    private void showChangePinDialog() {
-        EditText input = new EditText(getContext());
-        input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-        input.setHint(R.string.admin_change_pin_hint);
-        new AlertDialog.Builder(getContext())
-                .setTitle(R.string.admin_change_pin)
-                .setView(input)
-                .setNegativeButton(R.string.admin_back, null)
-                .setPositiveButton(R.string.raffle_save, (d, w) -> {
-                    String pin = input.getText().toString().trim();
-                    if (pin.matches("\\d{4}")) {
-                        AdminSettings.setPin(getContext(), pin);
-                        Toast.makeText(getContext(), R.string.admin_change_pin_saved,
-                                Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(getContext(), R.string.admin_change_pin_invalid,
-                                Toast.LENGTH_SHORT).show();
-                    }
-                })
-                .show();
-    }
-
-    private void showDsgvoAccessDialog() {
-        EditText input = new EditText(getContext());
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
-        input.setHint(R.string.dsgvo_access_hint);
-        new AlertDialog.Builder(getContext())
-                .setTitle(R.string.dsgvo_access_title)
-                .setView(input)
-                .setNegativeButton(R.string.admin_back, null)
-                .setPositiveButton(R.string.dsgvo_access_search,
-                        (d, w) -> runDsgvoAccess(input.getText().toString().trim()))
-                .show();
-    }
-
-    private void runDsgvoAccess(String email) {
-        if (email.isEmpty()) {
-            return;
-        }
-        dbExecutor.submit(() -> {
-            String report = RaffleRepository.get(getContext()).buildAccessReport(email);
-            post(() -> showDsgvoResult(email, report));
-        });
-    }
-
-    private void showDsgvoResult(String email, String report) {
-        if (report == null) {
-            new AlertDialog.Builder(getContext())
-                    .setTitle(R.string.dsgvo_access_title)
-                    .setMessage(R.string.dsgvo_access_none)
-                    .setPositiveButton(R.string.admin_back, null)
-                    .show();
-            return;
-        }
-        new AlertDialog.Builder(getContext())
-                .setTitle(getContext().getString(R.string.dsgvo_report_title, email))
-                .setMessage(report)
-                .setNeutralButton(R.string.dsgvo_access_share, (d, w) -> shareDsgvoReport(email, report))
-                .setPositiveButton(R.string.admin_back, null)
-                .show();
-    }
-
-    private void shareDsgvoReport(String email, String report) {
-        Intent share = new Intent(Intent.ACTION_SEND);
-        share.setType("text/plain");
-        share.putExtra(Intent.EXTRA_SUBJECT, getContext().getString(R.string.dsgvo_report_title, email));
-        share.putExtra(Intent.EXTRA_TEXT, report);
-        Intent chooser = Intent.createChooser(share, getContext().getString(R.string.dsgvo_access_share));
-        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        try {
-            getContext().startActivity(chooser);
-        } catch (Exception e) {
-            Toast.makeText(getContext(), R.string.admin_export_failed, Toast.LENGTH_SHORT).show();
         }
     }
 

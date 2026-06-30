@@ -2,8 +2,6 @@ package com.buhlergroup.pepper.action.dance;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.Gravity;
@@ -27,7 +25,6 @@ import com.buhlergroup.pepper.action.admin.AdminController;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 import com.buhlergroup.pepper.databinding.ViewDanceLibraryBinding;
 import com.buhlergroup.pepper.debug.DebugLog;
-import com.buhlergroup.pepper.media.AudioCoordinator;
 import com.buhlergroup.pepper.robot.RobotContext;
 
 import java.util.List;
@@ -39,6 +36,8 @@ public class DanceLibraryView extends FrameLayout {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final ExecutorService heavyExecutor = Executors.newSingleThreadExecutor();
     private final DanceRepository repository = new DanceRepository();
+    private final DancePreviewPlayer previewPlayer =
+            new DancePreviewPlayer(repository, message -> post(() -> toast(message)));
     private LinearLayout list;
     private View loadingOverlay;
     private TextView loadingText;
@@ -185,6 +184,7 @@ public class DanceLibraryView extends FrameLayout {
         super.onDetachedFromWindow();
         executor.shutdownNow();
         heavyExecutor.shutdownNow();
+        previewPlayer.release();
     }
 
     private void refresh() {
@@ -331,39 +331,7 @@ public class DanceLibraryView extends FrameLayout {
     }
 
     private void previewFrom(DanceEntity dance, long ms) {
-        heavyExecutor.execute(() -> {
-            MediaPlayer player = null;
-            try {
-                repository.preparePlayback(getContext(), dance);
-                if (dance.previewUrl == null) {
-                    post(() -> toast("Keine Vorschau verfügbar."));
-                    return;
-                }
-                player = new MediaPlayer();
-                player.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                player.setDataSource(dance.previewUrl);
-                player.prepare();
-                if (ms > 0 && ms < player.getDuration()) {
-                    player.seekTo((int) ms);
-                }
-                AudioCoordinator.get().attachMusic(player);
-                player.start();
-                Thread.sleep(8000);
-            } catch (Exception e) {
-                post(() -> toast("Vorhören fehlgeschlagen: " + e.getMessage()));
-            } finally {
-                if (player != null) {
-                    AudioCoordinator.get().detachMusic(player);
-                    try {
-                        if (player.isPlaying()) {
-                            player.stop();
-                        }
-                    } catch (Exception ignored) {
-                    }
-                    player.release();
-                }
-            }
-        });
+        previewPlayer.start(getContext(), dance, ms);
     }
 
     private void toggleFavorite(DanceEntity dance) {

@@ -53,11 +53,11 @@ public final class MemoryGameController {
     public void play(QiContext context, MemoryGameConfig config) {
         MemoryGameView board = view;
         if (board == null) {
-            say(context, "Mein Tablet ist gerade nicht bereit, deshalb kann ich Memory nicht starten.");
+            say(context, MemoryGameNarration.tabletNotReady());
             return;
         }
         if (running) {
-            say(context, "Wir spielen doch schon!");
+            say(context, MemoryGameNarration.alreadyPlaying());
             return;
         }
 
@@ -72,8 +72,7 @@ public final class MemoryGameController {
         board.setHint("Wiederhole die Sequenz auf dem Tablet");
         board.show();
 
-        say(context, "Willkommen bei Memory mit Bewegung auf " + config.label + "! "
-                + "Ich zeige dir eine Folge aus Farben und Tönen, und du wiederholst sie auf dem Tablet.");
+        say(context, MemoryGameNarration.welcome(config.label));
         playAnimation(context, R.raw.raise_right_hand_b001);
 
         List<Integer> sequence = new ArrayList<>();
@@ -159,43 +158,29 @@ public final class MemoryGameController {
     private void celebrateRound(QiContext context, int completed, MemoryGameView board) {
         board.playSuccessCue();
         if (completed % 4 == 0) {
-            say(context, "Wahnsinn, " + completed + " Runden! Du bist ein Memory-Profi!");
+            say(context, MemoryGameNarration.roundProfi(completed));
             playAnimation(context, R.raw.pepper_highfive);
         } else {
-            say(context, pickPraise(completed));
+            say(context, MemoryGameNarration.pickPraise(random, completed));
         }
     }
 
     private void endGame(QiContext context, int completed, boolean record) {
         if (completed <= 0) {
-            say(context, "Kein Treffer diesmal, aber das schaffst du! Sag Memory, dann spielen wir nochmal.");
+            say(context, MemoryGameNarration.endNoHit());
             return;
         }
         if (record) {
-            say(context, "Neuer Rekord! Du hast " + completed
-                    + " Runden geschafft. Das war fantastisch!");
+            say(context, MemoryGameNarration.endRecord(completed));
             playAnimation(context, R.raw.pepper_highfive);
             return;
         }
         if (completed >= 8) {
-            say(context, "Unglaublich! Du hast " + completed
-                    + " Runden geschafft. Das ist ein Spitzenergebnis!");
+            say(context, MemoryGameNarration.endTopResult(completed));
             playAnimation(context, R.raw.pepper_highfive);
         } else {
-            say(context, "Schade, da war ein Fehler. Du hast " + completed
-                    + " Runden geschafft. Willst du es nochmal versuchen?");
+            say(context, MemoryGameNarration.endRetry(completed));
         }
-    }
-
-    private String pickPraise(int completed) {
-        String[] options = {
-                "Super gemacht!",
-                "Richtig! Weiter so!",
-                "Perfekt gemerkt!",
-                "Stark, das war " + completed + "!",
-                "Genau richtig!"
-        };
-        return options[random.nextInt(options.length)];
     }
 
     private Integer awaitTouch(BlockingQueue<Integer> queue, long timeoutMs) {

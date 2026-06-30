@@ -2,7 +2,6 @@ package com.buhlergroup.pepper.action.admin;
 
 import android.content.Context;
 import android.graphics.Typeface;
-import android.graphics.drawable.ColorDrawable;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
@@ -15,9 +14,6 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.debug.DebugLog;
@@ -74,7 +70,7 @@ final class ModelPanelController {
         keyEdits.clear();
         statusViews.clear();
         for (LlmProvider provider : LlmProvider.values()) {
-            LinearLayout card = card();
+            LinearLayout card = AdminViewFactory.card(ctx());
 
             TextView name = new TextView(ctx());
             name.setText(provider.displayName);
@@ -130,7 +126,7 @@ final class ModelPanelController {
         providerSpinners.clear();
         modelSpinners.clear();
         for (ModelTask task : ModelTask.values()) {
-            LinearLayout card = card();
+            LinearLayout card = AdminViewFactory.card(ctx());
 
             TextView name = new TextView(ctx());
             name.setText(taskLabel(task));
@@ -143,28 +139,28 @@ final class ModelPanelController {
             desc.setText(taskDescription(task));
             desc.setTextColor(color(R.color.text_muted));
             desc.setTextSize(13);
-            LinearLayout.LayoutParams descParams = rowParams();
+            LinearLayout.LayoutParams descParams = AdminViewFactory.rowParams();
             descParams.topMargin = dp(2);
             card.addView(desc, descParams);
 
             LlmProvider savedProvider = ModelSettings.getProvider(ctx(), task);
             String savedModelId = ModelSettings.getModel(ctx(), task);
 
-            card.addView(fieldLabel(R.string.model_provider_label));
+            card.addView(AdminViewFactory.fieldLabel(ctx(), R.string.model_provider_label));
             Spinner providerSpinner = providerSpinner();
             providerSpinner.setSelection(savedProvider.ordinal());
-            card.addView(providerSpinner, rowParams());
+            card.addView(providerSpinner, AdminViewFactory.rowParams());
             providerSpinners.put(task, providerSpinner);
 
-            card.addView(fieldLabel(R.string.model_model_label));
-            Spinner modelSpinner = styledSpinner();
-            card.addView(modelSpinner, rowParams());
+            card.addView(AdminViewFactory.fieldLabel(ctx(), R.string.model_model_label));
+            Spinner modelSpinner = AdminViewFactory.styledSpinner(ctx());
+            card.addView(modelSpinner, AdminViewFactory.rowParams());
             modelSpinners.put(task, modelSpinner);
 
             TextView hint = new TextView(ctx());
             hint.setTextColor(color(R.color.buhler_teal));
             hint.setTextSize(13);
-            LinearLayout.LayoutParams hintParams = rowParams();
+            LinearLayout.LayoutParams hintParams = AdminViewFactory.rowParams();
             hintParams.topMargin = dp(4);
             card.addView(hint, hintParams);
 
@@ -297,86 +293,25 @@ final class ModelPanelController {
     }
 
     private Spinner providerSpinner() {
-        Spinner spinner = styledSpinner();
+        Spinner spinner = AdminViewFactory.styledSpinner(ctx());
         spinner.setAdapter(providerAdapter());
         return spinner;
     }
 
     private ArrayAdapter<LlmProvider> providerAdapter() {
-        return whiteAdapter(Arrays.asList(LlmProvider.values()));
+        return AdminViewFactory.whiteAdapter(ctx(), Arrays.asList(LlmProvider.values()));
     }
 
     private ArrayAdapter<LlmModel> modelAdapter(List<LlmModel> models) {
-        return whiteAdapter(models);
-    }
-
-    private <T> ArrayAdapter<T> whiteAdapter(List<T> items) {
-        ArrayAdapter<T> adapter = new ArrayAdapter<T>(
-                ctx(), android.R.layout.simple_spinner_item, items) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                TextView view = (TextView) super.getView(position, convertView, parent);
-                view.setTextColor(color(R.color.text_primary));
-                view.setTextSize(16);
-                return view;
-            }
-
-            @Override
-            public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
-                TextView view = (TextView) super.getDropDownView(position, convertView, parent);
-                view.setTextColor(color(R.color.text_primary));
-                view.setTextSize(16);
-                view.setPadding(dp(16), dp(14), dp(16), dp(14));
-                view.setBackgroundColor(color(R.color.admin_card));
-                return view;
-            }
-        };
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        return adapter;
-    }
-
-    private Spinner styledSpinner() {
-        Spinner spinner = new Spinner(ctx());
-        spinner.setPopupBackgroundDrawable(new ColorDrawable(color(R.color.admin_card)));
-        return spinner;
-    }
-
-    private TextView fieldLabel(int textRes) {
-        TextView label = new TextView(ctx());
-        label.setText(textRes);
-        label.setTextColor(color(R.color.text_secondary));
-        label.setTextSize(12);
-        label.setAllCaps(true);
-        LinearLayout.LayoutParams params = rowParams();
-        params.topMargin = dp(10);
-        label.setLayoutParams(params);
-        return label;
-    }
-
-    private LinearLayout card() {
-        LinearLayout card = new LinearLayout(ctx());
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setBackground(ContextCompat.getDrawable(ctx(), R.drawable.bg_admin_card));
-        card.setPadding(dp(16), dp(14), dp(16), dp(16));
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.bottomMargin = dp(12);
-        card.setLayoutParams(params);
-        return card;
-    }
-
-    private LinearLayout.LayoutParams rowParams() {
-        return new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        return AdminViewFactory.whiteAdapter(ctx(), models);
     }
 
     private int color(int colorRes) {
-        return ContextCompat.getColor(ctx(), colorRes);
+        return AdminViewFactory.color(ctx(), colorRes);
     }
 
     private int dp(int value) {
-        float density = ctx().getResources().getDisplayMetrics().density;
-        return Math.round(value * density);
+        return AdminViewFactory.dp(ctx(), value);
     }
 
     private String taskLabel(ModelTask task) {
