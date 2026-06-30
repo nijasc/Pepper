@@ -101,8 +101,8 @@ final class RoomScanner {
                 ExplorationMap map = lam.dumpMap();
                 String data = map.serialize();
                 String id = UUID.randomUUID().toString();
-                File file = new File(nav.mapDir(c), id + ".map");
-                nav.writeFile(file, data);
+                File file = new File(MapFileStore.mapDir(c), id + ".map");
+                MapFileStore.writeFile(file, data);
 
                 RoomScanEntity scan = new RoomScanEntity(
                         id, name, System.currentTimeMillis(), file.getAbsolutePath());

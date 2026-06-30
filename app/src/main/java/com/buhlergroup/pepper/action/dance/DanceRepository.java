@@ -3,8 +3,6 @@ package com.buhlergroup.pepper.action.dance;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.dance.audio.SongAudioAnalyzer;
 import com.buhlergroup.pepper.action.dance.data.DanceDao;
@@ -17,103 +15,19 @@ import com.buhlergroup.pepper.action.dynamicanim.SongResearcher;
 import com.buhlergroup.pepper.debug.DebugLog;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public final class DanceRepository {
 
     private static final String TAG = "Dance";
-    private static final String BUILTIN_PREFIX = "builtin_";
-    private static final String BUILTIN_HULA_ID = BUILTIN_PREFIX + "hula";
-    private static final String BUILTIN_SIX_SEVEN_ID = BUILTIN_PREFIX + "six_seven";
 
     private final DanceGenerator generator = new DanceGenerator();
     private final SongResearcher songResearcher = new SongResearcher();
 
-    public static String readQianim(File file) throws Exception {
-        byte[] bytes = new byte[(int) file.length()];
-        try (FileInputStream in = new FileInputStream(file)) {
-            int read = 0;
-            while (read < bytes.length) {
-                int r = in.read(bytes, read, bytes.length - read);
-                if (r < 0) {
-                    break;
-                }
-                read += r;
-            }
-            return new String(bytes, 0, read, StandardCharsets.UTF_8);
-        }
-    }
-
-    public void ensureBuiltInDances(Context context) {
-        try {
-            seedBuiltIn(context, BUILTIN_HULA_ID, "Hula",
-                    R.raw.hula_dance,
-                    R.raw.summer, 12000L);
-            seedBuiltIn(context, BUILTIN_SIX_SEVEN_ID, "Six Seven",
-                    R.raw.six_seven,
-                    R.raw.wyoming, 15000L);
-        } catch (Exception e) {
-            Log.w(TAG, "Could not seed built-in dances: " + e.getMessage());
-        }
-    }
-
-    private void seedBuiltIn(Context context, String id, String name, int rawRes, int audioRawRes,
-                             long durationMs) throws IOException {
-        DanceDao dao = DanceDatabase.get(context).danceDao();
-        DanceEntity existing = dao.findById(id);
-        if (existing != null && existing.qianimPath != null
-                && new File(existing.qianimPath).exists()) {
-            if (audioRawRes != 0
-                    && (existing.audioPath == null || !new File(existing.audioPath).exists())) {
-                File audio = new File(danceDir(context), id + ".mp3");
-                copyRawToFile(context, audioRawRes, audio);
-                dao.setAudioPath(id, audio.getAbsolutePath());
-                Log.i(TAG, "Backfilled audio for built-in '" + name + "'");
-            }
-            return;
-        }
-        File target = new File(danceDir(context), id + ".qianim");
-        copyRawToFile(context, rawRes, target);
-        DanceEntity entity = new DanceEntity(
-                id, name, target.getAbsolutePath(), durationMs, false, System.currentTimeMillis());
-        if (audioRawRes != 0) {
-            File audio = new File(danceDir(context), id + ".mp3");
-            copyRawToFile(context, audioRawRes, audio);
-            entity.audioPath = audio.getAbsolutePath();
-        }
-        dao.insert(entity);
-        Log.i(TAG, "Seeded built-in dance '" + name + "'");
-    }
-
-    private void copyRawToFile(Context context, int rawRes, File dest) throws IOException {
-        File tmp = new File(dest.getAbsolutePath() + ".part");
-        try (InputStream in = context.getResources().openRawResource(rawRes);
-             FileOutputStream out = new FileOutputStream(tmp)) {
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = in.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
-            }
-        }
-        if (dest.exists() && !dest.delete()) {
-            throw new IOException("Alte Animations-Datei konnte nicht ersetzt werden.");
-        }
-        if (!tmp.renameTo(dest)) {
-            throw new IOException("Animations-Datei konnte nicht gespeichert werden.");
-        }
-    }
-
     public DanceEntity getOrCreate(Context context, String query,
                                    DanceGenerator.ProgressListener progress) throws Exception {
         DanceDao dao = DanceDatabase.get(context).danceDao();
-        File danceDir = danceDir(context);
+        File danceDir = DanceFileStore.danceDir(context);
 
         if (progress != null) {
             progress.onStage(DanceGenerator.Stage.SEARCH);
@@ -126,7 +40,7 @@ public final class DanceRepository {
         if (bySong != null) {
             if (bySong.qianimPath != null && new File(bySong.qianimPath).exists()) {
                 Log.i(TAG, "Reusing dance for " + songName);
-                if (!applyLocalAudio(bySong)) {
+                if (!DanceAudioCache.applyLocalAudio(bySong)) {
                     bySong.previewUrl = source.previewUrl;
                 }
                 return bySong;
@@ -137,7 +51,7 @@ public final class DanceRepository {
         DanceEntity existing = dao.findById(source.sourceId);
         if (existing != null && existing.qianimPath != null
                 && new File(existing.qianimPath).exists()) {
-            if (!applyLocalAudio(existing)) {
+            if (!DanceAudioCache.applyLocalAudio(existing)) {
                 existing.previewUrl = source.previewUrl;
             }
             return existing;
@@ -150,7 +64,7 @@ public final class DanceRepository {
         if (progress != null) {
             progress.onStage(DanceGenerator.Stage.AUDIO);
         }
-        File audioFile = downloadPreview(danceDir, source);
+        File audioFile = DanceAudioCache.downloadPreview(danceDir, source);
 
         if (progress != null) {
             progress.onStage(DanceGenerator.Stage.BEAT);
@@ -165,8 +79,8 @@ public final class DanceRepository {
             throw new Exception("Tanz-Choreografie konnte nicht erzeugt werden.");
         }
 
-        File qianimFile = new File(danceDir, sanitizeFileName(source.sourceId) + ".qianim");
-        writeFile(qianimFile, qianim);
+        File qianimFile = new File(danceDir, DanceFileStore.sanitizeFileName(source.sourceId) + ".qianim");
+        DanceFileStore.writeFile(qianimFile, qianim);
 
         DanceEntity entity = new DanceEntity(
                 source.sourceId, songName, qianimFile.getAbsolutePath(),
@@ -191,10 +105,6 @@ public final class DanceRepository {
         return new SongSource(track.trackId, track.title, track.previewUrl, track.durationMs);
     }
 
-    private String sanitizeFileName(String value) {
-        return value.replaceAll("[^A-Za-z0-9_-]", "_");
-    }
-
     private String normalizeSongName(String query) {
         return query == null ? "" : query.trim().replaceAll("\\s+", " ");
     }
@@ -217,66 +127,20 @@ public final class DanceRepository {
 
     public void delete(Context context, DanceEntity dance) {
         DanceDatabase.get(context).danceDao().deleteById(dance.youtubeId);
-        deleteQuietly(dance.qianimPath);
-        deleteQuietly(dance.audioPath);
-    }
-
-    @Nullable
-    private File downloadPreview(File danceDir, SongSource source) {
-        if (source.previewUrl == null || source.previewUrl.isEmpty()) {
-            return null;
-        }
-        try {
-            File audioFile = new File(danceDir, sanitizeFileName(source.sourceId) + ".m4a");
-            downloadToFile(source.previewUrl, audioFile);
-            Log.i(TAG, "Cached preview audio for " + source.title);
-            return audioFile;
-        } catch (Exception e) {
-            Log.w(TAG, "Could not cache preview audio for " + source.title + ": " + e.getMessage());
-            return null;
-        }
-    }
-
-    private void downloadToFile(String urlString, File dest) throws IOException {
-        HttpURLConnection connection = (HttpURLConnection) new URL(urlString).openConnection();
-        connection.setConnectTimeout(8000);
-        connection.setReadTimeout(15000);
-        connection.setRequestProperty("User-Agent", "PepperDance/1.0");
-        try {
-            int code = connection.getResponseCode();
-            if (code != HttpURLConnection.HTTP_OK) {
-                throw new IOException("Audio-Download fehlgeschlagen (HTTP " + code + ").");
-            }
-            File tmp = new File(dest.getAbsolutePath() + ".part");
-            try (InputStream in = connection.getInputStream();
-                 FileOutputStream out = new FileOutputStream(tmp)) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, read);
-                }
-            }
-            if (dest.exists() && !dest.delete()) {
-                throw new IOException("Alte Audio-Datei konnte nicht ersetzt werden.");
-            }
-            if (!tmp.renameTo(dest)) {
-                throw new IOException("Audio-Datei konnte nicht gespeichert werden.");
-            }
-        } finally {
-            connection.disconnect();
-        }
+        DanceFileStore.deleteQuietly(dance.qianimPath);
+        DanceFileStore.deleteQuietly(dance.audioPath);
     }
 
     public void preparePlayback(Context context, DanceEntity dance) {
-        if (applyLocalAudio(dance)) {
+        if (DanceAudioCache.applyLocalAudio(dance)) {
             Log.i(TAG, "Playing '" + dance.songName + "' from local cache");
             return;
         }
-        if (!dance.youtubeId.startsWith(BUILTIN_PREFIX)) {
+        if (!dance.youtubeId.startsWith(BuiltInDanceSeeder.BUILTIN_PREFIX)) {
             try {
                 ITunesSearch.Result track = new ITunesSearch().search(dance.songName);
                 dance.previewUrl = track.previewUrl;
-                backfillAudioCache(context, dance, track.previewUrl);
+                DanceAudioCache.backfillAudioCache(context, dance, track.previewUrl);
             } catch (Exception e) {
                 Log.w(TAG, "Could not resolve preview for '" + dance.songName + "': " + e.getMessage());
                 DebugLog.get().w(TAG,
@@ -296,38 +160,14 @@ public final class DanceRepository {
 
     private String fallbackAudioPath(Context context) {
         try {
-            File fallback = new File(danceDir(context), "fallback_audio.mp3");
+            File fallback = new File(DanceFileStore.danceDir(context), "fallback_audio.mp3");
             if (!fallback.exists()) {
-                copyRawToFile(context, R.raw.summer, fallback);
+                DanceFileStore.copyRawToFile(context, R.raw.summer, fallback);
             }
             return fallback.getAbsolutePath();
         } catch (Exception e) {
             Log.w(TAG, "Fallback audio unavailable: " + e.getMessage());
             return null;
-        }
-    }
-
-    private boolean applyLocalAudio(DanceEntity dance) {
-        if (dance.audioPath != null && new File(dance.audioPath).exists()) {
-            dance.previewUrl = dance.audioPath;
-            return true;
-        }
-        return false;
-    }
-
-    private void backfillAudioCache(Context context, DanceEntity dance, String previewUrl) {
-        if (previewUrl == null || previewUrl.isEmpty()) {
-            return;
-        }
-        try {
-            File audioFile = new File(danceDir(context), sanitizeFileName(dance.youtubeId) + ".m4a");
-            downloadToFile(previewUrl, audioFile);
-            dance.audioPath = audioFile.getAbsolutePath();
-            dance.previewUrl = audioFile.getAbsolutePath();
-            DanceDatabase.get(context).danceDao().setAudioPath(dance.youtubeId, dance.audioPath);
-            Log.i(TAG, "Backfilled local audio cache for " + dance.songName);
-        } catch (Exception e) {
-            Log.w(TAG, "Could not backfill audio cache for " + dance.songName + ": " + e.getMessage());
         }
     }
 
@@ -350,7 +190,7 @@ public final class DanceRepository {
             String qianim = generator.generateValidatedDance(
                     context, dance.songName, seconds, edit.choreography, null, dance.bpm, null);
             if (qianim != null) {
-                writeFile(new File(dance.qianimPath), qianim);
+                DanceFileStore.writeFile(new File(dance.qianimPath), qianim);
                 Log.i(TAG, "Edit regenerated choreography for " + dance.songName);
                 changed = true;
             }
@@ -358,47 +198,6 @@ public final class DanceRepository {
 
         if (!changed) {
             throw new Exception("Die Anweisung konnte nicht angewendet werden.");
-        }
-    }
-
-    private File danceDir(Context context) {
-        File dir = new File(context.getFilesDir(), "dances");
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        return dir;
-    }
-
-    private void writeFile(File file, String content) throws Exception {
-        try (FileOutputStream out = new FileOutputStream(file)) {
-            out.write(content.getBytes(StandardCharsets.UTF_8));
-        }
-    }
-
-    private void deleteQuietly(String path) {
-        if (path == null) {
-            return;
-        }
-        try {
-            File f = new File(path);
-            if (f.exists()) {
-                f.delete();
-            }
-        } catch (Exception ignored) {
-        }
-    }
-
-    private static final class SongSource {
-        final String sourceId;
-        final String title;
-        final String previewUrl;
-        final long durationMs;
-
-        SongSource(String sourceId, String title, String previewUrl, long durationMs) {
-            this.sourceId = sourceId;
-            this.title = title;
-            this.previewUrl = previewUrl;
-            this.durationMs = durationMs;
         }
     }
 }

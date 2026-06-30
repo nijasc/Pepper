@@ -9,8 +9,6 @@ import androidx.annotation.Nullable;
 import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.HolderBuilder;
 import com.aldebaran.qi.sdk.object.actuation.ExplorationMap;
-import com.aldebaran.qi.sdk.object.actuation.Frame;
-import com.aldebaran.qi.sdk.object.geometry.Quaternion;
 import com.aldebaran.qi.sdk.object.geometry.Transform;
 import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
 import com.aldebaran.qi.sdk.object.holder.Holder;
@@ -20,10 +18,6 @@ import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -194,7 +188,7 @@ public final class NavigationManager {
             try {
                 dao(c).deleteWaypointsForScan(scan.id);
                 dao(c).deleteScan(scan.id);
-                deleteFileQuietly(scan.mapPath);
+                MapFileStore.deleteFileQuietly(scan.mapPath);
                 if (activeScan != null && activeScan.id.equals(scan.id)) {
                     activeScan = null;
                     activeMap = null;
@@ -220,8 +214,8 @@ public final class NavigationManager {
                 return;
             }
             try {
-                Transform t = robotInMap(c);
-                double[] pose = pose2d(t);
+                Transform t = PoseUtil.robotInMap(c);
+                double[] pose = PoseUtil.pose2d(t);
                 WaypointEntity wp = new WaypointEntity(
                         scan.id, name, type, pose[0], pose[1], pose[2], System.currentTimeMillis());
                 wp.id = dao(c).insertWaypoint(wp);
@@ -289,7 +283,7 @@ public final class NavigationManager {
                 return;
             }
             try {
-                cb.onResult(pose2d(robotInMap(c)));
+                cb.onResult(PoseUtil.pose2d(PoseUtil.robotInMap(c)));
             } catch (Exception e) {
                 Log.w(TAG, "getRobotPose failed: " + e.getMessage());
                 cb.onError("Position konnte nicht ermittelt werden.");
@@ -307,22 +301,6 @@ public final class NavigationManager {
 
     void rotateFullCircle(QiContext c, int steps, Runnable onStep, RobotGuide.Condition shouldContinue) {
         guide.rotateFullCircle(c, steps, onStep, shouldContinue);
-    }
-
-    private Transform robotInMap(QiContext c) {
-        Frame robotFrame = c.getActuation().robotFrame();
-        Frame mapFrame = c.getMapping().mapFrame();
-        return robotFrame.computeTransform(mapFrame).getTransform();
-    }
-
-    private double[] pose2d(Transform t) {
-        double x = t.getTranslation().getX();
-        double y = t.getTranslation().getY();
-        Quaternion q = t.getRotation();
-        double theta = Math.atan2(
-                2.0 * (q.getW() * q.getZ() + q.getX() * q.getY()),
-                1.0 - 2.0 * (q.getY() * q.getY() + q.getZ() * q.getZ()));
-        return new double[]{x, y, theta};
     }
 
     void holdAbilities(QiContext c) {
@@ -348,53 +326,6 @@ public final class NavigationManager {
                 h.release();
             } catch (Exception ignored) {
             }
-        }
-    }
-
-    File mapDir(Context context) {
-        File dir = new File(context.getFilesDir(), "maps");
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        return dir;
-    }
-
-    void writeFile(File file, String content) throws Exception {
-        try (FileOutputStream out = new FileOutputStream(file)) {
-            out.write(content.getBytes(StandardCharsets.UTF_8));
-        }
-    }
-
-    @Nullable
-    String readFile(String path) {
-        File file = new File(path);
-        if (!file.exists()) {
-            return null;
-        }
-        try (FileInputStream in = new FileInputStream(file)) {
-            byte[] bytes = new byte[(int) file.length()];
-            int read = 0;
-            while (read < bytes.length) {
-                int r = in.read(bytes, read, bytes.length - read);
-                if (r < 0) {
-                    break;
-                }
-                read += r;
-            }
-            return new String(bytes, 0, read, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            Log.w(TAG, "readFile failed: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private void deleteFileQuietly(String path) {
-        try {
-            File f = new File(path);
-            if (f.exists()) {
-                f.delete();
-            }
-        } catch (Exception ignored) {
         }
     }
 

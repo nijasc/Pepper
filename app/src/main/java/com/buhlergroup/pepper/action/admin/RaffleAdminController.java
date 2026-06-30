@@ -3,25 +3,15 @@ package com.buhlergroup.pepper.action.admin;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Typeface;
-import android.net.Uri;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.core.content.FileProvider;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.R;
@@ -31,10 +21,8 @@ import com.buhlergroup.pepper.action.raffle.WinnerController;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
-import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 
-import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -42,13 +30,13 @@ import java.util.concurrent.Executor;
 
 final class RaffleAdminController {
 
-    private static final String TAG = "AdminView";
-
     private final View root;
     private final Executor executor;
     private final PanelNavigator panelNav;
     private final SelfieGalleryController gallery;
     private final Runnable onClose;
+    private final RaffleEntryRowFactory entryRowFactory;
+    private final RaffleEmailSender emailSender;
 
     private final EditText raffleTitle;
     private final EditText raffleDescription;
@@ -79,6 +67,19 @@ final class RaffleAdminController {
         this.panelNav = panelNav;
         this.gallery = gallery;
         this.onClose = onClose;
+        this.entryRowFactory = new RaffleEntryRowFactory(root, executor,
+                new RaffleEntryRowFactory.Host() {
+                    @Override
+                    public void onDeleteEntry(RaffleEntryEntity entry) {
+                        confirmDeleteEntry(entry);
+                    }
+
+                    @Override
+                    public void onShowSelfie(SelfieEntity selfie) {
+                        gallery.showDetail(selfie);
+                    }
+                });
+        this.emailSender = new RaffleEmailSender(root, executor);
 
         raffleTitle = root.findViewById(R.id.raffleTitle);
         raffleDescription = root.findViewById(R.id.raffleDescription);
@@ -255,77 +256,10 @@ final class RaffleAdminController {
         } else {
             for (RaffleEntryEntity entry : entries) {
                 boolean isWinner = raffle.winnerId != null && raffle.winnerId == entry.id;
-                raffleEntries.addView(createEntryRow(entry, isWinner));
+                raffleEntries.addView(entryRowFactory.createEntryRow(entry, isWinner));
             }
         }
         panelNav.show(PanelNavigator.PANEL_RAFFLE);
-    }
-
-    private View createEntryRow(RaffleEntryEntity entry, boolean isWinner) {
-        LinearLayout row = new LinearLayout(ctx());
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        int pv = dp(6);
-        row.setPadding(0, pv, 0, pv);
-
-        ImageView thumb = new ImageView(ctx());
-        LinearLayout.LayoutParams thumbParams = new LinearLayout.LayoutParams(dp(48), dp(48));
-        thumbParams.setMarginEnd(dp(12));
-        thumb.setLayoutParams(thumbParams);
-        thumb.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        thumb.setBackgroundColor(0xFF000000);
-        thumb.setVisibility(View.GONE);
-        row.addView(thumb);
-
-        StringBuilder sb = new StringBuilder();
-        if (isWinner) {
-            sb.append("🏆 ");
-        }
-        sb.append(entry.name).append(" · ").append(entry.email);
-        if (entry.phone != null && !entry.phone.isEmpty()) {
-            sb.append(" · ").append(entry.phone);
-        }
-        TextView text = new TextView(ctx());
-        text.setText(sb.toString());
-        text.setTextColor(isWinner ? 0xFFFFD54F : 0xFFFFFFFF);
-        if (isWinner) {
-            text.setTypeface(text.getTypeface(), Typeface.BOLD);
-        }
-        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        text.setLayoutParams(textParams);
-        row.addView(text);
-
-        Button deleteButton = new Button(ctx());
-        deleteButton.setText(R.string.raffle_entry_delete);
-        deleteButton.setTextColor(0xFFFFFFFF);
-        deleteButton.setBackgroundResource(R.drawable.bg_pill_red);
-        LinearLayout.LayoutParams deleteParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        deleteParams.setMarginStart(dp(8));
-        deleteButton.setLayoutParams(deleteParams);
-        deleteButton.setOnClickListener(v -> confirmDeleteEntry(entry));
-        row.addView(deleteButton);
-
-        if (entry.selfieId != null && !entry.selfieId.isEmpty()) {
-            executor.execute(() -> {
-                SelfieRepository repository = SelfieRepository.get(ctx());
-                SelfieEntity selfie = repository.findById(entry.selfieId);
-                if (selfie == null) {
-                    return;
-                }
-                Bitmap bitmap = SelfieAdapter.decodeThumb(
-                        new File(repository.imagesDir(), selfie.filename), 160);
-                root.post(() -> {
-                    if (bitmap != null) {
-                        thumb.setImageBitmap(bitmap);
-                    }
-                    thumb.setVisibility(View.VISIBLE);
-                    row.setOnClickListener(v -> gallery.showDetail(selfie));
-                });
-            });
-        }
-        return row;
     }
 
     private void confirmDeleteRaffle() {
@@ -432,59 +366,6 @@ final class RaffleAdminController {
     }
 
     private void sendWinnerEmail() {
-        RaffleEntryEntity winner = currentWinner;
-        String title = currentRaffleTitle;
-        if (winner == null) {
-            return;
-        }
-        executor.execute(() -> {
-            Uri selfieUri = null;
-            if (winner.selfieId != null && !winner.selfieId.isEmpty()) {
-                SelfieRepository repository = SelfieRepository.get(ctx());
-                SelfieEntity selfie = repository.findById(winner.selfieId);
-                if (selfie != null) {
-                    File file = new File(repository.imagesDir(), selfie.filename);
-                    if (file.exists()) {
-                        try {
-                            selfieUri = FileProvider.getUriForFile(ctx(),
-                                    ctx().getPackageName() + ".fileprovider", file);
-                        } catch (Exception e) {
-                            Log.w(TAG, "Selfie attachment failed: " + e.getMessage());
-                        }
-                    }
-                }
-            }
-            Uri attachment = selfieUri;
-            root.post(() -> launchEmail(winner, title, attachment));
-        });
-    }
-
-    private void launchEmail(RaffleEntryEntity winner, String title, Uri selfieUri) {
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("message/rfc822");
-        intent.putExtra(Intent.EXTRA_EMAIL, new String[]{winner.email});
-        intent.putExtra(Intent.EXTRA_SUBJECT, ctx().getString(R.string.raffle_email_subject, title));
-        intent.putExtra(Intent.EXTRA_TEXT,
-                ctx().getString(R.string.raffle_email_body, winner.name, title));
-        if (selfieUri != null) {
-            intent.putExtra(Intent.EXTRA_STREAM, selfieUri);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        }
-        intent.setPackage("com.google.android.gm");
-        try {
-            ctx().startActivity(intent);
-            return;
-        } catch (ActivityNotFoundException e) {
-            Log.w(TAG, "Gmail not available, falling back to chooser");
-        }
-        Intent fallback = new Intent(intent);
-        fallback.setPackage(null);
-        Intent chooser = Intent.createChooser(fallback, ctx().getString(R.string.raffle_email_chooser));
-        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        try {
-            ctx().startActivity(chooser);
-        } catch (Exception e) {
-            Toast.makeText(ctx(), R.string.raffle_email_chooser, Toast.LENGTH_SHORT).show();
-        }
+        emailSender.send(currentWinner, currentRaffleTitle);
     }
 }

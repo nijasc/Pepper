@@ -37,7 +37,7 @@ final class RobotLocalizer {
                 return;
             }
             try {
-                String data = nav.readFile(scan.mapPath);
+                String data = MapFileStore.readFile(scan.mapPath);
                 if (data == null) {
                     cb.onError("Karte konnte nicht geladen werden.");
                     return;

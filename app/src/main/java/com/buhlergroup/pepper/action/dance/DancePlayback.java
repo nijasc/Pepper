@@ -31,7 +31,7 @@ public final class DancePlayback {
     public static void play(QiContext context, DanceEntity dance) throws Exception {
         DebugLog.get().setStatus("Tanz: " + dance.songName);
         DebugLog.get().i(TAG, "Tanz gestartet: " + dance.songName);
-        String qianim = DanceRepository.readQianim(new File(Objects.requireNonNull(dance.qianimPath)));
+        String qianim = DanceFileStore.readQianim(new File(Objects.requireNonNull(dance.qianimPath)));
         Animation animation = AnimationBuilder.with(context).withTexts(qianim).build();
         Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
 
