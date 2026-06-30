@@ -30,6 +30,9 @@ public interface RaffleDao {
     @Query("SELECT * FROM raffles WHERE status = 'FINISHED' AND finished_at > 0 AND finished_at < :cutoff")
     List<RaffleEntity> getFinishedBefore(long cutoff);
 
+    @Query("SELECT id FROM raffles WHERE created_at > 0 AND created_at < :cutoff")
+    List<Long> staleIdsBefore(long cutoff);
+
     @Query("UPDATE raffles SET winnerId = :entryId WHERE id = :raffleId")
     void setWinner(long raffleId, long entryId);
 

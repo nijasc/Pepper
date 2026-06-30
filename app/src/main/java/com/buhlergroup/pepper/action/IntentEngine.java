@@ -1,7 +1,7 @@
 package com.buhlergroup.pepper.action;
 
+import com.buhlergroup.pepper.llm.ModelTask;
 import com.buhlergroup.pepper.openai.ModelSelector;
-import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
@@ -20,7 +20,7 @@ import java.util.Map;
 public class IntentEngine {
     private static final String TAG = "IntentEngine";
     private static final String MODEL =
-            ModelSelector.modelFor(ModelSelector.ModelTask.CLASSIFICATION);
+            ModelSelector.modelFor(ModelTask.CLASSIFICATION);
     private final Map<String, Action> intents = new HashMap<>();
     private final OpenAIService openAi;
     private final HistoryManager historyManager;

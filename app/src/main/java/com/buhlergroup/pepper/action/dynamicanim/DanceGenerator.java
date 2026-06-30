@@ -5,8 +5,8 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.buhlergroup.pepper.llm.ModelTask;
 import com.buhlergroup.pepper.openai.ModelSelector;
-import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.util.JsonUtils;
 
 import org.json.JSONArray;

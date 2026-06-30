@@ -21,7 +21,7 @@ import com.buhlergroup.pepper.llm.LlmModel;
 import com.buhlergroup.pepper.llm.LlmProvider;
 import com.buhlergroup.pepper.llm.ModelCatalog;
 import com.buhlergroup.pepper.llm.ModelSettings;
-import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
+import com.buhlergroup.pepper.llm.ModelTask;
 
 import java.util.ArrayList;
 import java.util.Arrays;

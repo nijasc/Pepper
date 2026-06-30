@@ -3,6 +3,7 @@ package com.buhlergroup.pepper.action.dynamicanim;
 import android.util.Log;
 
 import com.buhlergroup.pepper.llm.ChatMessages;
+import com.buhlergroup.pepper.llm.ModelTask;
 import com.buhlergroup.pepper.openai.ModelSelector;
 import com.buhlergroup.pepper.openai.OpenAIService;
 
@@ -14,7 +15,7 @@ abstract class GeneratorBase {
 
     protected static final String TAG = "DynAnim";
     protected static final String MODEL =
-            ModelSelector.modelFor(ModelSelector.ModelTask.GENERATION);
+            ModelSelector.modelFor(ModelTask.GENERATION);
     protected static final int MAX_SECONDS = 30;
 
     protected final OpenAIService openAi = OpenAIService.shared();

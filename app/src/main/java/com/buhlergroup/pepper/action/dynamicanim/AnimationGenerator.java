@@ -5,7 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
+import com.buhlergroup.pepper.llm.ModelTask;
 
 import org.json.JSONObject;
 import org.w3c.dom.Document;

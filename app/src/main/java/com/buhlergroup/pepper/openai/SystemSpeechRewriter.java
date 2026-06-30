@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 import com.buhlergroup.pepper.llm.ChatMessages;
+import com.buhlergroup.pepper.llm.ModelTask;
 
 import org.json.JSONObject;
 
@@ -24,7 +25,7 @@ public final class SystemSpeechRewriter {
 
     private static final String TAG = "SysSpeech";
     private static final String MODEL =
-            ModelSelector.modelFor(ModelSelector.ModelTask.REWRITE);
+            ModelSelector.modelFor(ModelTask.REWRITE);
     private static final long TIMEOUT_MS = 1500;
     private static final int MIN_LENGTH = 12;
     private static final int MAX_CACHE_SIZE = 256;
@@ -89,7 +90,7 @@ public final class SystemSpeechRewriter {
         body.put("model", MODEL);
         body.put("messages", messages);
 
-        String response = openAi.chat(ModelSelector.ModelTask.REWRITE, body);
+        String response = openAi.chat(ModelTask.REWRITE, body);
         return parseContent(response);
     }
 

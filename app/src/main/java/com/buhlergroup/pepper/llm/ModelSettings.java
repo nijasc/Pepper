@@ -3,7 +3,6 @@ package com.buhlergroup.pepper.llm;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAiTokenProvider;
 
 public final class ModelSettings {

@@ -11,8 +11,8 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.llm.ChatMessages;
 import com.buhlergroup.pepper.llm.LlmService;
+import com.buhlergroup.pepper.llm.ModelTask;
 import com.buhlergroup.pepper.llm.OpenAiCompatibleLlmService;
-import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 import com.buhlergroup.pepper.perception.EmotionReader;
 

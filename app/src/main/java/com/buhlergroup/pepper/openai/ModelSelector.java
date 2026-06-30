@@ -1,5 +1,7 @@
 package com.buhlergroup.pepper.openai;
 
+import com.buhlergroup.pepper.llm.ModelTask;
+
 public final class ModelSelector {
 
     public static final String FAST = "gpt-4o-mini";
@@ -21,13 +23,5 @@ public final class ModelSelector {
             default:
                 return STRONG;
         }
-    }
-
-    public enum ModelTask {
-        CONVERSATION,
-        CLASSIFICATION,
-        REWRITE,
-        GENERATION,
-        DOCUMENTATION
     }
 }

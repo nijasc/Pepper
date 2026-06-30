@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.buhlergroup.pepper.debug.DebugLog;
-import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
 
 import java.io.IOException;

@@ -6,8 +6,8 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.buhlergroup.pepper.llm.ChatMessages;
+import com.buhlergroup.pepper.llm.ModelTask;
 import com.buhlergroup.pepper.openai.ModelSelector;
-import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.util.JsonUtils;
 
@@ -26,7 +26,7 @@ public final class SongResearcher {
 
     private static final String TAG = "DynAnim";
     private static final String MODEL =
-            ModelSelector.modelFor(ModelSelector.ModelTask.GENERATION);
+            ModelSelector.modelFor(ModelTask.GENERATION);
     private static final int RESEARCH_TIMEOUT_MS = 90000;
 
     private final OpenAIService openAi = OpenAIService.shared();

@@ -7,7 +7,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
-import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
+import com.buhlergroup.pepper.llm.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 

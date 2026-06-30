@@ -1,7 +1,6 @@
 package com.buhlergroup.pepper.action.raffle;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -119,7 +118,7 @@ public final class RaffleRepository {
 
     private void purgeAbandoned(long now, int days) {
         long maxCutoff = now - days * (long) MAX_RETENTION_MULTIPLIER * 24L * 60L * 60L * 1000L;
-        List<Long> stale = staleRaffleIds(maxCutoff);
+        List<Long> stale = raffleDao.staleIdsBefore(maxCutoff);
         if (stale.isEmpty()) {
             return;
         }
@@ -127,21 +126,6 @@ public final class RaffleRepository {
         for (long id : stale) {
             deleteRaffleCompletely(id);
         }
-    }
-
-    private List<Long> staleRaffleIds(long maxCutoff) {
-        List<Long> ids = new ArrayList<>();
-        Cursor cursor = database.query(
-                "SELECT id FROM raffles WHERE created_at > 0 AND created_at < ?",
-                new Object[]{maxCutoff});
-        try {
-            while (cursor.moveToNext()) {
-                ids.add(cursor.getLong(0));
-            }
-        } finally {
-            cursor.close();
-        }
-        return ids;
     }
 
     public JoinResult joinRaffle(long raffleId, String name, String email, String phone,
