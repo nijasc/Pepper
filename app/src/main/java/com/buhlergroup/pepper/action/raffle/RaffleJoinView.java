@@ -1,9 +1,7 @@
 package com.buhlergroup.pepper.action.raffle;
 
 import android.content.Context;
-import android.text.InputType;
 import android.util.AttributeSet;
-import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -21,9 +19,9 @@ import com.buhlergroup.pepper.databinding.ViewRaffleJoinBinding;
 
 public class RaffleJoinView extends FrameLayout {
 
-    public static final int STEP_NAME = 0;
-    public static final int STEP_EMAIL = 1;
-    public static final int STEP_PHONE = 2;
+    public static final int STEP_NAME = RaffleJoinForm.STEP_NAME;
+    public static final int STEP_EMAIL = RaffleJoinForm.STEP_EMAIL;
+    public static final int STEP_PHONE = RaffleJoinForm.STEP_PHONE;
     private View card;
     private View stepContainer;
     private View consentContainer;
@@ -40,11 +38,7 @@ public class RaffleJoinView extends FrameLayout {
     private Button backButton;
     private Button nextButton;
     private volatile Listener listener;
-    private int[] steps = {STEP_NAME, STEP_EMAIL};
-    private int index;
-    private String name = "";
-    private String email = "";
-    private String phone = "";
+    private final RaffleJoinForm form = new RaffleJoinForm();
 
     public RaffleJoinView(Context context) {
         super(context);
@@ -97,13 +91,7 @@ public class RaffleJoinView extends FrameLayout {
     public void show(String title, boolean requirePhone, Listener l) {
         post(() -> {
             this.listener = l;
-            this.steps = requirePhone
-                    ? new int[]{STEP_NAME, STEP_EMAIL, STEP_PHONE}
-                    : new int[]{STEP_NAME, STEP_EMAIL};
-            this.index = 0;
-            this.name = "";
-            this.email = "";
-            this.phone = "";
+            form.reset(requirePhone);
             titleView.setText(title);
             confirmView.setVisibility(GONE);
             card.setVisibility(VISIBLE);
@@ -134,21 +122,18 @@ public class RaffleJoinView extends FrameLayout {
         consentPhase = false;
         consentContainer.setVisibility(GONE);
         stepContainer.setVisibility(VISIBLE);
-        index = 0;
         applyStepUI();
         Listener current = listener;
         if (current != null) {
-            current.onStepShown(steps[0]);
+            current.onStepShown(form.stepTypeAt(0));
         }
     }
 
     public void goToStep(int stepType, int errorRes) {
         post(() -> {
-            int target = indexOf(stepType);
-            if (target < 0) {
+            if (!form.moveTo(stepType)) {
                 return;
             }
-            index = target;
             applyStepUI();
             showErrorInternal(errorRes);
         });
@@ -190,9 +175,9 @@ public class RaffleJoinView extends FrameLayout {
             }
             return;
         }
-        int type = steps[index];
+        int type = form.currentStepType();
         String value = input.getText().toString().trim();
-        Integer error = validate(type, value);
+        Integer error = form.validate(type, value);
         if (error != null) {
             showErrorInternal(error);
             Listener l = listener;
@@ -201,18 +186,18 @@ public class RaffleJoinView extends FrameLayout {
             }
             return;
         }
-        store(type, value);
-        if (index == steps.length - 1) {
+        form.store(type, value);
+        if (form.isLastStep()) {
             Listener l = listener;
             if (l != null) {
-                l.onSubmit(name, email, phone);
+                l.onSubmit(form.name(), form.email(), form.phone());
             }
         } else {
-            index++;
+            form.advance();
             animateAndApply(true);
             Listener l = listener;
             if (l != null) {
-                l.onStepShown(steps[index]);
+                l.onStepShown(form.currentStepType());
             }
         }
     }
@@ -225,84 +210,36 @@ public class RaffleJoinView extends FrameLayout {
     }
 
     private void onBack() {
-        if (consentPhase || index == 0) {
+        if (consentPhase || form.isFirstStep()) {
             return;
         }
-        store(steps[index], input.getText().toString().trim());
-        index--;
+        form.store(form.currentStepType(), input.getText().toString().trim());
+        form.retreat();
         animateAndApply(false);
         Listener l = listener;
         if (l != null) {
-            l.onStepShown(steps[index]);
-        }
-    }
-
-    private Integer validate(int type, String value) {
-        switch (type) {
-            case STEP_NAME:
-                return value.isEmpty() ? R.string.raffle_join_name_required : null;
-            case STEP_EMAIL:
-                return Patterns.EMAIL_ADDRESS.matcher(value).matches()
-                        ? null : R.string.raffle_join_email_invalid;
-            case STEP_PHONE:
-                if (value.isEmpty()) {
-                    return R.string.raffle_join_phone_required;
-                }
-                String digits = value.replaceAll("\\D", "");
-                boolean validChars = value.matches("[+0-9\\s()\\-]+");
-                return validChars && digits.length() >= 7 && digits.length() <= 15
-                        ? null : R.string.raffle_join_phone_invalid;
-            default:
-                return null;
-        }
-    }
-
-    private void store(int type, String value) {
-        switch (type) {
-            case STEP_NAME:
-                name = value;
-                break;
-            case STEP_EMAIL:
-                email = value;
-                break;
-            case STEP_PHONE:
-                phone = value;
-                break;
-            default:
-                break;
-        }
-    }
-
-    private String valueFor(int type) {
-        switch (type) {
-            case STEP_NAME:
-                return name;
-            case STEP_EMAIL:
-                return email;
-            case STEP_PHONE:
-                return phone;
-            default:
-                return "";
+            l.onStepShown(form.currentStepType());
         }
     }
 
     private void applyStepUI() {
-        int type = steps[index];
-        promptView.setText(promptRes(type));
-        input.setHint(hintRes(type));
-        input.setInputType(inputTypeFor(type));
-        input.setText(valueFor(type));
+        int type = form.currentStepType();
+        promptView.setText(form.promptRes(type));
+        input.setHint(form.hintRes(type));
+        input.setInputType(form.inputTypeFor(type));
+        input.setText(form.valueFor(type));
         input.setSelection(input.getText().length());
         errorView.setVisibility(GONE);
-        progressView.setText(getContext().getString(R.string.raffle_join_progress, index + 1, steps.length));
+        progressView.setText(getContext().getString(
+                R.string.raffle_join_progress, form.currentIndex() + 1, form.stepCount()));
         cancelButton.setVisibility(VISIBLE);
-        if (index == 0) {
+        if (form.isFirstStep()) {
             backButton.setVisibility(GONE);
         } else {
             backButton.setVisibility(VISIBLE);
             backButton.setText(R.string.admin_back);
         }
-        nextButton.setText(index == steps.length - 1 ? R.string.raffle_join_finish : R.string.raffle_join_next);
+        nextButton.setText(form.isLastStep() ? R.string.raffle_join_finish : R.string.raffle_join_next);
         nextButton.setEnabled(true);
         nextButton.setAlpha(1f);
         focusInput();
@@ -356,51 +293,6 @@ public class RaffleJoinView extends FrameLayout {
                 target.animate().translationX(14f).setDuration(50).withEndAction(() ->
                         target.animate().translationX(-8f).setDuration(50).withEndAction(() ->
                                 target.animate().translationX(0f).setDuration(50).start()))).start();
-    }
-
-    private int indexOf(int stepType) {
-        for (int i = 0; i < steps.length; i++) {
-            if (steps[i] == stepType) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private int promptRes(int type) {
-        switch (type) {
-            case STEP_EMAIL:
-                return R.string.raffle_join_step_email;
-            case STEP_PHONE:
-                return R.string.raffle_join_step_phone;
-            case STEP_NAME:
-            default:
-                return R.string.raffle_join_step_name;
-        }
-    }
-
-    private int hintRes(int type) {
-        switch (type) {
-            case STEP_EMAIL:
-                return R.string.raffle_join_email_hint;
-            case STEP_PHONE:
-                return R.string.raffle_join_phone_hint;
-            case STEP_NAME:
-            default:
-                return R.string.raffle_join_name_hint;
-        }
-    }
-
-    private int inputTypeFor(int type) {
-        switch (type) {
-            case STEP_EMAIL:
-                return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
-            case STEP_PHONE:
-                return InputType.TYPE_CLASS_PHONE;
-            case STEP_NAME:
-            default:
-                return InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PERSON_NAME;
-        }
     }
 
     public interface Listener {

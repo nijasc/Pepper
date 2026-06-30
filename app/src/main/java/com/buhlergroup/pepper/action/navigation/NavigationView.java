@@ -2,7 +2,6 @@ package com.buhlergroup.pepper.action.navigation;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
@@ -41,6 +40,7 @@ public class NavigationView extends FrameLayout {
     private ScrollView scrollRoot;
     private View scanFullscreen;
     private ImageView scanMap;
+    private NavRowFactory rowFactory;
 
     public NavigationView(Context context) {
         super(context);
@@ -58,6 +58,7 @@ public class NavigationView extends FrameLayout {
     }
 
     private void init(Context context) {
+        rowFactory = new NavRowFactory(context);
         ViewNavigationBinding binding =
                 ViewNavigationBinding.inflate(LayoutInflater.from(context), this);
         setBackgroundColor(ContextCompat.getColor(context, R.color.game_overlay));
@@ -296,14 +297,14 @@ public class NavigationView extends FrameLayout {
     private void renderScans(List<RoomScanEntity> scans) {
         scanList.removeAllViews();
         if (scans == null || scans.isEmpty()) {
-            scanList.addView(emptyLabel(R.string.nav_no_scans));
+            scanList.addView(rowFactory.emptyLabel(R.string.nav_no_scans));
             return;
         }
         for (RoomScanEntity scan : scans) {
-            LinearLayout row = row(scan.name);
-            row.addView(pill(getContext().getString(R.string.nav_activate),
+            LinearLayout row = rowFactory.row(scan.name);
+            row.addView(rowFactory.pill(getContext().getString(R.string.nav_activate),
                     R.drawable.bg_pill_teal, v -> activate(scan)));
-            row.addView(pill(getContext().getString(R.string.nav_delete),
+            row.addView(rowFactory.pill(getContext().getString(R.string.nav_delete),
                     R.drawable.bg_pill_red, v -> deleteScan(scan)));
             scanList.addView(row);
         }
@@ -313,7 +314,7 @@ public class NavigationView extends FrameLayout {
         waypointMap.setWaypoints(waypoints);
         waypointList.removeAllViews();
         if (waypoints == null || waypoints.isEmpty()) {
-            waypointList.addView(emptyLabel(R.string.nav_no_waypoints));
+            waypointList.addView(rowFactory.emptyLabel(R.string.nav_no_waypoints));
             return;
         }
         for (WaypointEntity wp : waypoints) {
@@ -321,10 +322,10 @@ public class NavigationView extends FrameLayout {
             if (WaypointEntity.TYPE_FOTOSTAND.equals(wp.type)) {
                 label = label + " (" + getContext().getString(R.string.nav_wp_fotostand) + ")";
             }
-            LinearLayout row = row(label);
-            row.addView(pill(getContext().getString(R.string.nav_drive_here),
+            LinearLayout row = rowFactory.row(label);
+            row.addView(rowFactory.pill(getContext().getString(R.string.nav_drive_here),
                     R.drawable.bg_pill_teal, v -> driveTo(wp)));
-            row.addView(pill(getContext().getString(R.string.nav_delete),
+            row.addView(rowFactory.pill(getContext().getString(R.string.nav_delete),
                     R.drawable.bg_pill_red, v -> deleteWaypoint(wp)));
             waypointList.addView(row);
         }
@@ -397,60 +398,6 @@ public class NavigationView extends FrameLayout {
                 post(() -> toastText(error));
             }
         });
-    }
-
-    private LinearLayout row(String label) {
-        LinearLayout row = new LinearLayout(getContext());
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        rowParams.topMargin = dp(6);
-        row.setLayoutParams(rowParams);
-
-        TextView text = new TextView(getContext());
-        text.setText(label);
-        text.setTextColor(ContextCompat.getColor(getContext(), R.color.white));
-        text.setTextSize(18);
-        LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        text.setLayoutParams(textParams);
-        row.addView(text);
-        return row;
-    }
-
-    private TextView pill(String text, int bgRes, OnClickListener onClick) {
-        TextView pill = new TextView(getContext());
-        pill.setText(text);
-        pill.setTextColor(ContextCompat.getColor(getContext(), R.color.white));
-        pill.setTextSize(15);
-        pill.setGravity(Gravity.CENTER);
-        pill.setBackgroundResource(bgRes);
-        pill.setPadding(dp(20), dp(10), dp(20), dp(10));
-        pill.setClickable(true);
-        pill.setFocusable(true);
-        pill.setOnClickListener(onClick);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.setMarginStart(dp(8));
-        pill.setLayoutParams(params);
-        return pill;
-    }
-
-    private TextView emptyLabel(int resId) {
-        TextView text = new TextView(getContext());
-        text.setText(resId);
-        text.setTextColor(0xCCFFFFFF);
-        text.setTextSize(16);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        params.topMargin = dp(6);
-        text.setLayoutParams(params);
-        return text;
-    }
-
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void toast(int resId) {

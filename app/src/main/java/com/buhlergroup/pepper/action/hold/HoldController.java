@@ -1,7 +1,5 @@
 package com.buhlergroup.pepper.action.hold;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.aldebaran.qi.Future;
@@ -9,13 +7,9 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.aldebaran.qi.sdk.builder.AnimateBuilder;
 import com.aldebaran.qi.sdk.builder.AnimationBuilder;
 import com.aldebaran.qi.sdk.builder.HolderBuilder;
-import com.aldebaran.qi.sdk.builder.ListenBuilder;
-import com.aldebaran.qi.sdk.builder.PhraseSetBuilder;
 import com.aldebaran.qi.sdk.object.actuation.Animate;
 import com.aldebaran.qi.sdk.object.actuation.Animation;
-import com.aldebaran.qi.sdk.object.conversation.Listen;
 import com.aldebaran.qi.sdk.object.conversation.ListenResult;
-import com.aldebaran.qi.sdk.object.conversation.PhraseSet;
 import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
 import com.aldebaran.qi.sdk.object.holder.Holder;
 import com.aldebaran.qi.sdk.object.touch.TouchSensor;
@@ -33,8 +27,6 @@ public final class HoldController {
     private static final long MAX_HOLD_MS = 10 * 60 * 1000;
     private static final long OVERTIME_PROMPT_INTERVAL_MS = 30000;
     private static final long[] ESCALATION_AT_MS = {60000, 180000, 300000};
-    private static final String PREFS = "pepper_hold";
-    private static final String KEY_HELD_COUNT = "beers_held";
     private static final HoldController INSTANCE = new HoldController();
     private final HoldQuotes quotes = new HoldQuotes();
     private volatile boolean sessionRunning;
@@ -164,7 +156,7 @@ public final class HoldController {
                 long elapsed = System.currentTimeMillis() - holdStart;
                 setTimer(formatElapsed(elapsed));
                 if (listenFuture == null || listenFuture.isDone()) {
-                    listenFuture = startStopListener(context);
+                    listenFuture = HoldSpeechListener.start(context, this::requestRelease);
                 }
                 for (int i = 0; i < ESCALATION_AT_MS.length; i++) {
                     if (!escalated[i] && elapsed >= ESCALATION_AT_MS[i]) {
@@ -198,7 +190,7 @@ public final class HoldController {
             }
             runAnimation(context, R.raw.hold_release);
 
-            int count = incrementHeldCount(context);
+            int count = HeldCountStore.increment(context);
             String bye = quotes.bye(english);
             if (count > 1) {
                 bye += english
@@ -251,33 +243,6 @@ public final class HoldController {
         }
     }
 
-    private Future<ListenResult> startStopListener(QiContext context) {
-        try {
-            PhraseSet phrases = PhraseSetBuilder.with(context)
-                    .withTexts("stopp", "stop", "danke", "danke schön", "gib her", "fertig",
-                            "thanks", "thank you", "give it back", "done")
-                    .build();
-            Listen listen = ListenBuilder.with(context)
-                    .withPhraseSet(phrases)
-                    .build();
-            Future<ListenResult> future = listen.async().run();
-            future.thenConsume(f -> {
-                if (f.isCancelled() || f.hasError()) {
-                    return;
-                }
-                ListenResult result = f.get();
-                if (result != null && result.getHeardPhrase() != null
-                        && !result.getHeardPhrase().getText().isEmpty()) {
-                    requestRelease();
-                }
-            });
-            return future;
-        } catch (Exception e) {
-            Log.w(TAG, "Stop listener failed: " + e.getMessage());
-            return null;
-        }
-    }
-
     private void runAnimation(QiContext context, int resource) {
         try {
             Animation animation = AnimationBuilder.with(context)
@@ -289,17 +254,6 @@ public final class HoldController {
             animate.run();
         } catch (Exception e) {
             Log.w(TAG, "Hold animation failed: " + e.getMessage());
-        }
-    }
-
-    private int incrementHeldCount(Context context) {
-        try {
-            SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-            int count = prefs.getInt(KEY_HELD_COUNT, 0) + 1;
-            prefs.edit().putInt(KEY_HELD_COUNT, count).apply();
-            return count;
-        } catch (Exception e) {
-            return 1;
         }
     }
 
