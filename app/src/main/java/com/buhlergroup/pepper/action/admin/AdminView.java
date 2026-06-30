@@ -21,9 +21,11 @@ import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATS;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_STATUS;
 import static com.buhlergroup.pepper.action.admin.PanelNavigator.PANEL_SYSTEM;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -69,6 +71,7 @@ public class AdminView extends FrameLayout {
     private DiagnosticsController diagnostics;
     private ProfilePanelController profiles;
     private ModelPanelController models;
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch attractSwitch;
 
     public AdminView(Context context) {
@@ -184,13 +187,13 @@ public class AdminView extends FrameLayout {
         AttractSettings.save(getContext(), checked);
     }
 
-    public void onProfileDocumentPicked(android.net.Uri uri) {
+    public void onProfileDocumentPicked(Uri uri) {
         if (profiles != null) {
             profiles.onDocumentPicked(uri);
         }
     }
 
-    public void onActorImagePicked(android.net.Uri uri) {
+    public void onActorImagePicked(Uri uri) {
         if (actor != null) {
             actor.onImagePicked(uri);
         }

@@ -14,10 +14,11 @@ import com.aldebaran.qi.sdk.object.actuation.OrientationPolicy;
 import com.aldebaran.qi.sdk.object.geometry.Transform;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class TestAction extends Action {
 
-    public TestAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public TestAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

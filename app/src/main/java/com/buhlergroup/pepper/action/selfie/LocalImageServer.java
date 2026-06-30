@@ -37,10 +37,6 @@ public final class LocalImageServer {
     private volatile ServerSocket serverSocket;
     private volatile boolean running = false;
 
-    public LocalImageServer(File rootDir, int port) {
-        this(rootDir, port, null);
-    }
-
     public LocalImageServer(File rootDir, int port, InetAddress bindAddress) {
         this.rootDir = rootDir;
         this.port = port;

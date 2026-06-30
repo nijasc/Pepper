@@ -36,21 +36,17 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * The "Actor" admin tile: Pepper as a camera actor for the Sommerferien video. A deck of
- * tap-to-fire {@link ActorPreset presets} (grouped by Drehbuch) drives a full-screen
- * display-state on the tablet plus an optional looping gesture. Supports a hands-free
- * start delay (tap, walk behind the camera, then it fires) and timed auto-sequences
- * (countdown → fireworks). Replaces the old single-image "Emotes" tile.
- */
 final class ActorPanelController {
 
     private static final String TAG = "ActorPanel";
     private static final String PREFS = "emote_prefs";
     private static final String KEY_OVERLAY_IMAGE = "overlay_image_uri";
     private static final int[] DELAYS = {0, 3, 5, 10};
+    private static final long REPEAT_PAUSE_MS = 5000;
+    private static final long PAUSE_STEP_MS = 200;
 
     private final View root;
     private final PanelNavigator panelNav;
@@ -64,9 +60,7 @@ final class ActorPanelController {
     private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
     private final AtomicInteger generation = new AtomicInteger(0);
 
-    private List<ActorPreset> presets;
     private int delayIdx = 0;
-    private Uri overlayUri;
 
     ActorPanelController(View root, PanelNavigator panelNav) {
         this.root = root;
@@ -84,7 +78,6 @@ final class ActorPanelController {
         overlayStop.setOnClickListener(v -> stop());
         delayButton.setOnClickListener(v -> cycleDelay());
 
-        overlayUri = loadSavedUri();
         buildDeck();
         updateDelayLabel();
     }
@@ -97,10 +90,8 @@ final class ActorPanelController {
         panelNav.show(PanelNavigator.PANEL_ACTOR);
     }
 
-    // ----------------------------------------------------------------- deck UI
-
     private void buildDeck() {
-        presets = ActorPresets.build(ctx());
+        List<ActorPreset> presets = ActorPresets.build(ctx());
         deck.removeAllViews();
         String lastGroup = null;
         for (ActorPreset preset : presets) {
@@ -149,8 +140,6 @@ final class ActorPanelController {
         delayButton.setText(sec == 0 ? ctx().getString(R.string.actor_delay_off) : sec + " s");
     }
 
-    // -------------------------------------------------------------- fire / stop
-
     private void onPreset(ActorPreset preset) {
         if (preset.picksImage) {
             pickImage();
@@ -191,10 +180,15 @@ final class ActorPanelController {
             return;
         }
         display.render(preset.state);
-        speak(preset.speech, gen);
-        if (preset.gestureRaw != 0) {
-            startGesture(preset.gestureRaw, gen);
+        if (preset.speech == null && preset.gestureRaw == 0) {
+            return;
         }
+        QiContext context = RobotContext.get();
+        if (context == null) {
+            toast(R.string.actor_not_ready);
+            return;
+        }
+        startLoop(preset, context, gen);
     }
 
     private void runSequence(List<ActorPreset.Step> steps, int index, int gen) {
@@ -209,14 +203,13 @@ final class ActorPanelController {
         }
     }
 
-    /** Pepper speaks the line (countdown digit, greeting …) in parallel with the pose. */
     private void speak(String text, int gen) {
         if (text == null || gen != generation.get()) {
             return;
         }
         QiContext context = RobotContext.get();
         if (context == null) {
-            return; // display still shows; only speech needs the robot
+            return;
         }
         speechExecutor.execute(() -> {
             if (gen != generation.get()) {
@@ -230,23 +223,65 @@ final class ActorPanelController {
         });
     }
 
-    private void startGesture(int rawRes, int gen) {
-        QiContext context = RobotContext.get();
-        if (context == null) {
-            toast(R.string.actor_not_ready);
-            return; // display state still shows; only the physical gesture needs the robot
-        }
+    private void startLoop(ActorPreset preset, QiContext context, int gen) {
         playExecutor.execute(() -> {
             try {
                 while (gen == generation.get()) {
-                    Animation animation = AnimationBuilder.with(context).withResources(rawRes).build();
-                    Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
-                    animate.run();
+                    Future<?> speech = preset.speech == null ? null : sayAsync(context, preset.speech, gen);
+                    if (preset.gestureRaw != 0) {
+                        runGesture(context, preset.gestureRaw);
+                    }
+                    if (speech != null) {
+                        try {
+                            speech.get();
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    if (!pauseBetweenCycles(gen)) {
+                        break;
+                    }
                 }
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
             } catch (Exception e) {
-                Log.w(TAG, "Actor-Geste fehlgeschlagen: " + e.getMessage());
+                Log.w(TAG, "Actor-Loop fehlgeschlagen: " + e.getMessage());
             }
         });
+    }
+
+    private Future<?> sayAsync(QiContext context, String text, int gen) {
+        return speechExecutor.submit(() -> {
+            if (gen != generation.get()) {
+                return;
+            }
+            try {
+                SpeechManager.getInstance().say(context, text);
+            } catch (Exception e) {
+                Log.w(TAG, "Actor-Speech fehlgeschlagen: " + e.getMessage());
+            }
+        });
+    }
+
+    private void runGesture(QiContext context, int rawRes) {
+        String boosted = GestureBooster.boost(ctx(), rawRes);
+        AnimationBuilder builder = AnimationBuilder.with(context);
+        Animation animation = (boosted != null
+                ? builder.withTexts(boosted)
+                : builder.withResources(rawRes)).build();
+        Animate animate = AnimateBuilder.with(context).withAnimation(animation).build();
+        animate.run();
+    }
+
+    private boolean pauseBetweenCycles(int gen) throws InterruptedException {
+        long waited = 0;
+        while (waited < REPEAT_PAUSE_MS) {
+            if (gen != generation.get()) {
+                return false;
+            }
+            Thread.sleep(PAUSE_STEP_MS);
+            waited += PAUSE_STEP_MS;
+        }
+        return gen == generation.get();
     }
 
     private void stop() {
@@ -272,8 +307,6 @@ final class ActorPanelController {
         display.render(null);
     }
 
-    // ---------------------------------------------------------------- own image
-
     private void pickImage() {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -296,7 +329,6 @@ final class ActorPanelController {
         } catch (Exception e) {
             Log.w(TAG, "Persistable permission failed: " + e.getMessage());
         }
-        overlayUri = uri;
         prefs().edit().putString(KEY_OVERLAY_IMAGE, uri.toString()).apply();
         showImageOverlay(uri);
     }
@@ -343,11 +375,6 @@ final class ActorPanelController {
             sample *= 2;
         }
         return sample;
-    }
-
-    private Uri loadSavedUri() {
-        String saved = prefs().getString(KEY_OVERLAY_IMAGE, null);
-        return saved == null ? null : Uri.parse(saved);
     }
 
     private SharedPreferences prefs() {

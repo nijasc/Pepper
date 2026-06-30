@@ -5,6 +5,7 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.util.Locale;
 import java.util.Random;
@@ -28,7 +29,7 @@ public class SiriAction extends Action {
     private final Random random = new Random();
 
     public SiriAction(LanguageManager languageManager,
-                      com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+                      HistoryManager historyManager) {
         super(historyManager);
         this.languageManager = languageManager;
     }
@@ -51,11 +52,6 @@ public class SiriAction extends Action {
         return responses[random.nextInt(responses.length)];
     }
 
-    /**
-     * Erkennt, welcher Sprachassistent genannt wurde, und liefert passende
-     * Konter. Gibt {@code null} zurück, wenn kein bekannter Assistent erkannt
-     * wird – dann greift die generische Antwortliste.
-     */
     private String[] specificResponses(String text, boolean english) {
         if (text.contains("alexa")) {
             return english

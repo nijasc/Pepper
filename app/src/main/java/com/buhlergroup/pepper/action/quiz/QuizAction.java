@@ -4,10 +4,11 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class QuizAction extends Action {
 
-    public QuizAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public QuizAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

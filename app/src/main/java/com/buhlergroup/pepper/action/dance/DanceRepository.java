@@ -3,6 +3,7 @@ package com.buhlergroup.pepper.action.dance;
 import android.content.Context;
 import android.util.Log;
 
+import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.dance.audio.SongAudioAnalyzer;
 import com.buhlergroup.pepper.action.dance.data.DanceDao;
 import com.buhlergroup.pepper.action.dance.data.DanceDatabase;
@@ -51,11 +52,11 @@ public final class DanceRepository {
     public void ensureBuiltInDances(Context context) {
         try {
             seedBuiltIn(context, BUILTIN_HULA_ID, "Hula",
-                    com.buhlergroup.pepper.R.raw.hula_dance,
-                    com.buhlergroup.pepper.R.raw.summer, 12000L);
+                    R.raw.hula_dance,
+                    R.raw.summer, 12000L);
             seedBuiltIn(context, BUILTIN_SIX_SEVEN_ID, "Six Seven",
-                    com.buhlergroup.pepper.R.raw.six_seven,
-                    com.buhlergroup.pepper.R.raw.wyoming, 15000L);
+                    R.raw.six_seven,
+                    R.raw.wyoming, 15000L);
         } catch (Exception e) {
             Log.w(TAG, "Could not seed built-in dances: " + e.getMessage());
         }
@@ -105,10 +106,6 @@ public final class DanceRepository {
         if (!tmp.renameTo(dest)) {
             throw new IOException("Animations-Datei konnte nicht gespeichert werden.");
         }
-    }
-
-    public DanceEntity getOrCreate(Context context, String query) throws Exception {
-        return getOrCreate(context, query, null);
     }
 
     public DanceEntity getOrCreate(Context context, String query,
@@ -298,7 +295,7 @@ public final class DanceRepository {
         try {
             File fallback = new File(danceDir(context), "fallback_audio.mp3");
             if (!fallback.exists()) {
-                copyRawToFile(context, com.buhlergroup.pepper.R.raw.summer, fallback);
+                copyRawToFile(context, R.raw.summer, fallback);
             }
             return fallback.getAbsolutePath();
         } catch (Exception e) {

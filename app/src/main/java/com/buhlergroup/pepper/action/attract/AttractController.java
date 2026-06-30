@@ -30,13 +30,8 @@ public final class AttractController {
     private static final double ROAM_TURN_MAX = 0.6;
     private static final double GREET_DISTANCE_M = 1.5;
     private static final long ROAM_PAUSE_MS = 1500;
-    // Steckenbleiben-Erkennung: macht ein Roam-Schritt weniger als so viele Meter
-    // tatsächlich Strecke, gilt er als blockiert.
     private static final double STUCK_PROGRESS_M = 0.15;
-    // Nach so vielen aufeinanderfolgenden blockierten Schritten wird ein
-    // Recovery-Manöver ausgelöst.
     private static final int STUCK_THRESHOLD = 2;
-    // Recovery: kurz zurücksetzen und mit grossem Winkel von der Engstelle wegdrehen.
     private static final double RECOVERY_BACK_M = 0.25;
     private static final double RECOVERY_TURN_MIN = 1.6;
     private static final double RECOVERY_TURN_MAX = 2.8;
@@ -89,7 +84,7 @@ public final class AttractController {
             return;
         }
         boolean shouldRun = AttractSettings.isEnabled(context)
-                && !overlayOpen && !busy && idleElapsed(context);
+                && !overlayOpen && !busy && idleElapsed();
         if (shouldRun && !active) {
             startAttract(context);
         } else if (!shouldRun && active) {
@@ -101,8 +96,8 @@ public final class AttractController {
         stopAttract();
     }
 
-    private boolean idleElapsed(QiContext context) {
-        long idleMs = AttractSettings.getIdleMinutes(context) * 60_000L;
+    private boolean idleElapsed() {
+        long idleMs = AttractSettings.getIdleMinutes() * 60_000L;
         return SystemClock.elapsedRealtime() - lastInteractionMs >= idleMs;
     }
 
@@ -218,11 +213,6 @@ public final class AttractController {
         }
     }
 
-    /**
-     * Fährt eine relative Bewegung aus und gibt die tatsächlich zurückgelegte
-     * Strecke (in Metern) zurück – oder {@link Double#NaN} bei Fehler. So lässt
-     * sich erkennen, ob Pepper trotz GoTo blockiert ist (kein Fortschritt).
-     */
     private double runStep(QiContext context, double x, double theta) {
         try {
             Frame robotFrame = context.getActuation().robotFrame();
@@ -252,11 +242,6 @@ public final class AttractController {
         }
     }
 
-    /**
-     * Recovery-Manöver bei Steckenbleiben: laufendes GoTo abbrechen, ein Stück
-     * zurücksetzen und mit grossem Winkel von der Engstelle/Ecke wegdrehen, damit
-     * der nächste Roam-Schritt in eine offene Richtung führt.
-     */
     private void recoverFromStuck(QiContext context) {
         if (!active) {
             return;
@@ -292,7 +277,7 @@ public final class AttractController {
         if (greeting) {
             return;
         }
-        long greetMs = AttractSettings.getGreetSeconds(context) * 1000L;
+        long greetMs = AttractSettings.getGreetSeconds() * 1000L;
         if (SystemClock.elapsedRealtime() - lastGreetMs < greetMs) {
             return;
         }

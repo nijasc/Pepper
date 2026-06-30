@@ -14,6 +14,7 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.action.dance.data.DanceEntity;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ public class DanceAction extends Action {
     private final Object audioLock = new Object();
     private MediaPlayer mediaPlayer;
 
-    public DanceAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public DanceAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

@@ -23,11 +23,11 @@ public final class AttractSettings {
         return prefs(context).getBoolean(KEY_ENABLED, DEFAULT_ENABLED);
     }
 
-    public static int getIdleMinutes(Context context) {
+    public static int getIdleMinutes() {
         return DEFAULT_IDLE_MINUTES;
     }
 
-    public static int getGreetSeconds(Context context) {
+    public static int getGreetSeconds() {
         return DEFAULT_GREET_SECONDS;
     }
 

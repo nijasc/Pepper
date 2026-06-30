@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -179,6 +180,7 @@ final class SelfieGalleryController {
         return zipFile;
     }
 
+    @SuppressLint("SetTextI18n")
     void showDetail(SelfieEntity selfie) {
         if (!detailServerHeld) {
             SelfieController.get().acquireServer(ctx());

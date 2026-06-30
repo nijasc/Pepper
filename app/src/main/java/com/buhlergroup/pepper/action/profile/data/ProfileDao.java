@@ -4,7 +4,6 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-import androidx.room.Update;
 
 import java.util.List;
 
@@ -13,9 +12,6 @@ public interface ProfileDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(ProfileEntity profile);
-
-    @Update
-    void update(ProfileEntity profile);
 
     @Query("SELECT * FROM profiles ORDER BY builtin DESC, name COLLATE NOCASE ASC")
     List<ProfileEntity> getAll();

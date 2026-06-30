@@ -344,8 +344,6 @@ public final class HoldController {
 
     private void sayQuietly(QiContext context, String text) {
         try {
-            // Ohne Körpersprache sprechen, damit die Halte-Hand ruhig bleibt und
-            // das aufgelegte Objekt nicht durch Body-Talk-Gesten abgeworfen wird.
             SpeechManager.getInstance().sayStill(context, text);
         } catch (Exception e) {
             Log.w(TAG, "Say failed: " + e.getMessage());

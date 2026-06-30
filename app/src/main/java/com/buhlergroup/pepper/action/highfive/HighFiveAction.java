@@ -9,10 +9,11 @@ import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.QiFutures;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class HighFiveAction extends Action {
 
-    public HighFiveAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public HighFiveAction(HistoryManager historyManager) {
         super(historyManager);
     }
 
@@ -33,7 +34,7 @@ public class HighFiveAction extends Action {
         try {
             Thread.sleep(7000);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
     }
 

@@ -6,6 +6,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
@@ -84,7 +85,7 @@ public class DocumentationAction extends Action {
 
         try {
             String response = service.chat(
-                    com.buhlergroup.pepper.openai.ModelSelector.ModelTask.DOCUMENTATION, body, ANSWER_TIMEOUT_MS);
+                    ModelTask.DOCUMENTATION, body, ANSWER_TIMEOUT_MS);
             String answer = service.extractLanguageTag(parseAnswer(response));
             getHistoryManager().addUser(input);
             getHistoryManager().addAssistant(answer, this);

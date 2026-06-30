@@ -112,8 +112,9 @@ public final class DebugLog {
     }
 
     private void append(char level, String tag, String message) {
-        String line = lineFormat.format(new Date()) + " " + level + "/" + tag + ": " + message;
+        String line;
         synchronized (entries) {
+            line = lineFormat.format(new Date()) + " " + level + "/" + tag + ": " + message;
             entries.addLast(line);
             while (entries.size() > MAX_ENTRIES) {
                 entries.removeFirst();
@@ -140,11 +141,13 @@ public final class DebugLog {
     public String export() {
         StringBuilder sb = new StringBuilder();
         List<String> snapshot;
+        String createdStamp;
         synchronized (entries) {
             snapshot = new ArrayList<>(entries);
+            createdStamp = stampFormat.format(new Date());
         }
         sb.append("Pepper Debug-Log\n");
-        sb.append("Erstellt: ").append(stampFormat.format(new Date())).append('\n');
+        sb.append("Erstellt: ").append(createdStamp).append('\n');
         sb.append("Gerät: ").append(Build.MANUFACTURER).append(' ').append(Build.MODEL)
                 .append(" (Android ").append(Build.VERSION.RELEASE).append(")\n");
         sb.append("Status: ").append(status.isEmpty() ? "—" : status).append('\n');

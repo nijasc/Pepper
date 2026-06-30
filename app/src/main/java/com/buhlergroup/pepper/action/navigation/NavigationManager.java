@@ -12,12 +12,15 @@ import com.aldebaran.qi.sdk.object.geometry.Quaternion;
 import com.aldebaran.qi.sdk.object.geometry.Transform;
 import com.aldebaran.qi.sdk.object.holder.AutonomousAbilitiesType;
 import com.aldebaran.qi.sdk.object.holder.Holder;
+import com.buhlergroup.pepper.action.navigation.data.NavigationDao;
 import com.buhlergroup.pepper.action.navigation.data.NavigationDatabase;
 import com.buhlergroup.pepper.action.navigation.data.RoomScanEntity;
 import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
 import com.buhlergroup.pepper.lang.SpeechManager;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -158,10 +161,6 @@ public final class NavigationManager {
 
     public void stopAndSaveScan(String name, Callback<RoomScanEntity> cb) {
         scanner.stopAndSaveScan(name, cb);
-    }
-
-    public void captureSnapshot() {
-        scanner.captureSnapshot();
     }
 
     public void captureRotation() {
@@ -359,7 +358,7 @@ public final class NavigationManager {
     }
 
     void writeFile(File file, String content) throws Exception {
-        try (java.io.FileOutputStream out = new java.io.FileOutputStream(file)) {
+        try (FileOutputStream out = new FileOutputStream(file)) {
             out.write(content.getBytes(StandardCharsets.UTF_8));
         }
     }
@@ -369,7 +368,7 @@ public final class NavigationManager {
         if (!file.exists()) {
             return null;
         }
-        try (java.io.FileInputStream in = new java.io.FileInputStream(file)) {
+        try (FileInputStream in = new FileInputStream(file)) {
             byte[] bytes = new byte[(int) file.length()];
             int read = 0;
             while (read < bytes.length) {
@@ -396,7 +395,7 @@ public final class NavigationManager {
         }
     }
 
-    com.buhlergroup.pepper.action.navigation.data.NavigationDao dao(Context context) {
+    NavigationDao dao(Context context) {
         return NavigationDatabase.get(context).navigationDao();
     }
 

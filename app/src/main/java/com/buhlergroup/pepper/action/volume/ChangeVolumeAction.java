@@ -6,6 +6,7 @@ import android.media.AudioManager;
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -13,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class ChangeVolumeAction extends Action {
 
-    public ChangeVolumeAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public ChangeVolumeAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

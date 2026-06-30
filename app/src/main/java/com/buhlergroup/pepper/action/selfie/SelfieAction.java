@@ -2,10 +2,11 @@ package com.buhlergroup.pepper.action.selfie;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class SelfieAction extends Action {
 
-    public SelfieAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public SelfieAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

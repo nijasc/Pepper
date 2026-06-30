@@ -28,17 +28,11 @@ public interface DanceDao {
     @Query("UPDATE dances SET song_name = :name WHERE youtube_id = :youtubeId")
     void rename(String youtubeId, String name);
 
-    @Query("UPDATE dances SET qianim_path = :qianimPath WHERE youtube_id = :youtubeId")
-    void setQianimPath(String youtubeId, String qianimPath);
-
     @Query("UPDATE dances SET audio_start_ms = :audioStartMs WHERE youtube_id = :youtubeId")
     void setAudioStartMs(String youtubeId, long audioStartMs);
 
     @Query("UPDATE dances SET audio_path = :audioPath WHERE youtube_id = :youtubeId")
     void setAudioPath(String youtubeId, String audioPath);
-
-    @Query("UPDATE dances SET bpm = :bpm WHERE youtube_id = :youtubeId")
-    void setBpm(String youtubeId, int bpm);
 
     @Query("DELETE FROM dances WHERE youtube_id = :youtubeId")
     void deleteById(String youtubeId);

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.buhlergroup.pepper.openai.ModelSelector;
+import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,23 +35,6 @@ public final class DanceGenerator extends GeneratorBase {
         return (int) Math.max(10, Math.min(25, Math.round(step)));
     }
 
-    public String generateValidatedDance(Context context, String songName, int seconds) {
-        return generateValidatedDance(context, songName, seconds, null, null);
-    }
-
-    public String generateValidatedDance(Context context, String songName, int seconds, String editNote) {
-        return generateValidatedDance(context, songName, seconds, editNote, null);
-    }
-
-    public String generateValidatedDance(Context context, String songName, int seconds,
-                                         String editNote, String mood) {
-        return generateValidatedDance(context, songName, seconds, editNote, mood, 0, null);
-    }
-
-    public String generateValidatedDance(Context context, String songName, int seconds,
-                                         String editNote, String mood, ProgressListener progress) {
-        return generateValidatedDance(context, songName, seconds, editNote, mood, 0, progress);
-    }
 
     public String generateValidatedDance(Context context, String songName, int seconds,
                                          String editNote, String mood, int measuredBpm,
@@ -80,9 +64,15 @@ public final class DanceGenerator extends GeneratorBase {
         }
         for (int attempt = 1; attempt <= 2; attempt++) {
             try {
+                String systemPrompt = danceCompactPrompt() + researchCoupling() + moodGuidance(effectiveMood);
+                if (attempt > 1) {
+                    systemPrompt += "\n\nRETRY: the previous answer could not be used. Reply with ONLY the raw "
+                            + "JSON object (starting with '{' and ending with '}'), no Markdown, no code fences, "
+                            + "no commentary. Every joint name must be one of the listed actuators and every value "
+                            + "must stay inside its given range.";
+                }
                 List<Map<String, String>> messages = new ArrayList<>();
-                messages.add(message("system",
-                        danceCompactPrompt() + researchCoupling() + moodGuidance(effectiveMood)));
+                messages.add(message("system", systemPrompt));
                 messages.add(message("user", userMessage));
 
                 Map<String, Object> body = new HashMap<>();
@@ -90,7 +80,7 @@ public final class DanceGenerator extends GeneratorBase {
                 body.put("messages", messages);
                 body.put("reasoning_effort", "high");
 
-                String response = openAi.chatStrongest(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.GENERATION, body, DANCE_TIMEOUT_MS);
+                String response = openAi.chatStrongest(ModelTask.GENERATION, body, DANCE_TIMEOUT_MS);
                 String content = new JSONObject(response)
                         .getJSONArray("choices")
                         .getJSONObject(0)
@@ -132,7 +122,7 @@ public final class DanceGenerator extends GeneratorBase {
             body.put("model", ModelSelector.FAST);
             body.put("messages", messages);
 
-            String response = openAi.chat(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.CLASSIFICATION, body, 15000);
+            String response = openAi.chat(ModelTask.CLASSIFICATION, body, 15000);
             String content = new JSONObject(response)
                     .getJSONArray("choices")
                     .getJSONObject(0)

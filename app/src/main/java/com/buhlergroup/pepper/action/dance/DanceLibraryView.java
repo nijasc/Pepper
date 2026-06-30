@@ -69,8 +69,6 @@ public class DanceLibraryView extends FrameLayout {
         loadingText = binding.danceLoadingText;
         scrollRoot = binding.danceScrollRoot;
         binding.danceCreate.setOnClickListener(v -> promptCreate());
-        // Diese Bibliothek ist nur aus dem Admin-Panel erreichbar; beim Schliessen
-        // zurueck ins Admin statt zum Home, damit der Admin-Zugang erhalten bleibt.
         binding.danceClose.setOnClickListener(v -> {
             DanceLibraryController.get().close();
             AdminController.get().open();

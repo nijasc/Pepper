@@ -117,14 +117,14 @@ public final class WifiCameraManager {
         bounds.inJustDecodeBounds = true;
         BitmapFactory.decodeByteArray(bytes, 0, bytes.length, bounds);
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight, MAX_PHOTO_EDGE);
+        options.inSampleSize = sampleSizeFor(bounds.outWidth, bounds.outHeight);
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
     }
 
-    private int sampleSizeFor(int width, int height, int maxEdge) {
+    private int sampleSizeFor(int width, int height) {
         int sample = 1;
         int longer = Math.max(width, height);
-        while (longer / sample > maxEdge) {
+        while (longer / sample > WifiCameraManager.MAX_PHOTO_EDGE) {
             sample *= 2;
         }
         return sample;

@@ -3,6 +3,8 @@ package com.buhlergroup.pepper.action.dynamicanim;
 import android.content.Context;
 import android.util.Log;
 
+import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
+
 import org.json.JSONObject;
 import org.w3c.dom.Document;
 
@@ -67,7 +69,7 @@ public final class AnimationGenerator extends GeneratorBase {
         body.put("messages", messages);
         body.put("reasoning_effort", "low");
 
-        String response = openAi.chat(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.GENERATION, body, GENERATION_TIMEOUT_MS);
+        String response = openAi.chat(ModelTask.GENERATION, body, GENERATION_TIMEOUT_MS);
         return new JSONObject(response)
                 .getJSONArray("choices")
                 .getJSONObject(0)

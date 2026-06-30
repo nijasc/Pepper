@@ -16,6 +16,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.buhlergroup.pepper.R;
@@ -46,7 +47,6 @@ final class ModelPanelController {
     private final Map<LlmProvider, TextView> statusViews = new EnumMap<>(LlmProvider.class);
     private final Map<ModelTask, Spinner> providerSpinners = new EnumMap<>(ModelTask.class);
     private final Map<ModelTask, Spinner> modelSpinners = new EnumMap<>(ModelTask.class);
-    private final Map<ModelTask, TextView> modelHints = new EnumMap<>(ModelTask.class);
 
     ModelPanelController(View root, Executor executor, PanelNavigator panelNav) {
         this.root = root;
@@ -129,7 +129,6 @@ final class ModelPanelController {
         taskList.removeAllViews();
         providerSpinners.clear();
         modelSpinners.clear();
-        modelHints.clear();
         for (ModelTask task : ModelTask.values()) {
             LinearLayout card = card();
 
@@ -168,7 +167,6 @@ final class ModelPanelController {
             LinearLayout.LayoutParams hintParams = rowParams();
             hintParams.topMargin = dp(4);
             card.addView(hint, hintParams);
-            modelHints.put(task, hint);
 
             fillModelSpinner(modelSpinner, hint, savedProvider, savedModelId);
 
@@ -324,7 +322,7 @@ final class ModelPanelController {
             }
 
             @Override
-            public View getDropDownView(int position, View convertView, ViewGroup parent) {
+            public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
                 TextView view = (TextView) super.getDropDownView(position, convertView, parent);
                 view.setTextColor(color(R.color.text_primary));
                 view.setTextSize(16);

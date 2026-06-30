@@ -2,10 +2,11 @@ package com.buhlergroup.pepper.action.hold;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class HoldMyBeerAction extends Action {
 
-    public HoldMyBeerAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public HoldMyBeerAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

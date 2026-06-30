@@ -2,21 +2,15 @@ package com.buhlergroup.pepper.action.admin;
 
 import java.util.List;
 
-/**
- * One button in the Actor deck. Bundles what Pepper shows ({@link ActorState}, may be
- * {@code null} for the clean branded idle backdrop), an optional looping gesture/pose
- * (a {@code .qianim} raw res — celebrations move, B/C/D beats hold a posture), and an
- * optional spoken line ({@code speech}) so Pepper says the countdown/greeting instead of
- * only showing it. For a hands-free beat, a timed {@link Step} sequence auto-advances.
- */
+
 final class ActorPreset {
 
     final String label;
     final String group;
     final ActorState state;
-    final int gestureRaw;      // 0 = no gesture/pose
-    final String speech;       // null = silent
-    final List<Step> sequence; // null = single state
+    final int gestureRaw;
+    final String speech;
+    final List<Step> sequence;
     final boolean picksImage;
 
     private ActorPreset(String label, String group, ActorState state, int gestureRaw,
@@ -54,7 +48,6 @@ final class ActorPreset {
         return new ActorPreset(label, group, null, 0, null, null, true);
     }
 
-    /** One timed beat of an auto-sequence: a state, how long to hold, and an optional line. */
     static final class Step {
         final ActorState state;
         final int holdMs;

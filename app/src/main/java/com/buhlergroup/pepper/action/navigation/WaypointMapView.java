@@ -13,6 +13,7 @@ import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class WaypointMapView extends View {
 
@@ -148,7 +149,7 @@ public class WaypointMapView extends View {
     }
 
     private String fmt(double value) {
-        return String.format(java.util.Locale.US, "%.1f", value);
+        return String.format(Locale.US, "%.1f", value);
     }
 
     private float toX(float worldX, float minX, float scale, float pad) {

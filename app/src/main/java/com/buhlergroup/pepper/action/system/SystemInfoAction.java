@@ -9,6 +9,7 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.openai.OpenAIService;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.util.List;
 
@@ -17,7 +18,7 @@ public class SystemInfoAction extends Action {
     private final OpenAIService openAi;
 
     public SystemInfoAction(LanguageManager lm, List<Action> actions,
-                            com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+                            HistoryManager historyManager) {
         super(historyManager);
         this.lm = lm;
         this.openAi = new OpenAIService(actions);

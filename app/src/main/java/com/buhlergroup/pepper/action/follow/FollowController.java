@@ -148,9 +148,6 @@ public final class FollowController {
                         lostTarget = true;
                         break;
                     }
-                    // Kurzzeitiger Verlust (Person zu schnell oder zu nah/gross fürs
-                    // Tracking): weiter zur zuletzt bekannten Position fahren, um sie
-                    // wieder einzufangen, statt sofort stehenzubleiben.
                     if (trackValid) {
                         long missNow = System.currentTimeMillis();
                         boolean finished = goToFuture == null || goToFuture.isDone();
@@ -181,8 +178,6 @@ public final class FollowController {
 
                 Frame headFrame = human.getHeadFrame();
                 if (headFrame == null) {
-                    // Kopf gerade nicht lesbar – wie kurzen Verlust behandeln,
-                    // nicht die ganze Session abbrechen.
                     misses++;
                     Thread.sleep(LOOP_PAUSE_MS);
                     continue;

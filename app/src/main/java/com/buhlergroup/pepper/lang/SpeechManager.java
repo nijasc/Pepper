@@ -13,7 +13,7 @@ import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.openai.SystemSpeechRewriter;
 
 public class SpeechManager {
-    private static LanguageManager languageManager;
+    private volatile LanguageManager languageManager;
 
     private final Object speechLock = new Object();
 
@@ -28,34 +28,34 @@ public class SpeechManager {
         languageManager = lm;
     }
 
+    private SupportedLanguage currentOrDefault() {
+        LanguageManager lm = languageManager;
+        return lm != null ? lm.getCurrent() : SupportedLanguage.GERMAN;
+    }
+
     public SupportedLanguage currentLanguage() {
-        return languageManager.getCurrent();
+        return currentOrDefault();
     }
 
     public void say(QiContext context, String toSay) {
-        SupportedLanguage current = languageManager.getCurrent();
+        SupportedLanguage current = currentOrDefault();
         speak(context, toSay, new Locale(current.getQiLang(), current.getRegion()), current);
     }
 
     public void say(QiContext context, String toSay, String outputLangTag) {
-        SupportedLanguage fallback = languageManager.getCurrent();
+        SupportedLanguage fallback = currentOrDefault();
         Locale locale = LocaleResolver.resolve(outputLangTag, fallback);
         speak(context, toSay, locale, fallback);
     }
 
     public void systemSay(QiContext context, String toSay) {
-        SupportedLanguage target = languageManager.getCurrent();
+        SupportedLanguage target = currentOrDefault();
         String text = SystemSpeechRewriter.get().rewrite(context, toSay, target);
         speak(context, text, new Locale(target.getQiLang(), target.getRegion()), target);
     }
 
-    /**
-     * Spricht ohne begleitende Körpersprache (Arme/Hände bleiben ruhig). Nötig
-     * z. B. während "Hold my beer", damit Pepper das gehaltene Objekt nicht durch
-     * Body-Talk-Gesten abwirft.
-     */
     public void sayStill(QiContext context, String toSay) {
-        SupportedLanguage current = languageManager.getCurrent();
+        SupportedLanguage current = currentOrDefault();
         speak(context, toSay, new Locale(current.getQiLang(), current.getRegion()), current,
                 BodyLanguageOption.DISABLED);
     }

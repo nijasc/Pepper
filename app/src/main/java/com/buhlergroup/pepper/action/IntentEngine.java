@@ -1,6 +1,7 @@
 package com.buhlergroup.pepper.action;
 
 import com.buhlergroup.pepper.openai.ModelSelector;
+import com.buhlergroup.pepper.openai.ModelSelector.ModelTask;
 import com.buhlergroup.pepper.openai.OpenAIService;
 import com.buhlergroup.pepper.openai.history.HistoryManager;
 
@@ -46,7 +47,7 @@ public class IntentEngine {
         body.put("response_format", buildResponseFormat());
 
         try {
-            String response = openAi.chat(com.buhlergroup.pepper.openai.ModelSelector.ModelTask.CLASSIFICATION, body);
+            String response = openAi.chat(ModelTask.CLASSIFICATION, body);
             String intentKey = parseIntent(response);
             return intents.get(intentKey);
         } catch (IOException | JSONException e) {
@@ -123,16 +124,8 @@ public class IntentEngine {
             return role;
         }
 
-        public void setRole(String role) {
-            this.role = role;
-        }
-
         public String getContent() {
             return content;
-        }
-
-        public void setContent(String content) {
-            this.content = content;
         }
     }
 }

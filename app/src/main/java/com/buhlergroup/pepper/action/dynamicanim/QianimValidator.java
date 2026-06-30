@@ -39,7 +39,7 @@ public final class QianimValidator {
     private QianimValidator() {
     }
 
-    static float[] limitsFor(String actuator) {
+    public static float[] limitsFor(String actuator) {
         return LIMITS.get(actuator);
     }
 

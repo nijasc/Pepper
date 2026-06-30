@@ -66,16 +66,32 @@ public final class OpenAiCompatibleLlmService implements LlmService {
     public String chatStrongest(ModelTask task, Map<String, Object> body, int timeoutMs) throws IOException {
         Context ctx = ctx();
         LlmProvider provider = ModelSettings.getProvider(ctx, task);
-        body.put("model", provider.flagshipModel);
+        String apiKey = ModelSettings.getKey(ctx, provider);
         if (provider.maxReasoningEffort != null) {
             body.put("reasoning_effort", provider.maxReasoningEffort);
         } else {
             body.remove("reasoning_effort");
             body.remove("reasoning");
         }
-        applyWebSearch(provider, body);
-        return httpClient.request(provider, ModelSettings.getKey(ctx, provider),
-                "/chat/completions", body, timeoutMs);
+        List<String> candidates = candidateModels(provider, provider.flagshipModel);
+        LlmHttpException lastModelError = null;
+        for (String model : candidates) {
+            body.put("model", model);
+            try {
+                return httpClient.request(provider, apiKey, "/chat/completions", body, timeoutMs);
+            } catch (LlmHttpException e) {
+                if (e.isModelError()) {
+                    DebugLog.get().w(TAG, "Stärkstes Modell '" + model + "' nicht verfügbar (HTTP "
+                            + e.statusCode + ") – versuche Fallback-Modell");
+                    lastModelError = e;
+                    continue;
+                }
+                throw e;
+            }
+        }
+        throw lastModelError != null
+                ? lastModelError
+                : new IOException("Kein verfügbares Modell");
     }
 
     @Override
@@ -174,22 +190,6 @@ public final class OpenAiCompatibleLlmService implements LlmService {
         if (!provider.supportsReasoningEffort) {
             body.remove("reasoning_effort");
             body.remove("reasoning");
-        }
-    }
-
-    private void applyWebSearch(LlmProvider provider, Map<String, Object> body) {
-        switch (provider) {
-            case OPENAI:
-                body.put("web_search_options", new HashMap<>());
-                break;
-            case GROK:
-                Map<String, Object> search = new HashMap<>();
-                search.put("mode", "auto");
-                body.put("search_parameters", search);
-                break;
-            case GEMINI:
-            default:
-                break;
         }
     }
 

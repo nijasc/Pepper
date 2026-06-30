@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -8,6 +9,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.text.InputType;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,6 +29,7 @@ import com.buhlergroup.pepper.action.profile.data.ResourceType;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.Executor;
 
 final class ProfilePanelController {
@@ -107,12 +110,13 @@ final class ProfilePanelController {
         });
     }
 
+    @SuppressLint("SetTextI18n")
     private void renderResources(List<ResourceEntity> resources) {
         resourceList.removeAllViews();
         for (ResourceEntity res : resources) {
             LinearLayout row = new LinearLayout(ctx());
             row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(0, 8, 0, 8);
 
             TextView label = new TextView(ctx());
@@ -397,7 +401,7 @@ final class ProfilePanelController {
     }
 
     private ResourceType typeFor(String name) {
-        String lower = name == null ? "" : name.toLowerCase(java.util.Locale.ROOT);
+        String lower = name == null ? "" : name.toLowerCase(Locale.ROOT);
         if (lower.endsWith(".pdf")) {
             return ResourceType.PDF;
         }

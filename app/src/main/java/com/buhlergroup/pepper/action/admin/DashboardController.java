@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -74,6 +75,7 @@ final class DashboardController {
         dashHandler.removeCallbacks(dashRefresh);
     }
 
+    @SuppressLint("SetTextI18n")
     void refreshDashboard() {
         boolean online = Connectivity.isOnline(ctx());
         dashWifi.setText(online ? R.string.status_dash_connected : R.string.status_dash_disconnected);

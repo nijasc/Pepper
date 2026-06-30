@@ -7,10 +7,11 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.SelfieController;
 import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class JoinRaffleAction extends Action {
 
-    public JoinRaffleAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public JoinRaffleAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

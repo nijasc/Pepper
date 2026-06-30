@@ -13,6 +13,7 @@ import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.openai.OpenAIService;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -306,7 +307,7 @@ public final class ProfileRepository {
         if (!file.exists()) {
             return "";
         }
-        try (InputStream in = new java.io.FileInputStream(file)) {
+        try (InputStream in = new FileInputStream(file)) {
             byte[] bytes = new byte[(int) file.length()];
             int read = 0;
             int r;

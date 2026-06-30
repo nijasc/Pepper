@@ -125,10 +125,6 @@ final class RoomScanner {
         });
     }
 
-    void captureSnapshot() {
-        nav.submit(this::publishScanSnapshot);
-    }
-
     void captureRotation() {
         Thread running = rotationThread;
         if (running != null && running.isAlive()) {

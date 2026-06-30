@@ -40,7 +40,7 @@ public final class TonePlayer {
         });
     }
 
-    public void playTone(double frequencyHz, long durationMs, double amplitude) {
+    private void playTone(double frequencyHz, long durationMs, double amplitude) {
         executor.execute(() -> emit(frequencyHz, durationMs, amplitude));
     }
 

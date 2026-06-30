@@ -12,6 +12,7 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleEntryEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.action.selfie.SelfieRepository;
 import com.buhlergroup.pepper.debug.DebugLog;
+import com.buhlergroup.pepper.stats.Stats;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -91,14 +92,6 @@ public final class RaffleRepository {
         }
     }
 
-    public RaffleEntity findRaffle(long id) {
-        return raffleDao.findById(id);
-    }
-
-    public void setStatus(long raffleId, RaffleStatus status) {
-        raffleDao.setStatus(raffleId, status);
-    }
-
     public void endRaffle(long raffleId) {
         raffleDao.setStatus(raffleId, RaffleStatus.ENDED);
     }
@@ -148,12 +141,6 @@ public final class RaffleRepository {
         return ids;
     }
 
-    public long addEntry(long raffleId, String name, String email, String phone, String selfieId) {
-        RaffleEntryEntity entry = new RaffleEntryEntity(raffleId, name, email, phone, selfieId,
-                System.currentTimeMillis());
-        return entryDao.insert(entry);
-    }
-
     public JoinResult joinRaffle(long raffleId, String name, String email, String phone,
                                  boolean requiresPhone, String selfieId) {
         final JoinResult[] result = {JoinResult.NOT_ACTIVE};
@@ -180,8 +167,8 @@ public final class RaffleRepository {
             result[0] = JoinResult.SUCCESS;
         });
         if (result[0] == JoinResult.SUCCESS) {
-            com.buhlergroup.pepper.stats.Stats.increment(appContext,
-                    com.buhlergroup.pepper.stats.Stats.RAFFLE_JOINS);
+            Stats.increment(appContext,
+                    Stats.RAFFLE_JOINS);
         }
         return result[0];
     }

@@ -4,6 +4,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.navigation.data.WaypointEntity;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,7 +27,7 @@ public class GuideAction extends Action {
             "take", "me", "us", "to", "the", "a", "an", "where", "is", "find", "please", "go",
             "lead", "guide", "show", "of"));
 
-    public GuideAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public GuideAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

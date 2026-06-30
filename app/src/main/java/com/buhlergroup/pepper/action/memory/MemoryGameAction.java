@@ -2,10 +2,11 @@ package com.buhlergroup.pepper.action.memory;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class MemoryGameAction extends Action {
 
-    public MemoryGameAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public MemoryGameAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

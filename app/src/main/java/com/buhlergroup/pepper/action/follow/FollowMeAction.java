@@ -3,10 +3,11 @@ package com.buhlergroup.pepper.action.follow;
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class FollowMeAction extends Action {
 
-    public FollowMeAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public FollowMeAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

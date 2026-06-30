@@ -76,10 +76,6 @@ public class QuizView extends FrameLayout {
         post(() -> scoreView.setText(text));
     }
 
-    public void setFeedback(String text) {
-        post(() -> feedbackView.setText(text));
-    }
-
     public void showQuestion(String progress, String question, List<String> options) {
         post(() -> {
             progressView.setText(progress);
@@ -94,10 +90,6 @@ public class QuizView extends FrameLayout {
             }
             inputEnabled = true;
         });
-    }
-
-    public void setInputEnabled(boolean enabled) {
-        this.inputEnabled = enabled;
     }
 
     public void revealAnswer(int correctIndex, int chosenIndex) {

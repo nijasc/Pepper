@@ -4,6 +4,7 @@ import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.openai.OpenAIService;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class SayAction extends Action {
     private final OpenAIService openAi;
 
     public SayAction(List<Action> actions,
-                     com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+                     HistoryManager historyManager) {
         super(historyManager);
         this.openAi = new OpenAIService(actions);
     }

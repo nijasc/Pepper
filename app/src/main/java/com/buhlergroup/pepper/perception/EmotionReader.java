@@ -34,7 +34,7 @@ public class EmotionReader {
         return mood.getPromptHint();
     }
 
-    public BasicEmotion readMood(QiContext context) {
+    private BasicEmotion readMood(QiContext context) {
         try {
             List<Human> humans = context.getHumanAwareness().getHumansAround();
             if (humans == null || humans.isEmpty()) {

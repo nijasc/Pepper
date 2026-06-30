@@ -12,12 +12,13 @@ import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.audio.AudioCoordinator;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class SaxophoneAction extends Action {
 
     private static final long MAX_PLAY_MS = 35000;
 
-    public SaxophoneAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public SaxophoneAction(HistoryManager historyManager) {
         super(historyManager);
     }
 
@@ -43,9 +44,6 @@ public class SaxophoneAction extends Action {
             long duration = player.getDuration();
             long playMs = duration > 0 ? Math.min(duration, MAX_PLAY_MS) : MAX_PLAY_MS;
             long deadline = System.currentTimeMillis() + playMs;
-            // Animation wiederholen, bis der Song zu Ende ist, damit Bewegung und
-            // Musik gleichzeitig enden (vorher lief der Song nach Animationsende
-            // weiter, weil die Animation nur einmal abgespielt wurde).
             while (System.currentTimeMillis() < deadline
                     && !Thread.currentThread().isInterrupted()) {
                 Future<Void> anim = animate.async().run();

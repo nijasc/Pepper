@@ -35,11 +35,6 @@ public final class AdminSettings {
         return context.getApplicationContext().getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
-    public static String getPin(Context context) {
-        String pin = prefs(context).getString(KEY_PIN, "");
-        return pin.isEmpty() ? DEFAULT_PIN : pin;
-    }
-
     public static void setPin(Context context, String pin) {
         if (pin == null || pin.isEmpty()) {
             return;

@@ -2,10 +2,11 @@ package com.buhlergroup.pepper.action.admin;
 
 import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.action.Action;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class OpenAdminAction extends Action {
 
-    public OpenAdminAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public OpenAdminAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

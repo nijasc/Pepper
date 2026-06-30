@@ -6,6 +6,7 @@ import com.buhlergroup.pepper.action.raffle.data.RaffleEntity;
 import com.buhlergroup.pepper.action.raffle.data.RaffleStatus;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.openai.OpenAIService;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -17,7 +18,7 @@ public class RaffleInfoAction extends Action {
     private final OpenAIService openAi;
 
     public RaffleInfoAction(List<Action> actions,
-                            com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+                            HistoryManager historyManager) {
         super(historyManager);
         this.openAi = new OpenAIService(actions);
     }

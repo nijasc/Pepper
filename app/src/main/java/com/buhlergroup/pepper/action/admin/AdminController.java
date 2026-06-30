@@ -1,5 +1,7 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.net.Uri;
+
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
 import com.buhlergroup.pepper.openai.history.HistoryEntry;
@@ -78,14 +80,14 @@ public final class AdminController {
         return open;
     }
 
-    public void onProfileDocumentPicked(android.net.Uri uri) {
+    public void onProfileDocumentPicked(Uri uri) {
         AdminView current = view;
         if (current != null) {
             current.onProfileDocumentPicked(uri);
         }
     }
 
-    public void onActorImagePicked(android.net.Uri uri) {
+    public void onActorImagePicked(Uri uri) {
         AdminView current = view;
         if (current != null) {
             current.onActorImagePicked(uri);

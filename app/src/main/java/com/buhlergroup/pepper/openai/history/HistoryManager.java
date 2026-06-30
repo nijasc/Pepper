@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HistoryManager implements Cloneable {
+public class HistoryManager {
     public static final int MAX_HISTORY = 10;
     private static final int MAX_DEV_LOG = 200;
     private final List<HistoryEntry> history = new ArrayList<>();

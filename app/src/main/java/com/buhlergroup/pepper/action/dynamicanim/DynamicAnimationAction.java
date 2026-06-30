@@ -11,6 +11,7 @@ import com.aldebaran.qi.sdk.object.actuation.Animation;
 import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.action.thinking.ThinkingController;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -25,7 +26,7 @@ public class DynamicAnimationAction extends Action {
             "(\\d+)\\s*(?:minuten?|minutes?|mins?\\b)", Pattern.CASE_INSENSITIVE);
     private final AnimationGenerator generator = new AnimationGenerator();
 
-    public DynamicAnimationAction(com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+    public DynamicAnimationAction(HistoryManager historyManager) {
         super(historyManager);
     }
 

@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
@@ -71,6 +72,7 @@ final class DiagnosticsController {
         panelNav.show(PanelNavigator.PANEL_DEBUG);
     }
 
+    @SuppressLint("SetTextI18n")
     private void renderDebugLog() {
         String status = DebugLog.get().getStatus();
         debugStatus.setText(root.getContext().getString(R.string.debug_status_label) + " "

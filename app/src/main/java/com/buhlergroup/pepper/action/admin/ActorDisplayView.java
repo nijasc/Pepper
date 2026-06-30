@@ -1,6 +1,7 @@
 package com.buhlergroup.pepper.action.admin;
 
 import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -23,15 +24,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Full-screen host that renders one {@link ActorState} on a pure black screen. On top sits
- * one consistently-styled, in-app drawing — flat shapes, rounded caps, one shared palette
- * — or white glowing typography. Black background for every Actor action except the "own
- * image" preset. Designed to look clean and cohesive on camera.
- */
 final class ActorDisplayView extends FrameLayout {
 
-    private final ImageView imageView;   // imported photo or big brand logo
+    private final ImageView imageView;
     private final TextView textView;
     private View effect;
     private ValueAnimator blink;
@@ -68,7 +63,7 @@ final class ActorDisplayView extends FrameLayout {
                 showText(state);
                 break;
             case ICON:
-                addEffect(new IconView(getContext(), state.icon, state.accent));
+                addEffect(new IconView(getContext(), state.icon));
                 break;
             case FIREWORKS:
                 addEffect(new ParticleView(getContext(), false));
@@ -94,7 +89,6 @@ final class ActorDisplayView extends FrameLayout {
         }
     }
 
-    /** Show an imported bitmap (the "Eigenes Bild" preset) — the only non-black state. */
     void showImage(Bitmap bitmap) {
         stopBlink();
         removeEffect();
@@ -131,7 +125,7 @@ final class ActorDisplayView extends FrameLayout {
 
     private void showBrand(ActorState s) {
         if (s.text == null) {
-            return; // plain black
+            return;
         }
         imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
         imageView.setImageResource(R.drawable.buhler_logo);
@@ -194,21 +188,16 @@ final class ActorDisplayView extends FrameLayout {
         return (color & 0x00FFFFFF) | (alpha << 24);
     }
 
-    // ----------------------------------------------------- consistent illustrations
-
-    /** Flat, single-style drawings: sun, heart, party, palm. White · teal · sun · coral. */
     private static final class IconView extends View {
 
         private final ActorState.Icon icon;
-        private final int accent;
         private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint stroke = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Path path = new Path();
 
-        IconView(Context c, ActorState.Icon icon, int accent) {
+        IconView(Context c, ActorState.Icon icon) {
             super(c);
             this.icon = icon;
-            this.accent = accent;
             fill.setStyle(Paint.Style.FILL);
             stroke.setStyle(Paint.Style.STROKE);
             stroke.setStrokeCap(Paint.Cap.ROUND);
@@ -222,7 +211,7 @@ final class ActorDisplayView extends FrameLayout {
             float h = getHeight();
             float cx = w / 2f;
             float cy = h / 2f;
-            float u = Math.min(w, h);   // base unit
+            float u = Math.min(w, h);
             switch (icon) {
                 case SUN:
                     drawSun(canvas, cx, cy, u);
@@ -289,10 +278,8 @@ final class ActorDisplayView extends FrameLayout {
         }
 
         private void drawPalm(Canvas canvas, float cx, float cy, float u) {
-            // sun
             fill.setColor(ActorState.SUN);
             canvas.drawCircle(cx + u * 0.28f, cy - u * 0.28f, u * 0.09f, fill);
-            // trunk
             stroke.setColor(ActorState.TEAL);
             stroke.setStrokeWidth(u * 0.04f);
             float baseX = cx - u * 0.05f;
@@ -303,7 +290,6 @@ final class ActorDisplayView extends FrameLayout {
             path.moveTo(baseX, baseY);
             path.quadTo(cx - u * 0.20f, cy + u * 0.05f, topX, topY);
             canvas.drawPath(path, stroke);
-            // fronds
             stroke.setStrokeWidth(u * 0.035f);
             float[][] tips = {
                     {topX - u * 0.30f, topY - u * 0.02f},
@@ -317,7 +303,6 @@ final class ActorDisplayView extends FrameLayout {
                 path.quadTo((topX + t[0]) / 2f, topY - u * 0.10f, t[0], t[1]);
                 canvas.drawPath(path, stroke);
             }
-            // sea / ground waves
             stroke.setStrokeWidth(u * 0.03f);
             for (int row = 0; row < 2; row++) {
                 float y = cy + u * 0.40f + row * u * 0.08f;
@@ -333,9 +318,6 @@ final class ActorDisplayView extends FrameLayout {
         }
     }
 
-    // ---------------------------------------------------------------- particles
-
-    /** Looping fireworks (Drehbuch A) or falling confetti (Drehbuch D) on black. */
     private static final class ParticleView extends View {
 
         private final boolean confetti;
@@ -442,9 +424,6 @@ final class ActorDisplayView extends FrameLayout {
         }
     }
 
-    // --------------------------------------------------------------------- face
-
-    /** Display "mimik" for Drehbuch B on black: 0 = neutral, 1 = thinking, 2 = happy. */
     private static final class FaceView extends View {
 
         private final int mood;
@@ -508,9 +487,6 @@ final class ActorDisplayView extends FrameLayout {
         }
     }
 
-    // -------------------------------------------------------------- selfie frame
-
-    /** Selfie viewfinder for Drehbuch C — teal corner brackets + a drawn camera. */
     private static final class FrameView extends View {
 
         private final int accent;
@@ -536,32 +512,28 @@ final class ActorDisplayView extends FrameLayout {
             float len = u * 0.14f;
             line.setColor(accent);
             line.setStrokeWidth(u * 0.014f);
-            float l = inset, t = inset, r = w - inset, b = h - inset;
-            canvas.drawLine(l, t, l + len, t, line);
-            canvas.drawLine(l, t, l, t + len, line);
-            canvas.drawLine(r, t, r - len, t, line);
-            canvas.drawLine(r, t, r, t + len, line);
-            canvas.drawLine(l, b, l + len, b, line);
-            canvas.drawLine(l, b, l, b - len, line);
+            float r = w - inset, b = h - inset;
+            canvas.drawLine(inset, inset, inset + len, inset, line);
+            canvas.drawLine(inset, inset, inset, inset + len, line);
+            canvas.drawLine(r, inset, r - len, inset, line);
+            canvas.drawLine(r, inset, r, inset + len, line);
+            canvas.drawLine(inset, b, inset + len, b, line);
+            canvas.drawLine(inset, b, inset, b - len, line);
             canvas.drawLine(r, b, r - len, b, line);
             canvas.drawLine(r, b, r, b - len, line);
 
-            // camera body
             float cx = w / 2f, cy = h / 2f;
             float bw = u * 0.34f, bh = u * 0.24f;
-            RectF body = new RectF(cx - bw / 2f, cy - bh / 2f, cx + bw / 2f, cy + bh / 2f);
+            @SuppressLint("DrawAllocation") RectF body = new RectF(cx - bw / 2f, cy - bh / 2f, cx + bw / 2f, cy + bh / 2f);
             line.setStrokeWidth(u * 0.018f);
             line.setColor(Color.WHITE);
             canvas.drawRoundRect(body, u * 0.03f, u * 0.03f, line);
-            // viewfinder bump
-            RectF bump = new RectF(cx - bw * 0.18f, cy - bh / 2f - u * 0.05f, cx + bw * 0.05f, cy - bh / 2f);
+            @SuppressLint("DrawAllocation") RectF bump = new RectF(cx - bw * 0.18f, cy - bh / 2f - u * 0.05f, cx + bw * 0.05f, cy - bh / 2f);
             canvas.drawRoundRect(bump, u * 0.012f, u * 0.012f, line);
-            // lens
             fill.setColor(accent);
             canvas.drawCircle(cx, cy + bh * 0.03f, u * 0.075f, fill);
             fill.setColor(Color.WHITE);
             canvas.drawCircle(cx, cy + bh * 0.03f, u * 0.032f, fill);
-            // flash
             fill.setColor(ActorState.SUN);
             canvas.drawCircle(cx + bw * 0.32f, cy - bh * 0.22f, u * 0.018f, fill);
         }

@@ -30,6 +30,7 @@ import com.buhlergroup.pepper.action.selfie.data.SelfieEntity;
 import com.buhlergroup.pepper.config.Env;
 import com.buhlergroup.pepper.debug.DebugLog;
 import com.buhlergroup.pepper.lang.SpeechManager;
+import com.buhlergroup.pepper.stats.Stats;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -197,8 +198,8 @@ public final class SelfieController {
                 break;
             }
 
-            com.buhlergroup.pepper.stats.Stats.increment(context,
-                    com.buhlergroup.pepper.stats.Stats.SELFIES);
+            Stats.increment(context,
+                    Stats.SELFIES);
             if (offerRaffle) {
                 offerRaffleJoin(context, entity);
             }
@@ -216,14 +217,6 @@ public final class SelfieController {
             notifyState(false);
         }
         return null;
-    }
-
-    public int serverPort() {
-        return shareServer.port();
-    }
-
-    public String tokenFor(String filename) {
-        return shareServer.tokenFor(filename);
     }
 
     public String downloadUrl(Context context, String filename) {

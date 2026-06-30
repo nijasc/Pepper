@@ -1,5 +1,6 @@
 package com.buhlergroup.pepper.action.admin;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.LruCache;
@@ -21,6 +22,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -35,7 +37,7 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
                 }
             };
     private static final Set<SelfieAdapter> INSTANCES =
-            Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<>());
+            Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final List<SelfieEntity> items = new ArrayList<>();
     private final Set<String> raffleLinkedIds = new HashSet<>();
     private final ExecutorService decodeExecutor = Executors.newFixedThreadPool(2);
@@ -76,6 +78,7 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
         INSTANCES.remove(this);
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     public void setData(List<SelfieEntity> data, File imagesDir, Set<String> linkedSelfieIds) {
         this.imagesDir = imagesDir;
         items.clear();
@@ -92,6 +95,7 @@ public class SelfieAdapter extends RecyclerView.Adapter<SelfieAdapter.SelfieHold
         return new SelfieHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull SelfieHolder holder, int position) {
         SelfieEntity selfie = items.get(position);

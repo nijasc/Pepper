@@ -199,7 +199,7 @@ public class ActionHandler {
         }
     }
 
-    public void runAction(QiContext context, String actionName, String input) {
+    private void runAction(QiContext context, String actionName, String input) {
         Action action = actionsByName.get(actionName);
         if (action == null) {
             Log.w(this.getClass().getSimpleName(), "Unknown tile action: " + actionName);

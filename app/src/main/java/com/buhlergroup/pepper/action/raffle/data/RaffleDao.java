@@ -3,19 +3,14 @@ package com.buhlergroup.pepper.action.raffle.data;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
-import androidx.room.Update;
+
+import java.util.List;
 
 @Dao
 public interface RaffleDao {
 
     @Insert
     long insert(RaffleEntity raffle);
-
-    @Update
-    void update(RaffleEntity raffle);
-
-    @Query("SELECT * FROM raffles ORDER BY created_at DESC LIMIT 1")
-    RaffleEntity getLatest();
 
     @Query("SELECT * FROM raffles WHERE status != 'FINISHED' ORDER BY created_at DESC LIMIT 1")
     RaffleEntity getCurrent();
@@ -33,7 +28,7 @@ public interface RaffleDao {
     void setFinished(long id, long finishedAt);
 
     @Query("SELECT * FROM raffles WHERE status = 'FINISHED' AND finished_at > 0 AND finished_at < :cutoff")
-    java.util.List<RaffleEntity> getFinishedBefore(long cutoff);
+    List<RaffleEntity> getFinishedBefore(long cutoff);
 
     @Query("UPDATE raffles SET winnerId = :entryId WHERE id = :raffleId")
     void setWinner(long raffleId, long entryId);

@@ -5,12 +5,13 @@ import com.buhlergroup.pepper.action.Action;
 import com.buhlergroup.pepper.lang.LanguageManager;
 import com.buhlergroup.pepper.lang.SpeechManager;
 import com.buhlergroup.pepper.lang.SupportedLanguage;
+import com.buhlergroup.pepper.openai.history.HistoryManager;
 
 public class ChangeLanguageAction extends Action {
     private final LanguageManager languageManager;
 
     public ChangeLanguageAction(LanguageManager languageManager,
-                                com.buhlergroup.pepper.openai.history.HistoryManager historyManager) {
+                                HistoryManager historyManager) {
         super(historyManager);
         this.languageManager = languageManager;
     }

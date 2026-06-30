@@ -4,7 +4,7 @@ import android.util.Log;
 
 public final class OpenAiCircuitBreaker {
 
-    private static final String TAG = "OpenAIService";
+    private static final String TAG = "OpenAiCircuitBreaker";
     private static final int FAILURE_THRESHOLD = 3;
     private static final long COOLDOWN_MS = 30000;
 

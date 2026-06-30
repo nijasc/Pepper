@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.util.Log;
 import android.view.Gravity;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
 
+import com.aldebaran.qi.sdk.QiContext;
 import com.buhlergroup.pepper.R;
 import com.buhlergroup.pepper.action.dance.RobotContext;
 import com.buhlergroup.pepper.action.raffle.RaffleRepository;
@@ -289,7 +291,7 @@ final class RaffleAdminController {
         text.setText(sb.toString());
         text.setTextColor(isWinner ? 0xFFFFD54F : 0xFFFFFFFF);
         if (isWinner) {
-            text.setTypeface(text.getTypeface(), android.graphics.Typeface.BOLD);
+            text.setTypeface(text.getTypeface(), Typeface.BOLD);
         }
         LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
@@ -425,7 +427,7 @@ final class RaffleAdminController {
             return;
         }
         onClose.run();
-        com.aldebaran.qi.sdk.QiContext qc = RobotContext.get();
+        QiContext qc = RobotContext.get();
         if (qc != null) {
             WinnerController.get().celebrate(qc, winner.name);
         }

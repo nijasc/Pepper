@@ -46,10 +46,6 @@ final class SelfieShareServer {
         }
     }
 
-    int port() {
-        return SERVER_PORT;
-    }
-
     String tokenFor(String filename) {
         LocalImageServer current = server;
         return current != null ? current.tokenFor(filename) : "";
